@@ -20,6 +20,7 @@ import (
 	"github.com/divkix/Alita_Robot/alita/db/greetings"
 	"github.com/divkix/Alita_Robot/alita/db/lang"
 	"github.com/divkix/Alita_Robot/alita/db/models"
+	"github.com/divkix/Alita_Robot/alita/db/referrals"
 	"github.com/divkix/Alita_Robot/alita/i18n"
 	chatsettings "github.com/divkix/Alita_Robot/alita/settings"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
@@ -438,6 +439,17 @@ func SendWelcomeMessage(bot *gotgbot.Bot, ctx *ext.Context, userID int64, firstN
 func (moduleStruct) newMember(bot *gotgbot.Bot, ctx *ext.Context) error {
 	chat := ctx.EffectiveChat
 	newMember := ctx.ChatMember.NewChatMember.MergeChatMember().User
+	// Attribute only links that this bot previously created and stored.
+	if ctx.ChatMember.InviteLink != nil {
+		created, attributionErr := referrals.RecordManagedJoin(
+			chat.Id, newMember.Id, ctx.ChatMember.InviteLink.InviteLink, time.Unix(ctx.ChatMember.Date, 0),
+		)
+		if attributionErr != nil {
+			log.WithContext(tracing.UpdateContext(ctx)).Warnf("[Greetings][newMember] Referral attribution failed for chat %d user %d: %v", chat.Id, newMember.Id, attributionErr)
+		} else if created {
+			log.Debugf("[Greetings][newMember] Attributed user %d in chat %d to a managed invite link", newMember.Id, chat.Id)
+		}
+	}
 	captchaSettings, err := chatsettings.ReadCaptchaContext(tracing.UpdateContext(ctx), chat.Id)
 	if err != nil {
 		log.Errorf("[Greetings][newMember] Failed to get captcha settings for chat %d: %v", chat.Id, err)
