@@ -33,6 +33,29 @@ func TestRecordJoinCountsUniqueMembersOnly(t *testing.T) {
 	}
 }
 
+func TestRecordManagedJoinOnlyAcceptsStoredChatLink(t *testing.T) {
+	chatID := time.Now().UnixNano()
+	link := "https://t.me/+managed-" + time.Now().Format("150405.000000000")
+	if err := SaveInviteLink(models.ChatInviteLink{InviteLink: link, ChatID: chatID, CreatorID: 77}); err != nil {
+		t.Fatal(err)
+	}
+	created, err := RecordManagedJoin(chatID, 88, link, time.Now())
+	if err != nil || !created {
+		t.Fatalf("managed join = %v, %v; want true, nil", created, err)
+	}
+	rows, err := ListLinkStats(chatID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].InviterID != 77 || rows[0].Joined != 1 {
+		t.Fatalf("stats = %+v, want creator 77 and one join", rows)
+	}
+	created, err = RecordManagedJoin(chatID+1, 99, link, time.Now())
+	if err != nil || created {
+		t.Fatalf("cross-chat link = %v, %v; want false, nil", created, err)
+	}
+}
+
 func TestRecordJoinIgnoresUnmanagedLinks(t *testing.T) {
 	created, err := RecordJoin(123, 456, "", 0, time.Now())
 	if err != nil || created {
