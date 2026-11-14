@@ -1242,7 +1242,8 @@ misc_help_msg:
   × /ud <terme> : Rechercher dans Urban Dictionary.
 
   × /referral : Créez des liens d’invitation suivis et consultez les statistiques (admin, groupes uniquement).
-  × /runs : Une répartie aléatoire."
+  × /runs : Une répartie aléatoire.
+  Utilisez les commandes du module pour gérer votre communauté."
 misc_translation_error: Erreur lors de la demande de traduction !
 misc_reply_to_someone: Répondez à quelqu'un.
 misc_provide_content: Fournissez du contenu pour répondre !
