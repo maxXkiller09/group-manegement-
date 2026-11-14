@@ -13,6 +13,7 @@ import (
 	"github.com/divkix/Alita_Robot/alita/db/referrals"
 	"github.com/divkix/Alita_Robot/alita/utils/formatting"
 	"github.com/divkix/Alita_Robot/alita/utils/helpers"
+	"github.com/divkix/Alita_Robot/alita/utils/ratelimit"
 )
 
 var referralModule = moduleStruct{moduleName: "Referrals"}
@@ -27,8 +28,14 @@ func (moduleStruct) referral(c *helpers.CommandContext) error {
 	case "create":
 		return createReferralLink(c, strings.TrimSpace(strings.Join(args[1:], " ")))
 	case "stats":
+		if !helpers.RequireUserAdmin()(c) {
+			return ext.EndGroups
+		}
 		return showReferralStats(c)
 	case "leaderboard":
+		if !helpers.RequireUserAdmin()(c) {
+			return ext.EndGroups
+		}
 		return showReferralLeaderboard(c)
 	default:
 		return referralUsage(c)
@@ -47,7 +54,11 @@ func createReferralLink(c *helpers.CommandContext, name string) error {
 		return err
 	}
 	if c.User == nil || c.User.Id == 0 {
-		_, err := c.Msg.Reply(c.Bot, "I couldn't identify the admin who requested this link. Please retry without anonymous admin mode.", formatting.Shtml())
+		_, err := c.Msg.Reply(c.Bot, "I couldn't identify who requested this link. Please retry with a personal account.", formatting.Shtml())
+		return err
+	}
+	if allowed, remaining := ratelimit.GetBackupRateLimiter().AcquireReferralCreate(c.Chat.Id, c.User.Id); !allowed {
+		_, err := c.Msg.Reply(c.Bot, "Please wait "+ratelimit.FormatCooldown(remaining)+" before creating another tracked invite link.", formatting.Shtml())
 		return err
 	}
 
@@ -134,9 +145,7 @@ func LoadReferrals(dispatcher *ext.Dispatcher) {
 		PMGroupArg: helpers.PMGroupArgNone,
 		RequiredChecks: []helpers.CheckFunc{
 			helpers.RequireGroup(),
-			helpers.RequireConnectedAdmin(helpers.BotAdminRequired),
-			helpers.RequireBotAdmin(),
-			helpers.RequireUserAdmin(),
+			helpers.RequireConnectedMember(helpers.BotAdminRequired),
 		},
 	}, referralModule.referral)
 }
