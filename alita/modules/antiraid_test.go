@@ -779,6 +779,40 @@ func TestAntiRaidTrackJoinTriggersAtThreshold(t *testing.T) {
 	}
 }
 
+
+func TestAntiRaidTrackJoinCountsUniqueUsers(t *testing.T) {
+	withMiniredis(t)
+
+	chatID := uniqueModuleChatID()
+	t.Cleanup(func() {
+		clearJoinTracking(chatID)
+	})
+
+	firstCount, err := trackJoin(chatID, 42)
+	if err != nil {
+		t.Fatalf("first trackJoin() error = %v", err)
+	}
+	if firstCount != 1 {
+		t.Fatalf("first user count = %d, want 1", firstCount)
+	}
+
+	repeatedCount, err := trackJoin(chatID, 42)
+	if err != nil {
+		t.Fatalf("repeated trackJoin() error = %v", err)
+	}
+	if repeatedCount != 1 {
+		t.Fatalf("repeated user count = %d, want 1 (duplicate joins must not inflate raid threshold)", repeatedCount)
+	}
+
+	secondCount, err := trackJoin(chatID, 43)
+	if err != nil {
+		t.Fatalf("second user trackJoin() error = %v", err)
+	}
+	if secondCount != 2 {
+		t.Fatalf("two unique users count = %d, want 2", secondCount)
+	}
+}
+
 func TestAntiRaidStageAppliesConfiguredAction(t *testing.T) {
 	t.Run("no action when raid inactive and threshold disabled", func(t *testing.T) {
 		client := newModuleBotClient()
