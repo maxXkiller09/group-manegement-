@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -201,6 +202,28 @@ func TestOverviewReturnsZeroFilledSeriesAndRecentEvents(t *testing.T) {
 	}
 	if wider.ModerationCount != 7 {
 		t.Fatalf("30-day moderation_count = %d, want 7", wider.ModerationCount)
+	}
+}
+
+
+func TestOverviewHidesModerationDetailsFromMembers(t *testing.T) {
+	fixture, chatID := newOverviewFixture(t)
+	fixture.client.statuses[panelTestUserID] = "member"
+	seedModerationEvent(t, chatID, 801, 901, models.ModerationActionBan, "private reason", overviewDayStart())
+
+	recorder := panelRequest(t, fixture.handler, http.MethodGet, overviewPath(chatID, ""), readFixture(t, "initdata_main.txt"), "", "")
+	body := decodeOverview(t, recorder)
+	if body.ModerationCount != 1 {
+		t.Fatalf("moderation_count = %d, want aggregate count 1", body.ModerationCount)
+	}
+	if len(body.Recent) != 0 {
+		t.Fatalf("member received detailed moderation events: %+v", body.Recent)
+	}
+	if body.Names != nil {
+		t.Fatalf("member received user names: %+v", body.Names)
+	}
+	if strings.Contains(recorder.Body.String(), "private reason") || strings.Contains(recorder.Body.String(), "801") || strings.Contains(recorder.Body.String(), "901") {
+		t.Fatalf("member response contains private moderation details: %s", recorder.Body.String())
 	}
 }
 
