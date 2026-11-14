@@ -789,6 +789,8 @@ misc_help_msg:
 
   × /ud <término>: Busca en Urban Dictionary.
 
+  × /referral: Crea enlaces de invitación rastreados y consulta estadísticas (admin, solo grupos).
+
   × /runs: Una broma aleatoria."
 mutes_help_msg:
   "A veces los usuarios pueden ser molestos y podrías querer restringirlos
