@@ -1241,7 +1241,9 @@ misc_help_msg:
 
   × /ud <terme> : Rechercher dans Urban Dictionary.
 
-  × /runs : Une répartie aléatoire."
+  × /referral : Créez des liens d’invitation suivis et consultez les statistiques (admin, groupes uniquement).
+  × /runs : Une répartie aléatoire.
+  Utilisez les commandes du module pour gérer votre communauté."
 misc_translation_error: Erreur lors de la demande de traduction !
 misc_reply_to_someone: Répondez à quelqu'un.
 misc_provide_content: Fournissez du contenu pour répondre !
@@ -3055,6 +3057,7 @@ misc_extend_msg: |
   /github — chercher un utilisateur ou un dépôt GitHub
   /wiki — chercher sur Wikipédia
   /ud — chercher sur Urban Dictionary
+  /referral — créer des liens d’invitation suivis et voir les statistiques
   /runs — une phrase au hasard
 mutes_extend_msg: |
   /mute — rendre muet un utilisateur

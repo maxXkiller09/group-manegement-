@@ -753,7 +753,9 @@ misc_help_msg:
 
   × /ud <termo>: Busca no Urban Dictionary.
 
-  × /runs: Uma tirada aleatória."
+  × /referral: Crie links de convite rastreados e veja estatísticas de indicação (admin, somente grupos).
+  × /runs: Uma tirada aleatória.
+  Use os comandos do módulo para gerenciar sua comunidade."
 mutes_help_msg:
   "Às vezes usuários podem ser irritantes e você pode querer restringi-los
   de enviar uma mensagem para o chat, este módulo está aqui para ajudar, você pode usar este módulo
@@ -3112,6 +3114,7 @@ misc_extend_msg: |
   /github — buscar um usuário ou repositório do GitHub
   /wiki — pesquisar na Wikipédia
   /ud — pesquisar no Urban Dictionary
+  /referral — criar links de convite rastreados e ver estatísticas de indicação
   /runs — uma frase aleatória
 mutes_extend_msg: |
   /mute — silenciar um usuário

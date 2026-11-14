@@ -93,3 +93,28 @@ func RecordManagedJoin(chatID, userID int64, inviteURL string, joinedAt time.Tim
 	}
 	return RecordJoin(chatID, userID, inviteURL, link.CreatorID, joinedAt)
 }
+
+type InviterStats struct {
+	InviterID int64 `gorm:"column:inviter_id" json:"inviter_id"`
+	Joined    int64 `gorm:"column:joined" json:"joined"`
+}
+
+// ListLeaderboard returns the top inviters for one chat, counting unique users.
+func ListLeaderboard(chatID int64) ([]InviterStats, error) {
+	if db.DB == nil {
+		return nil, errors.New("database not initialized")
+	}
+	var rows []InviterStats
+	err := db.DB.Model(&models.ChatInviteAttribution{}).
+		Select("inviter_id, COUNT(*) AS joined").
+		Where("chat_id = ?", chatID).
+		Group("inviter_id").
+		Order("joined DESC").
+		Order("inviter_id ASC").
+		Limit(10).
+		Scan(&rows).Error
+	if err != nil {
+		return nil, fmt.Errorf("list chat referral leaderboard: %w", err)
+	}
+	return rows, nil
+}

@@ -3,6 +3,7 @@
 # Sample calls shown under a command's help when it is called wrongly
 # (commandHelpModules). Commands are the same in every language.
 ban_example: "/ban @username spam"
+referral_example: "/referral create study-group"
 sban_example: "/sban @username"
 tban_example: "/tban @username 1d spam"
 unban_example: "/unban @username"

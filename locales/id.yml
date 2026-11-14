@@ -781,7 +781,9 @@ misc_help_msg:
 
   × /ud <istilah>: Cari di Urban Dictionary.
 
-  × /runs: Sindiran acak."
+  × /referral: Buat tautan undangan terlacak dan lihat statistik referral (admin, hanya grup).
+  × /runs: Sindiran acak.
+  Gunakan perintah modul untuk mengelola komunitas Anda."
 mutes_help_msg:
   "Terkadang pengguna bisa mengganggu dan Anda mungkin ingin membatasi mereka
   dari mengirim pesan ke obrolan, modul ini ada di sini untuk membantu, Anda dapat menggunakan modul ini
@@ -3139,6 +3141,7 @@ misc_extend_msg: |
   /github — cari pengguna atau repositori GitHub
   /wiki — cari di Wikipedia
   /ud — cari di Urban Dictionary
+  /referral — buat tautan undangan terlacak dan lihat statistik referral
   /runs — kalimat acak
 mutes_extend_msg: |
   /mute — bisukan pengguna

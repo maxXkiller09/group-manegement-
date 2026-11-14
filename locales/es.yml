@@ -789,6 +789,8 @@ misc_help_msg:
 
   × /ud <término>: Busca en Urban Dictionary.
 
+  × /referral: Crea enlaces de invitación rastreados y consulta estadísticas (admin, solo grupos).
+
   × /runs: Una broma aleatoria."
 mutes_help_msg:
   "A veces los usuarios pueden ser molestos y podrías querer restringirlos
@@ -3148,6 +3150,7 @@ misc_extend_msg: |
   /github — buscar un usuario o repositorio de GitHub
   /wiki — buscar en Wikipedia
   /ud — buscar en Urban Dictionary
+  /referral — crear enlaces de invitación rastreados y ver estadísticas de referidos
   /runs — una frase aleatoria
 mutes_extend_msg: |
   /mute — silenciar a un usuario
