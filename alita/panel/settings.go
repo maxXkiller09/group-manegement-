@@ -244,6 +244,11 @@ func (p *Panel) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	// Preserve the panel's early writable check: even an invalid settings
+	// payload must not reveal field validation to a caller or bot that cannot write.
+	if !p.requirePermission(w, r, access, session.User.ID, permNone) {
+		return
+	}
 	var body settingsPatchRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSONError(w, http.StatusBadRequest, "invalid_body", "request body must be a JSON object with a changes map")
@@ -267,7 +272,8 @@ func (p *Panel) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
 
 	// Check every declared right before the first write; Telegram rights
 	// such as change-info and restrict-members are independent.
-	if !p.requirePermission(w, r, access, session.User.ID, settingsPermission(updates)) {
+	required := settingsPermission(updates)
+	if required != permNone && !p.requirePermission(w, r, access, session.User.ID, required) {
 		return
 	}
 
