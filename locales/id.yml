@@ -781,6 +781,7 @@ misc_help_msg:
 
   × /ud <istilah>: Cari di Urban Dictionary.
 
+  × /referral: Buat tautan undangan terlacak dan lihat statistik referral (admin, hanya grup).
   × /runs: Sindiran acak."
 mutes_help_msg:
   "Terkadang pengguna bisa mengganggu dan Anda mungkin ingin membatasi mereka
