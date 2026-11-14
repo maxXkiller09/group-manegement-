@@ -139,24 +139,31 @@ func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recentRows, err := moderation.ListForChat(access.ChatID, time.Time{}, overviewRecentLimit)
-	if err != nil {
-		log.WithError(err).Error("[Panel] Failed to list recent moderation events")
-		writeJSONError(w, http.StatusInternalServerError, "overview_failed", "could not read this chat's moderation history")
-		return
-	}
-	recent := make([]overviewEvent, 0, len(recentRows))
-	ids := make([]int64, 0, 2*len(recentRows))
-	for _, ev := range recentRows {
-		ids = append(ids, ev.ActorId, ev.TargetUserId)
-		recent = append(recent, overviewEvent{
-			ID:           ev.ID,
-			Action:       ev.Action,
-			ActorID:      ev.ActorId,
-			TargetUserID: ev.TargetUserId,
-			Reason:       ev.Reason,
-			CreatedAt:    ev.CreatedAt.UTC().Format(time.RFC3339),
-		})
+	// Detailed moderation records identify actors, targets and reasons. Keep
+	// those details on the admin surface; ordinary members only see the
+	// aggregate moderation count above.
+	recent := make([]overviewEvent, 0)
+	ids := make([]int64, 0)
+	if access.Role == RoleAdmin {
+		recentRows, err := moderation.ListForChat(access.ChatID, time.Time{}, overviewRecentLimit)
+		if err != nil {
+			log.WithError(err).Error("[Panel] Failed to list recent moderation events")
+			writeJSONError(w, http.StatusInternalServerError, "overview_failed", "could not read this chat's moderation history")
+			return
+		}
+		recent = make([]overviewEvent, 0, len(recentRows))
+		ids = make([]int64, 0, 2*len(recentRows))
+		for _, ev := range recentRows {
+			ids = append(ids, ev.ActorId, ev.TargetUserId)
+			recent = append(recent, overviewEvent{
+				ID:           ev.ID,
+				Action:       ev.Action,
+				ActorID:      ev.ActorId,
+				TargetUserID: ev.TargetUserId,
+				Reason:       ev.Reason,
+				CreatedAt:    ev.CreatedAt.UTC().Format(time.RFC3339),
+			})
+		}
 	}
 
 	memberCount, err := p.memberCount(r.Context(), access.ChatID)
