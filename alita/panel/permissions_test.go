@@ -45,8 +45,8 @@ func TestWriteRechecksAdminAfterAccessMemo(t *testing.T) {
 	write := panelRequest(t, fixture.handler, http.MethodPatch, settingsPath(chatID), raw,
 		`{"changes":{"language.code":"es"}}`, "application/json")
 	requireAPIError(t, write, http.StatusForbidden, "not_admin")
-	if count := countChatRows(t, &models.ChatTimezone{}, chatID); count != 0 {
-		t.Fatalf("demoted admin write created %d timezone rows", count)
+	if got := lang.GetGroupLanguage(context.Background(), chatID); got != "en" {
+		t.Fatalf("demoted admin changed language to %q, want no write", got)
 	}
 }
 
@@ -63,8 +63,8 @@ func TestWriteRechecksBotAdminAfterAccessMemo(t *testing.T) {
 	write := panelRequest(t, fixture.handler, http.MethodPatch, settingsPath(chatID), raw,
 		`{"changes":{"language.code":"es"}}`, "application/json")
 	requireAPIError(t, write, http.StatusConflict, "bot_not_admin")
-	if got := countChatRows(t, &models.ChatTimezone{}, chatID); got != 0 {
-		t.Fatalf("write without current bot admin created %d timezone rows", got)
+	if got := lang.GetGroupLanguage(context.Background(), chatID); got != "en" {
+		t.Fatalf("write without current bot admin changed language to %q, want no write", got)
 	}
 }
 
