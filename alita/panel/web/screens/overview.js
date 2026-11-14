@@ -138,12 +138,15 @@ function formatTime(value) {
 // recentSection lists action, actor, target and time. The API also carries a
 // reason; the overview deliberately shows only the four fields the screen
 // promises, and no message text exists to show.
-function recentSection(events, names) {
+function recentSection(events, names, moderationCount) {
 	const section = document.createElement("section");
 	section.className = "overview-recent";
 	section.append(textElement("h3", "Recent moderation"));
 	if (events.length === 0) {
-		section.append(textElement("p", "No moderation actions recorded yet.", "empty"));
+		const message = Number(moderationCount) > 0
+			? "Moderation details are available to chat admins."
+			: "No moderation actions recorded yet.";
+		section.append(textElement("p", message, "empty"));
 		return section;
 	}
 
@@ -219,7 +222,7 @@ function drawOverview(root, data) {
 		);
 	}
 
-	root.append(totalsBlock(totals), collectionNote(), recentSection(recent, data.names));
+	root.append(totalsBlock(totals), collectionNote(), recentSection(recent, data.names, data.moderation_count));
 }
 
 export async function renderOverview(root, chatID) {
