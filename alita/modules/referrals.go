@@ -81,7 +81,7 @@ func createReferralLink(c *helpers.CommandContext, name string) error {
 	if name != "" {
 		label += " (" + html.EscapeString(name) + ")"
 	}
-	text := fmt.Sprintf(`%s: <a href="%s">%s</a>`, label, html.EscapeString(link.InviteLink), html.EscapeString(link.InviteLink))
+	text := fmt.Sprintf("%s: <a href=\"%s\">%s</a>", label, html.EscapeString(link.InviteLink), html.EscapeString(link.InviteLink))
 	_, err = c.Msg.Reply(c.Bot, text, formatting.Shtml())
 	return err
 }
@@ -101,7 +101,7 @@ func showReferralStats(c *helpers.CommandContext) error {
 	var total int64
 	for i, row := range rows {
 		total += row.Joined
-		fmt.Fprintf(&text, `\n%d. <a href="%s">Open link</a> — <b>%d</b> unique join(s)`, i+1, html.EscapeString(row.InviteLink), row.Joined)
+		fmt.Fprintf(&text, "\n%d. <a href=\"%s\">Open link</a> — <b>%d</b> unique join(s)", i+1, html.EscapeString(row.InviteLink), row.Joined)
 	}
 	fmt.Fprintf(&text, "\n\nTotal attributed members: <b>%d</b>", total)
 	_, err = c.Msg.Reply(c.Bot, text.String(), formatting.Shtml())
