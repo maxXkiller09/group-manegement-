@@ -1,6 +1,7 @@
 package panel
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -61,6 +62,24 @@ func settingsPermission(changes map[string]any) permission {
 // it writes 403 {"code":"missing_permission"} for the caller or
 // 409 {"code":"bot_missing_permission"} for the bot and returns false.
 func (p *Panel) requirePermission(w http.ResponseWriter, r *http.Request, access chatAccess, userID int64, perm permission) bool {
+	// Read endpoints may reuse the short-lived access memo. Writes must
+	// revalidate both the caller and bot directly with Telegram so a demotion
+	// cannot retain write access until the memo expires.
+	fresh, err := p.accessChatFresh(r.Context(), userID, access.ChatID)
+	if err != nil {
+		switch {
+		case r.Context().Err() != nil:
+			writeJSONError(w, http.StatusGatewayTimeout, "timeout", "Telegram did not answer before the panel request deadline")
+		case errors.Is(err, errNotGroup):
+			writeJSONError(w, http.StatusNotFound, "chat_not_found", "the panel only serves group chats")
+		case errors.Is(err, errNotMember):
+			writeJSONError(w, http.StatusForbidden, "not_member", "you are not a member of this chat")
+		default:
+			writeJSONError(w, http.StatusBadGateway, "telegram_error", "Telegram could not verify current chat permissions: "+err.Error())
+		}
+		return false
+	}
+	access = fresh
 	if !requireWritable(w, access) {
 		return false
 	}
