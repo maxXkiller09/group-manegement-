@@ -30,6 +30,44 @@ func TestSettingsPatchPermissionRefusalWritesNothing(t *testing.T) {
 	}
 }
 
+
+func TestWriteRechecksAdminAfterAccessMemo(t *testing.T) {
+	fixture, chatID := newSettingsFixture(t)
+	raw := readFixture(t, "initdata_main.txt")
+	target := "/panel/api/v1/chats/" + strconv.FormatInt(chatID, 10)
+
+	// Prime the read memo while the caller and bot are administrators.
+	if response := panelRequest(t, fixture.handler, http.MethodGet, target, raw, "", ""); response.Code != http.StatusOK {
+		t.Fatalf("prime access status = %d, want 200", response.Code)
+	}
+	fixture.client.statuses[settingsFixtureUserID] = "member"
+
+	write := panelRequest(t, fixture.handler, http.MethodPatch, settingsPath(chatID), raw,
+		`{"changes":{"language.code":"es"}}`, "application/json")
+	requireAPIError(t, write, http.StatusForbidden, "not_admin")
+	if count := countChatRows(t, &models.ChatTimezone{}, chatID); count != 0 {
+		t.Fatalf("demoted admin write created %d timezone rows", count)
+	}
+}
+
+func TestWriteRechecksBotAdminAfterAccessMemo(t *testing.T) {
+	fixture, chatID := newSettingsFixture(t)
+	raw := readFixture(t, "initdata_main.txt")
+	target := "/panel/api/v1/chats/" + strconv.FormatInt(chatID, 10)
+
+	if response := panelRequest(t, fixture.handler, http.MethodGet, target, raw, "", ""); response.Code != http.StatusOK {
+		t.Fatalf("prime access status = %d, want 200", response.Code)
+	}
+	fixture.client.statuses[999] = "member"
+
+	write := panelRequest(t, fixture.handler, http.MethodPatch, settingsPath(chatID), raw,
+		`{"changes":{"language.code":"es"}}`, "application/json")
+	requireAPIError(t, write, http.StatusConflict, "bot_not_admin")
+	if got := countChatRows(t, &models.ChatTimezone{}, chatID); got != 0 {
+		t.Fatalf("write without current bot admin created %d timezone rows", got)
+	}
+}
+
 // The chat creator holds every right even when getChatMember reports none.
 func TestSettingsPatchCreatorSkipsRights(t *testing.T) {
 	fixture, chatID := newSettingsFixture(t)
