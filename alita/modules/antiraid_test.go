@@ -779,7 +779,6 @@ func TestAntiRaidTrackJoinTriggersAtThreshold(t *testing.T) {
 	}
 }
 
-
 func TestAntiRaidTrackJoinCountsUniqueUsers(t *testing.T) {
 	withMiniredis(t)
 
