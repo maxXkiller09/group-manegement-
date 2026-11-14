@@ -54,6 +54,7 @@ var commandHelpModules = map[string]string{
 	"logchannel": "logchannels",
 	"log":        "logchannels",
 	"nolog":      "logchannels",
+	"referral":   "misc",
 
 	"locks":            "locks",
 	"locktypes":        "locks",
