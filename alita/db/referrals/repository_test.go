@@ -31,6 +31,13 @@ func TestRecordJoinCountsUniqueMembersOnly(t *testing.T) {
 	if len(rows) != 1 || rows[0].Joined != 1 {
 		t.Fatalf("stats = %+v, want one link with one unique join", rows)
 	}
+	leaders, err := ListLeaderboard(chatID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(leaders) != 1 || leaders[0].InviterID != 11 || leaders[0].Joined != 1 {
+		t.Fatalf("leaderboard = %+v, want inviter 11 with one unique join", leaders)
+	}
 }
 
 func TestRecordManagedJoinOnlyAcceptsStoredChatLink(t *testing.T) {
