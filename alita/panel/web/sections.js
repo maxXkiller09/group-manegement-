@@ -5,6 +5,7 @@ import { renderOverview } from "./screens/overview.js";
 import { renderSettings } from "./screens/settings.js";
 import { renderTimeline } from "./screens/timeline.js";
 import { renderWarnings } from "./screens/warnings.js";
+import { renderReferrals } from "./screens/referrals.js";
 
 // Dashboard screens of one chat. Each screen module adds one entry
 // ({ key, label, description, render(root, chatID, chat) }); the chat screen
@@ -19,4 +20,5 @@ export const sections = [
 	{ key: "warnings", label: "Warnings", description: "Warned members and their warns", render: renderWarnings, adminOnly: true },
 	{ key: "timeline", label: "Timeline", description: "Every ban, kick, mute and unban", render: renderTimeline, adminOnly: true },
 	{ key: "members", label: "Top members", description: "Who sent the most messages", render: renderMembers, adminOnly: true },
+	{ key: "referrals", label: "Referrals", description: "Tracked invite links and top inviters", render: renderReferrals, adminOnly: true },
 ];
