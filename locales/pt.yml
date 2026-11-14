@@ -755,7 +755,7 @@ misc_help_msg:
 
   × /referral: Crie links de convite rastreados e veja estatísticas de indicação (admin, somente grupos).
   × /runs: Uma tirada aleatória.
-  Utilisez les commandes du module pour gérer votre communauté."
+  Use os comandos do módulo para gerenciar sua comunidade."
 mutes_help_msg:
   "Às vezes usuários podem ser irritantes e você pode querer restringi-los
   de enviar uma mensagem para o chat, este módulo está aqui para ajudar, você pode usar este módulo
