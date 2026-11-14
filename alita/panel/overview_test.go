@@ -227,6 +227,28 @@ func TestOverviewHidesModerationDetailsFromMembers(t *testing.T) {
 	}
 }
 
+
+func TestOverviewRechecksAdminBeforeReturningModerationDetails(t *testing.T) {
+	fixture, chatID := newOverviewFixture(t)
+	raw := readFixture(t, "initdata_main.txt")
+	seedModerationEvent(t, chatID, 802, 902, models.ModerationActionBan, "private reason", overviewDayStart())
+
+	target := "/panel/api/v1/chats/" + strconv.FormatInt(chatID, 10)
+	if response := panelRequest(t, fixture.handler, http.MethodGet, target, raw, "", ""); response.Code != http.StatusOK {
+		t.Fatalf("prime access status = %d, want 200", response.Code)
+	}
+	fixture.client.statuses[panelTestUserID] = "member"
+
+	recorder := panelRequest(t, fixture.handler, http.MethodGet, overviewPath(chatID, ""), raw, "", "")
+	body := decodeOverview(t, recorder)
+	if body.ModerationCount != 1 || len(body.Recent) != 0 || body.Names != nil {
+		t.Fatalf("demoted admin received private moderation data: %+v", body)
+	}
+	if strings.Contains(recorder.Body.String(), "private reason") || strings.Contains(recorder.Body.String(), "802") || strings.Contains(recorder.Body.String(), "902") {
+		t.Fatalf("demoted admin response contains private details: %s", recorder.Body.String())
+	}
+}
+
 func TestOverviewRejectsUnsupportedWindows(t *testing.T) {
 	fixture, chatID := newOverviewFixture(t)
 	raw := readFixture(t, "initdata_main.txt")
