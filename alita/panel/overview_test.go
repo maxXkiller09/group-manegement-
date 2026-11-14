@@ -208,7 +208,7 @@ func TestOverviewReturnsZeroFilledSeriesAndRecentEvents(t *testing.T) {
 
 func TestOverviewHidesModerationDetailsFromMembers(t *testing.T) {
 	fixture, chatID := newOverviewFixture(t)
-	fixture.client.statuses[panelTestUserID] = "member"
+	fixture.client.statuses[settingsFixtureUserID] = "member"
 	seedModerationEvent(t, chatID, 801, 901, models.ModerationActionBan, "private reason", overviewDayStart())
 
 	recorder := panelRequest(t, fixture.handler, http.MethodGet, overviewPath(chatID, ""), readFixture(t, "initdata_main.txt"), "", "")
