@@ -34,7 +34,7 @@ const (
 	DefaultExportCooldown = 5 * time.Minute
 	DefaultImportCooldown = 10 * time.Minute
 	DefaultResetCooldown  = 1 * time.Hour
-	DefaultReferralCreateCooldown = 10 * time.Minute
+	DefaultReferralCreateCooldown = 1 * time.Hour
 )
 
 func (r *BackupRateLimiter) AcquireExport(chatID int64) (bool, time.Duration) {
