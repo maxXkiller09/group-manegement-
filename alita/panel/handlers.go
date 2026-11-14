@@ -144,19 +144,6 @@ func requireAdmin(w http.ResponseWriter, access chatAccess) bool {
 	return true
 }
 
-// requireWritable rejects a write unless the caller is an admin and the bot
-// can act in the chat. Most reads never call it: a non-admin, or a chat where
-// the bot lost its rights, still sees values read-only.
-func requireWritable(w http.ResponseWriter, access chatAccess) bool {
-	if !requireAdmin(w, access) {
-		return false
-	}
-	if !access.BotAdmin {
-		writeJSONError(w, http.StatusConflict, "bot_not_admin", "the bot is not an admin in this chat, so changes are disabled")
-		return false
-	}
-	return true
-}
 
 // parsePageLimit reads a ?limit= query value: def when absent, capped at max,
 // and a 400 for anything that is not a positive integer.
