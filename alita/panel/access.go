@@ -105,6 +105,42 @@ func (p *Panel) accessChat(ctx context.Context, userID, chatID int64) (chatAcces
 	return access, nil
 }
 
+// accessChatFresh bypasses the read memo and asks Telegram for both the caller's
+// and bot's current membership. Mutating requests use this so a recent admin
+// demotion or bot-rights change cannot remain authorized by the read cache.
+func (p *Panel) accessChatFresh(ctx context.Context, userID, chatID int64) (chatAccess, error) {
+	info, err := p.bot.GetChatWithContext(ctx, chatID, nil)
+	if err != nil {
+		return chatAccess{}, fmt.Errorf("get chat: %w", err)
+	}
+	if info.Type != "group" && info.Type != "supergroup" {
+		return chatAccess{}, fmt.Errorf("%w: chat %d has type %q", errNotGroup, chatID, info.Type)
+	}
+
+	member, err := p.bot.GetChatMemberWithContext(ctx, chatID, userID, nil)
+	if err != nil {
+		return chatAccess{}, fmt.Errorf("get chat member: %w", err)
+	}
+	role, ok := memberRole(member)
+	if !ok {
+		status := "unknown"
+		if member != nil {
+			status = member.GetStatus()
+		}
+		return chatAccess{}, fmt.Errorf("%w: status %q", errNotMember, status)
+	}
+
+	botMember, err := p.bot.GetChatMemberWithContext(ctx, chatID, p.bot.Id, nil)
+	if err != nil {
+		return chatAccess{}, fmt.Errorf("get bot membership: %w", err)
+	}
+	botRole, _ := memberRole(botMember)
+
+	return chatAccess{
+		ChatID: info.Id, Title: info.Title, Role: role, BotAdmin: botRole == RoleAdmin,
+	}, nil
+}
+
 // memberRole is the panel role for one chat member. It reports false when the
 // member is not in the chat: left, kicked, or restricted with is_member false.
 func memberRole(member gotgbot.ChatMember) (string, bool) {
