@@ -56,10 +56,8 @@ func settingsPermission(changes map[string]any) permission {
 	return required
 }
 
-// requirePermission runs requireWritable, then checks perm with fresh
-// getChatMember calls for the caller (and the bot for permBotRestrict). On refusal
-// it writes 403 {"code":"missing_permission"} for the caller or
-// 409 {"code":"bot_missing_permission"} for the bot and returns false.
+// requirePermission rechecks the caller and bot with Telegram on every write,
+// then checks any additional rights required by the setting or list operation.
 func (p *Panel) requirePermission(w http.ResponseWriter, r *http.Request, access chatAccess, userID int64, perm permission) bool {
 	// The read-access memo is intentionally short-lived, but Telegram admin
 	// rights can be revoked at any moment. Revalidate both actors for every
