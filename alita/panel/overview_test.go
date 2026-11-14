@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -288,4 +289,28 @@ func TestOverviewSurfacesTelegramError(t *testing.T) {
 
 	recorder := panelRequest(t, fixture.handler, http.MethodGet, overviewPath(chatID, ""), readFixture(t, "initdata_main.txt"), "", "")
 	requireAPIError(t, recorder, http.StatusBadGateway, "telegram_error")
+}
+
+// A user demoted after the read memo is primed must not receive cached
+// moderation details from the overview response.
+func TestOverviewRechecksAdminBeforeReturningModerationDetails(t *testing.T) {
+	fixture, chatID := newOverviewFixture(t)
+	raw := readFixture(t, "initdata_main.txt")
+	if response := panelRequest(t, fixture.handler, http.MethodGet, overviewPath(chatID, ""), raw, "", ""); response.Code != http.StatusOK {
+		t.Fatalf("prime overview status = %d", response.Code)
+	}
+	seedModerationEvent(t, chatID, 801, 901, models.ModerationActionBan, "private reason", overviewDayStart())
+	fixture.client.statuses[panelTestUserID] = "member"
+
+	recorder := panelRequest(t, fixture.handler, http.MethodGet, overviewPath(chatID, ""), raw, "", "")
+	body := decodeOverview(t, recorder)
+	if body.ModerationCount != 1 {
+		t.Fatalf("moderation_count = %d, want aggregate count 1", body.ModerationCount)
+	}
+	if len(body.Recent) != 0 || body.Names != nil {
+		t.Fatalf("demoted admin received moderation details: %+v", body)
+	}
+	if strings.Contains(recorder.Body.String(), "private reason") || strings.Contains(recorder.Body.String(), "801") || strings.Contains(recorder.Body.String(), "901") {
+		t.Fatalf("response contains private moderation details: %s", recorder.Body.String())
+	}
 }
