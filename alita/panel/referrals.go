@@ -22,7 +22,7 @@ type referralLeaderItem struct {
 type referralDashboardResponse struct {
 	Links       []referralLinkItem   `json:"links"`
 	Leaderboard []referralLeaderItem `json:"leaderboard"`
-	Total      int64                `json:"total"`
+	Total       int64                `json:"total"`
 }
 
 // handleReferrals exposes tracked invite performance to verified chat admins.
