@@ -27,12 +27,14 @@ const (
 	exportRatePrefix = "backup:export:"
 	importRatePrefix = "backup:import:"
 	resetRatePrefix  = "backup:reset:"
+	referralCreateRatePrefix = "referral:create:"
 )
 
 const (
 	DefaultExportCooldown = 5 * time.Minute
 	DefaultImportCooldown = 10 * time.Minute
 	DefaultResetCooldown  = 1 * time.Hour
+	DefaultReferralCreateCooldown = 10 * time.Minute
 )
 
 func (r *BackupRateLimiter) AcquireExport(chatID int64) (bool, time.Duration) {
@@ -45,6 +47,12 @@ func (r *BackupRateLimiter) AcquireImport(chatID int64) (bool, time.Duration) {
 
 func (r *BackupRateLimiter) AcquireReset(chatID int64) (bool, time.Duration) {
 	return r.acquireOperation(resetRatePrefix+strconv.FormatInt(chatID, 10), DefaultResetCooldown)
+}
+
+// AcquireReferralCreate limits each member to one tracked invite link per chat every ten minutes.
+func (r *BackupRateLimiter) AcquireReferralCreate(chatID, userID int64) (bool, time.Duration) {
+	key := referralCreateRatePrefix + strconv.FormatInt(chatID, 10) + ":" + strconv.FormatInt(userID, 10)
+	return r.acquireOperation(key, DefaultReferralCreateCooldown)
 }
 
 func (r *BackupRateLimiter) acquireOperation(cacheKey string, cooldown time.Duration) (bool, time.Duration) {
