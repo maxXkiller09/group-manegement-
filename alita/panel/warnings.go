@@ -60,11 +60,11 @@ type warningRemoveResponse struct {
 // ones labelled. Reads never prune expired entries, so the label is all that
 // separates them from live warns. Who warned whom is admin-only data.
 func (p *Panel) handleWarnings(w http.ResponseWriter, r *http.Request) {
-	_, access, ok := p.chatRequest(w, r)
+	session, access, ok := p.chatRequest(w, r)
 	if !ok {
 		return
 	}
-	if !requireAdmin(w, access) {
+	if !p.requireAdmin(w, r, access, session.User.ID) {
 		return
 	}
 

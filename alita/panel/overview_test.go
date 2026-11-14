@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -201,6 +202,48 @@ func TestOverviewReturnsZeroFilledSeriesAndRecentEvents(t *testing.T) {
 	}
 	if wider.ModerationCount != 7 {
 		t.Fatalf("30-day moderation_count = %d, want 7", wider.ModerationCount)
+	}
+}
+
+func TestOverviewHidesModerationDetailsFromMembers(t *testing.T) {
+	fixture, chatID := newOverviewFixture(t)
+	fixture.client.statuses[settingsFixtureUserID] = "member"
+	seedModerationEvent(t, chatID, 801, 901, models.ModerationActionBan, "private reason", overviewDayStart())
+
+	recorder := panelRequest(t, fixture.handler, http.MethodGet, overviewPath(chatID, ""), readFixture(t, "initdata_main.txt"), "", "")
+	body := decodeOverview(t, recorder)
+	if body.ModerationCount != 1 {
+		t.Fatalf("moderation_count = %d, want aggregate count 1", body.ModerationCount)
+	}
+	if len(body.Recent) != 0 {
+		t.Fatalf("member received detailed moderation events: %+v", body.Recent)
+	}
+	if body.Names != nil {
+		t.Fatalf("member received user names: %+v", body.Names)
+	}
+	if strings.Contains(recorder.Body.String(), "private reason") || strings.Contains(recorder.Body.String(), "801") || strings.Contains(recorder.Body.String(), "901") {
+		t.Fatalf("member response contains private moderation details: %s", recorder.Body.String())
+	}
+}
+
+func TestOverviewRechecksAdminBeforeReturningModerationDetails(t *testing.T) {
+	fixture, chatID := newOverviewFixture(t)
+	raw := readFixture(t, "initdata_main.txt")
+	seedModerationEvent(t, chatID, 802, 902, models.ModerationActionBan, "private reason", overviewDayStart())
+
+	target := "/panel/api/v1/chats/" + strconv.FormatInt(chatID, 10)
+	if response := panelRequest(t, fixture.handler, http.MethodGet, target, raw, "", ""); response.Code != http.StatusOK {
+		t.Fatalf("prime access status = %d, want 200", response.Code)
+	}
+	fixture.client.statuses[panelTestUserID] = "member"
+
+	recorder := panelRequest(t, fixture.handler, http.MethodGet, overviewPath(chatID, ""), raw, "", "")
+	body := decodeOverview(t, recorder)
+	if body.ModerationCount != 1 || len(body.Recent) != 0 || body.Names != nil {
+		t.Fatalf("demoted admin received private moderation data: %+v", body)
+	}
+	if strings.Contains(recorder.Body.String(), "private reason") || strings.Contains(recorder.Body.String(), "802") || strings.Contains(recorder.Body.String(), "902") {
+		t.Fatalf("demoted admin response contains private details: %s", recorder.Body.String())
 	}
 }
 

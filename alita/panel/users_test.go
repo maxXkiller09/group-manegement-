@@ -107,8 +107,11 @@ func TestOverviewNamesRecentModerationForAdminsOnly(t *testing.T) {
 	memberFixture.client.admins[memberChatID] = adminListJSON(999)
 	seedModerationEvent(t, memberChatID, actor, target, models.ModerationActionBan, "spam", fixtureNow.Add(-time.Hour))
 	member := decodeOverview(t, panelRequest(t, memberFixture.handler, http.MethodGet, overviewPath(memberChatID, ""), readFixture(t, "initdata_main.txt"), "", ""))
-	if len(member.Recent) != 1 {
-		t.Fatalf("member overview recent = %+v, want the event", member.Recent)
+	if member.ModerationCount != 1 {
+		t.Fatalf("member overview moderation count = %d, want aggregate count 1", member.ModerationCount)
+	}
+	if len(member.Recent) != 0 {
+		t.Fatalf("member overview recent = %+v, want details hidden from non-admins", member.Recent)
 	}
 	if member.Names != nil {
 		t.Fatalf("member overview names = %+v, want none for a non-admin", member.Names)

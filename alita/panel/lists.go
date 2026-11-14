@@ -94,16 +94,22 @@ type listImportRequest struct {
 // admins, matching /get.
 func (p *Panel) handleListGet(kind listKind) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, access, ok := p.chatRequest(w, r)
+		session, access, ok := p.chatRequest(w, r)
 		if !ok {
 			return
+		}
+		admin := access.Role == RoleAdmin
+		if kind == listNotes && admin {
+			role, current := p.currentRole(w, r, access, session.User.ID)
+			if !current {
+				return
+			}
+			admin = role == RoleAdmin
 		}
 		query, limit, offset, ok := parseListPage(w, r)
 		if !ok {
 			return
 		}
-		admin := access.Role == RoleAdmin
-
 		if r.URL.Query().Get("format") == "text" {
 			body, contentType, filename, err := exportList(r.Context(), kind, access.ChatID, query, admin)
 			if err != nil {
@@ -130,7 +136,7 @@ func (p *Panel) handleListGet(kind listKind) http.HandlerFunc {
 		writeJSON(w, http.StatusOK, listPageResponse{
 			Entries:    entries,
 			NextCursor: next,
-			ReadOnly:   access.Role != RoleAdmin || !access.BotAdmin,
+			ReadOnly:   !admin || !access.BotAdmin,
 		})
 	}
 }

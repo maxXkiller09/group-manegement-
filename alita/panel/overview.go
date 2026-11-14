@@ -91,9 +91,16 @@ func parseOverviewDays(raw string) (int, bool) {
 // how many moderation actions it recorded, and the five most recent actions.
 // Every chat member with access may read it; nothing here is writable.
 func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
-	_, access, ok := p.chatRequest(w, r)
+	session, access, ok := p.chatRequest(w, r)
 	if !ok {
 		return
+	}
+	role := access.Role
+	if role == RoleAdmin {
+		role, ok = p.currentRole(w, r, access, session.User.ID)
+		if !ok {
+			return
+		}
 	}
 	days, ok := parseOverviewDays(r.URL.Query().Get("days"))
 	if !ok {
@@ -139,24 +146,31 @@ func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recentRows, err := moderation.ListForChat(access.ChatID, time.Time{}, overviewRecentLimit)
-	if err != nil {
-		log.WithError(err).Error("[Panel] Failed to list recent moderation events")
-		writeJSONError(w, http.StatusInternalServerError, "overview_failed", "could not read this chat's moderation history")
-		return
-	}
-	recent := make([]overviewEvent, 0, len(recentRows))
-	ids := make([]int64, 0, 2*len(recentRows))
-	for _, ev := range recentRows {
-		ids = append(ids, ev.ActorId, ev.TargetUserId)
-		recent = append(recent, overviewEvent{
-			ID:           ev.ID,
-			Action:       ev.Action,
-			ActorID:      ev.ActorId,
-			TargetUserID: ev.TargetUserId,
-			Reason:       ev.Reason,
-			CreatedAt:    ev.CreatedAt.UTC().Format(time.RFC3339),
-		})
+	// Detailed moderation records identify actors, targets and reasons. Keep
+	// those details on the admin surface; ordinary members only see the
+	// aggregate moderation count above.
+	recent := make([]overviewEvent, 0)
+	ids := make([]int64, 0)
+	if role == RoleAdmin {
+		recentRows, err := moderation.ListForChat(access.ChatID, time.Time{}, overviewRecentLimit)
+		if err != nil {
+			log.WithError(err).Error("[Panel] Failed to list recent moderation events")
+			writeJSONError(w, http.StatusInternalServerError, "overview_failed", "could not read this chat's moderation history")
+			return
+		}
+		recent = make([]overviewEvent, 0, len(recentRows))
+		ids = make([]int64, 0, 2*len(recentRows))
+		for _, ev := range recentRows {
+			ids = append(ids, ev.ActorId, ev.TargetUserId)
+			recent = append(recent, overviewEvent{
+				ID:           ev.ID,
+				Action:       ev.Action,
+				ActorID:      ev.ActorId,
+				TargetUserID: ev.TargetUserId,
+				Reason:       ev.Reason,
+				CreatedAt:    ev.CreatedAt.UTC().Format(time.RFC3339),
+			})
+		}
 	}
 
 	memberCount, err := p.memberCount(r.Context(), access.ChatID)
@@ -173,7 +187,7 @@ func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
 		ModerationCount: moderationCount,
 		Recent:          recent,
 	}
-	if access.Role == RoleAdmin {
+	if role == RoleAdmin {
 		response.Names = userNames(r.Context(), ids)
 	}
 	writeJSON(w, http.StatusOK, response)

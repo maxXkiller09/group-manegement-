@@ -50,11 +50,11 @@ type timelineResponse struct {
 // neither repeats nor hides another; paging stops at the retention boundary
 // the sweep deletes past.
 func (p *Panel) handleTimeline(w http.ResponseWriter, r *http.Request) {
-	_, access, ok := p.chatRequest(w, r)
+	session, access, ok := p.chatRequest(w, r)
 	if !ok {
 		return
 	}
-	if !requireAdmin(w, access) {
+	if !p.requireAdmin(w, r, access, session.User.ID) {
 		return
 	}
 
