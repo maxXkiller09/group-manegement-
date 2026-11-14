@@ -55,7 +55,6 @@ func (r *BackupRateLimiter) AcquireReferralCreate(chatID, userID int64) (bool, t
 	return r.acquireOperation(key, DefaultReferralCreateCooldown)
 }
 
-
 // ReleaseReferralCreate releases a reservation when Telegram or persistence
 // fails before a tracked invite link can be delivered.
 func (r *BackupRateLimiter) ReleaseReferralCreate(chatID, userID int64) error {
