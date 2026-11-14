@@ -3140,6 +3140,7 @@ misc_extend_msg: |
   /github — cari pengguna atau repositori GitHub
   /wiki — cari di Wikipedia
   /ud — cari di Urban Dictionary
+  /referral — buat tautan undangan terlacak dan lihat statistik referral
   /runs — kalimat acak
 mutes_extend_msg: |
   /mute — bisukan pengguna
