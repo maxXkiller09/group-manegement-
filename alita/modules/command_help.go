@@ -54,6 +54,7 @@ var commandHelpModules = map[string]string{
 	"logchannel": "logchannels",
 	"log":        "logchannels",
 	"nolog":      "logchannels",
+	"referral":   "misc",
 
 	"locks":            "locks",
 	"locktypes":        "locks",
@@ -318,6 +319,7 @@ var menuCommands = map[string]menuCommand{
 	"github":            {Module: "misc"},
 	"wiki":              {Module: "misc"},
 	"ud":                {Module: "misc"},
+	"referral":          {Module: "misc", AdminOnly: true},
 	"runs":              {Module: "misc"},
 
 	"mute":   {Module: "mutes", AdminOnly: true},
