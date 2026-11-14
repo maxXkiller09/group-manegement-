@@ -62,12 +62,13 @@ func ListLinkStats(chatID int64) ([]LinkStats, error) {
 		return nil, errors.New("database not initialized")
 	}
 	var rows []LinkStats
-	err := db.DB.Model(&models.ChatInviteAttribution{}).
-		Select("invite_link, inviter_id, COUNT(*) AS joined").
-		Where("chat_id = ?", chatID).
-		Group("invite_link, inviter_id").
+	err := db.DB.Model(&models.ChatInviteLink{}).
+		Select("chat_invite_links.invite_link, chat_invite_links.creator_id AS inviter_id, COUNT(chat_invite_attributions.user_id) AS joined").
+		Joins("LEFT JOIN chat_invite_attributions ON chat_invite_attributions.chat_id = chat_invite_links.chat_id AND chat_invite_attributions.invite_link = chat_invite_links.invite_link").
+		Where("chat_invite_links.chat_id = ?", chatID).
+		Group("chat_invite_links.invite_link, chat_invite_links.creator_id").
 		Order("joined DESC").
-		Order("invite_link ASC").
+		Order("chat_invite_links.invite_link ASC").
 		Scan(&rows).Error
 	if err != nil {
 		return nil, fmt.Errorf("list chat invite stats: %w", err)
