@@ -48,6 +48,8 @@ func TestMain(m *testing.M) {
 		&models.NotesSettings{},
 		&models.BlacklistSettings{},
 		&models.ChatDailyStat{},
+		&models.ChatInviteLink{},
+		&models.ChatInviteAttribution{},
 		&models.ChatHourlyStat{},
 		&models.ChatMemberDailyStat{},
 		&models.ChatMemberCount{},
