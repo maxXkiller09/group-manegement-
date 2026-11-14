@@ -2860,6 +2860,7 @@ misc_extend_msg: |
   /github — GitHub यूज़र या रिपॉज़िटरी खोजें
   /wiki — विकिपीडिया पर खोजें
   /ud — Urban Dictionary पर खोजें
+  /referral — ट्रैक किए गए इनवाइट लिंक बनाएँ और रेफ़रल आँकड़े देखें
   /runs — एक रैंडम चुटकी
 mutes_extend_msg: |
   /mute — यूज़र को म्यूट करें
