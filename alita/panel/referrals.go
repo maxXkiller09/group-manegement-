@@ -29,8 +29,8 @@ type referralDashboardResponse struct {
 // Raw invite URLs and inviter IDs are private group-management data, so
 // ordinary members receive the same admin-only boundary as /referral.
 func (p *Panel) handleReferrals(w http.ResponseWriter, r *http.Request) {
-	_, access, ok := p.chatRequest(w, r)
-	if !ok || !requireAdmin(w, access) {
+	session, access, ok := p.chatRequest(w, r)
+	if !ok || !p.requireAdmin(w, r, access, session.User.ID) {
 		return
 	}
 
