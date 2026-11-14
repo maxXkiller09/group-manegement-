@@ -205,7 +205,6 @@ func TestOverviewReturnsZeroFilledSeriesAndRecentEvents(t *testing.T) {
 	}
 }
 
-
 func TestOverviewHidesModerationDetailsFromMembers(t *testing.T) {
 	fixture, chatID := newOverviewFixture(t)
 	fixture.client.statuses[settingsFixtureUserID] = "member"
@@ -226,7 +225,6 @@ func TestOverviewHidesModerationDetailsFromMembers(t *testing.T) {
 		t.Fatalf("member response contains private moderation details: %s", recorder.Body.String())
 	}
 }
-
 
 func TestOverviewRechecksAdminBeforeReturningModerationDetails(t *testing.T) {
 	fixture, chatID := newOverviewFixture(t)
