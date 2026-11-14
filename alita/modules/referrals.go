@@ -71,7 +71,7 @@ func createReferralLink(c *helpers.CommandContext, name string) error {
 		// handed out because their joins cannot be attributed reliably.
 		_, revokeErr := c.Chat.RevokeInviteLink(c.Bot, link.InviteLink, nil)
 		if revokeErr != nil {
-			return fmt.Errorf("save referral link: %w (also failed to revoke it: %v)", err, revokeErr)
+			return fmt.Errorf("save referral link: %w (also failed to revoke it: %w)", err, revokeErr)
 		}
 		_, replyErr := c.Msg.Reply(c.Bot, "The link was created but could not be saved, so I revoked it. Please try again later.", formatting.Shtml())
 		return replyErr
