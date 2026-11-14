@@ -318,6 +318,7 @@ var menuCommands = map[string]menuCommand{
 	"github":            {Module: "misc"},
 	"wiki":              {Module: "misc"},
 	"ud":                {Module: "misc"},
+	"referral":          {Module: "misc", AdminOnly: true},
 	"runs":              {Module: "misc"},
 
 	"mute":   {Module: "mutes", AdminOnly: true},
