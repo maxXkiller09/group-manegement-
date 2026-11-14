@@ -181,7 +181,7 @@ func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
 		if role == RoleAdmin {
 			response.Names = userNames(r.Context(), ids)
 		} else {
-			recent = nil
+			response.Recent = nil
 		}
 	}
 	writeJSON(w, http.StatusOK, response)
