@@ -47,7 +47,6 @@ func TestSettingsPatchCreatorSkipsRights(t *testing.T) {
 	}
 }
 
-
 // A role cached by the initial chat lookup must not authorize a later write
 // after Telegram has revoked the user's administrator status.
 func TestSettingsPatchRechecksDemotedAdminBeforeWrite(t *testing.T) {
