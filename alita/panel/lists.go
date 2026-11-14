@@ -98,14 +98,11 @@ func (p *Panel) handleListGet(kind listKind) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		admin := false
-		if kind == listNotes {
-			role, current := p.currentRole(w, r, access, session.User.ID)
-			if !current {
-				return
-			}
-			admin = role == RoleAdmin
+		role, current := p.currentRole(w, r, access, session.User.ID)
+		if !current {
+			return
 		}
+		admin := role == RoleAdmin
 		query, limit, offset, ok := parseListPage(w, r)
 		if !ok {
 			return
@@ -136,7 +133,7 @@ func (p *Panel) handleListGet(kind listKind) http.HandlerFunc {
 		writeJSON(w, http.StatusOK, listPageResponse{
 			Entries:    entries,
 			NextCursor: next,
-			ReadOnly:   access.Role != RoleAdmin || !access.BotAdmin,
+			ReadOnly:   role != RoleAdmin || !access.BotAdmin,
 		})
 	}
 }
