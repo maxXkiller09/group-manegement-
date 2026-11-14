@@ -3150,6 +3150,7 @@ misc_extend_msg: |
   /github — buscar un usuario o repositorio de GitHub
   /wiki — buscar en Wikipedia
   /ud — buscar en Urban Dictionary
+  /referral — crear enlaces de invitación rastreados y ver estadísticas de referidos
   /runs — una frase aleatoria
 mutes_extend_msg: |
   /mute — silenciar a un usuario
