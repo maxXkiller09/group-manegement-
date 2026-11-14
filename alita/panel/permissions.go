@@ -61,34 +61,38 @@ func settingsPermission(changes map[string]any) permission {
 // it writes 403 {"code":"missing_permission"} for the caller or
 // 409 {"code":"bot_missing_permission"} for the bot and returns false.
 func (p *Panel) requirePermission(w http.ResponseWriter, r *http.Request, access chatAccess, userID int64, perm permission) bool {
-	if !requireWritable(w, access) {
-		return false
-	}
-	if perm == permNone {
-		return true
-	}
-
+	// The read-access memo is intentionally short-lived, but Telegram admin
+	// rights can be revoked at any moment. Revalidate both actors for every
+	// write, including permNone writes, rather than trusting the memo.
 	caller, err := p.bot.GetChatMemberWithContext(r.Context(), access.ChatID, userID, nil)
 	if err != nil {
 		writeJSONError(w, http.StatusBadGateway, "telegram_error", "Telegram could not return this member: "+err.Error())
 		return false
 	}
+	if role, ok := memberRole(caller); !ok || role != RoleAdmin {
+		writeJSONError(w, http.StatusForbidden, "not_admin", "only current chat admins can change this")
+		return false
+	}
+
+	botMember, err := p.bot.GetChatMemberWithContext(r.Context(), access.ChatID, p.bot.Id, nil)
+	if err != nil {
+		writeJSONError(w, http.StatusBadGateway, "telegram_error", "Telegram could not return the bot's membership: "+err.Error())
+		return false
+	}
+	if role, ok := memberRole(botMember); !ok || role != RoleAdmin {
+		writeJSONError(w, http.StatusConflict, "bot_not_admin", "the bot is not an admin in this chat, so changes are disabled")
+		return false
+	}
+
 	for _, right := range []permission{permChangeInfo, permRestrict} {
 		if perm&right != 0 && !memberCan(caller, right) {
 			writeJSONError(w, http.StatusForbidden, "missing_permission", "you need the "+permissionRight(right)+" right in this chat")
 			return false
 		}
 	}
-	if perm&permBotRestrict != 0 {
-		botMember, err := p.bot.GetChatMemberWithContext(r.Context(), access.ChatID, p.bot.Id, nil)
-		if err != nil {
-			writeJSONError(w, http.StatusBadGateway, "telegram_error", "Telegram could not return the bot's membership: "+err.Error())
-			return false
-		}
-		if !memberCan(botMember, permRestrict) {
-			writeJSONError(w, http.StatusConflict, "bot_missing_permission", "the bot is missing the "+permissionRight(permRestrict)+" right in this chat, so changes are disabled")
-			return false
-		}
+	if perm&permBotRestrict != 0 && !memberCan(botMember, permRestrict) {
+		writeJSONError(w, http.StatusConflict, "bot_missing_permission", "the bot is missing the "+permissionRight(permRestrict)+" right, so changes are disabled")
+		return false
 	}
 	return true
 }
