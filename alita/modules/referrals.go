@@ -8,6 +8,7 @@ import (
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/divkix/Alita_Robot/alita/db/models"
 	"github.com/divkix/Alita_Robot/alita/db/referrals"
@@ -62,8 +63,14 @@ func createReferralLink(c *helpers.CommandContext, name string) error {
 		return err
 	}
 
+	releaseCooldown := func() {
+		if releaseErr := ratelimit.GetBackupRateLimiter().ReleaseReferralCreate(c.Chat.Id, c.User.Id); releaseErr != nil {
+			log.Warnf("[Referrals] Could not release failed invite creation cooldown for chat %d user %d: %v", c.Chat.Id, c.User.Id, releaseErr)
+		}
+	}
 	link, err := c.Chat.CreateInviteLink(c.Bot, &gotgbot.CreateChatInviteLinkOpts{Name: name})
 	if err != nil {
+		releaseCooldown()
 		_, replyErr := c.Msg.Reply(c.Bot, "I couldn't create an invite link. Please check that I have permission to invite users.", formatting.Shtml())
 		if replyErr != nil {
 			return replyErr
@@ -84,6 +91,7 @@ func createReferralLink(c *helpers.CommandContext, name string) error {
 		if revokeErr != nil {
 			return fmt.Errorf("save referral link: %w (also failed to revoke it: %w)", err, revokeErr)
 		}
+		releaseCooldown()
 		_, replyErr := c.Msg.Reply(c.Bot, "The link was created but could not be saved, so I revoked it. Please try again later.", formatting.Shtml())
 		return replyErr
 	}
