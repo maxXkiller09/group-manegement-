@@ -15,6 +15,10 @@ func TestRecordJoinCountsUniqueMembersOnly(t *testing.T) {
 	if err := SaveInviteLink(models.ChatInviteLink{InviteLink: link, ChatID: chatID, CreatorID: 11}); err != nil {
 		t.Fatal(err)
 	}
+	unusedLink := "https://t.me/+unused-" + time.Now().Format("150405.000000000")
+	if err := SaveInviteLink(models.ChatInviteLink{InviteLink: unusedLink, ChatID: chatID, CreatorID: 33}); err != nil {
+		t.Fatal(err)
+	}
 	joinedAt := time.Date(2026, 11, 13, 12, 0, 0, 0, time.UTC)
 	created, err := RecordJoin(chatID, 22, link, 11, joinedAt)
 	if err != nil || !created {
@@ -28,8 +32,8 @@ func TestRecordJoinCountsUniqueMembersOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(rows) != 1 || rows[0].Joined != 1 {
-		t.Fatalf("stats = %+v, want one link with one unique join", rows)
+	if len(rows) != 2 || rows[0].InviteLink != link || rows[0].Joined != 1 || rows[1].InviteLink != unusedLink || rows[1].Joined != 0 {
+		t.Fatalf("stats = %+v, want used link with one join and unused link with zero joins", rows)
 	}
 	leaders, err := ListLeaderboard(chatID)
 	if err != nil {
