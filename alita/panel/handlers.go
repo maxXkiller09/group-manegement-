@@ -133,12 +133,31 @@ func (p *Panel) chatRequest(w http.ResponseWriter, r *http.Request) (Session, ch
 	return session, access, true
 }
 
-// requireAdmin rejects a request from a plain member. Reads of data that names
-// who warned, banned or muted whom use it too: those rows are admin-only, but
-// the bot needs no rights of its own to show them.
-func requireAdmin(w http.ResponseWriter, access chatAccess) bool {
-	if access.Role != RoleAdmin {
-		writeJSONError(w, http.StatusForbidden, "not_admin", "only chat admins can change this")
+// currentRole rechecks Telegram membership instead of trusting the short-lived
+// read memo when a response contains private admin data.
+func (p *Panel) currentRole(w http.ResponseWriter, r *http.Request, access chatAccess, userID int64) (string, bool) {
+	member, err := p.bot.GetChatMemberWithContext(r.Context(), access.ChatID, userID, nil)
+	if err != nil {
+		writeJSONError(w, http.StatusBadGateway, "telegram_error", "Telegram could not return this member: "+err.Error())
+		return "", false
+	}
+	role, ok := memberRole(member)
+	if !ok {
+		writeJSONError(w, http.StatusForbidden, "not_member", "you are no longer a member of this chat")
+		return "", false
+	}
+	return role, true
+}
+
+// requireAdmin protects data that identifies who warned, banned or muted whom.
+// The caller's current Telegram role is checked on every request.
+func (p *Panel) requireAdmin(w http.ResponseWriter, r *http.Request, access chatAccess, userID int64) bool {
+	role, ok := p.currentRole(w, r, access, userID)
+	if !ok {
+		return false
+	}
+	if role != RoleAdmin {
+		writeJSONError(w, http.StatusForbidden, "not_admin", "only current chat admins can view this")
 		return false
 	}
 	return true
