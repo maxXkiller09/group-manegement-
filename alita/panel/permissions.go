@@ -13,7 +13,7 @@ import (
 // write.
 type permission int
 
-const permNone permission = 0 // admin only, as requireWritable already checks
+const permNone permission = 0 // admin-only write; requirePermission checks current roles
 
 const (
 	permChangeInfo  permission = 1 << iota // caller can_change_info (creator always has it)
