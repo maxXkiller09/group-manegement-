@@ -91,7 +91,7 @@ func parseOverviewDays(raw string) (int, bool) {
 // how many moderation actions it recorded, and the five most recent actions.
 // Every chat member with access may read it; nothing here is writable.
 func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
-	_, access, ok := p.chatRequest(w, r)
+	session, access, ok := p.chatRequest(w, r)
 	if !ok {
 		return
 	}
@@ -174,7 +174,15 @@ func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
 		Recent:          recent,
 	}
 	if access.Role == RoleAdmin {
-		response.Names = userNames(r.Context(), ids)
+		role, roleOK := p.currentRole(w, r, access, session.User.ID)
+		if !roleOK {
+			return
+		}
+		if role == RoleAdmin {
+			response.Names = userNames(r.Context(), ids)
+		} else {
+			recent = nil
+		}
 	}
 	writeJSON(w, http.StatusOK, response)
 }
