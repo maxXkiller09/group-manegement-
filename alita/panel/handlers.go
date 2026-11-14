@@ -167,7 +167,8 @@ func (p *Panel) requireAdmin(w http.ResponseWriter, r *http.Request, access chat
 // can act in the chat. Most reads never call it: a non-admin, or a chat where
 // the bot lost its rights, still sees values read-only.
 func requireWritable(w http.ResponseWriter, access chatAccess) bool {
-	if !requireAdmin(w, access) {
+	if access.Role != RoleAdmin {
+		writeJSONError(w, http.StatusForbidden, "not_admin", "only chat admins can change this")
 		return false
 	}
 	if !access.BotAdmin {
