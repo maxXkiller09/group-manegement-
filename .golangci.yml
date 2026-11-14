@@ -94,4 +94,5 @@ formatters:
       sections:
         - standard
         - default
-        - prefix(github.com/divkix/Alita_Robot)
+        - localmodule
+      custom-order: true
