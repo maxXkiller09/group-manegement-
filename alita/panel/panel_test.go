@@ -461,6 +461,48 @@ func TestChatReturnsAdminRoleAndBotAdmin(t *testing.T) {
 	}
 }
 
+func TestPanelWriteRechecksCallerAdminRoleAfterMemo(t *testing.T) {
+	fixture := newPanelFixture(t)
+	chatID := uniquePanelChatID()
+	const userID int64 = 279058397
+	fixture.client.statuses[userID] = "administrator"
+
+	access, err := fixture.panel.accessChat(context.Background(), userID, chatID)
+	if err != nil || access.Role != RoleAdmin {
+		t.Fatalf("initial access = %+v, err %v; want admin", access, err)
+	}
+
+	// The caller is demoted after the read access result has been memoised.
+	fixture.client.statuses[userID] = "member"
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPatch, "/panel/api/v1/chats/"+strconv.FormatInt(chatID, 10)+"/settings", nil)
+	if fixture.panel.requirePermission(recorder, request, access, userID, permNone) {
+		t.Fatal("write permission remained granted after caller demotion")
+	}
+	requireAPIError(t, recorder, http.StatusForbidden, "not_admin")
+}
+
+func TestPanelWriteRechecksBotAdminRoleAfterMemo(t *testing.T) {
+	fixture := newPanelFixture(t)
+	chatID := uniquePanelChatID()
+	const userID int64 = 279058397
+	fixture.client.statuses[userID] = "administrator"
+
+	access, err := fixture.panel.accessChat(context.Background(), userID, chatID)
+	if err != nil || !access.BotAdmin {
+		t.Fatalf("initial access = %+v, err %v; want bot admin", access, err)
+	}
+
+	// The bot loses admin rights after the read access result was memoised.
+	fixture.client.statuses[999] = "member"
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodDelete, "/panel/api/v1/chats/"+strconv.FormatInt(chatID, 10)+"/warnings", nil)
+	if fixture.panel.requirePermission(recorder, request, access, userID, permNone) {
+		t.Fatal("write permission remained granted after bot demotion")
+	}
+	requireAPIError(t, recorder, http.StatusConflict, "bot_not_admin")
+}
+
 func TestChatMemberIsReadonly(t *testing.T) {
 	fixture := newPanelFixture(t)
 	chatID := uniquePanelChatID()
