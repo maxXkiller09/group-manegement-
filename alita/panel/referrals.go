@@ -54,15 +54,15 @@ func (p *Panel) handleReferrals(w http.ResponseWriter, r *http.Request) {
 	for _, row := range rows {
 		response.Links = append(response.Links, referralLinkItem{
 			InviteLink: row.InviteLink,
-			InviterID: row.InviterID,
-			Joined: row.Joined,
+			InviterID:  row.InviterID,
+			Joined:     row.Joined,
 		})
 		response.Total += row.Joined
 	}
 	for _, row := range leaders {
 		response.Leaderboard = append(response.Leaderboard, referralLeaderItem{
 			InviterID: row.InviterID,
-			Joined: row.Joined,
+			Joined:    row.Joined,
 		})
 	}
 	writeJSON(w, http.StatusOK, response)
