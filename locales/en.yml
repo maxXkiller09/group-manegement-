@@ -827,6 +827,8 @@ misc_help_msg:
 
   × /ud <term>: Look up Urban Dictionary.
 
+  × /referral: Create tracked invite links and view referral stats (admin, groups only).
+
   × /runs: A random quip."
 mutes_help_msg:
   "Sometimes users can be annoying and you might want to restrict them
