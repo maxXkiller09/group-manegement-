@@ -244,10 +244,6 @@ func (p *Panel) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if !requireWritable(w, access) {
-		return
-	}
-
 	var body settingsPatchRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSONError(w, http.StatusBadRequest, "invalid_body", "request body must be a JSON object with a changes map")
