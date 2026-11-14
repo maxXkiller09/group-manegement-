@@ -91,7 +91,11 @@ func parseOverviewDays(raw string) (int, bool) {
 // how many moderation actions it recorded, and the five most recent actions.
 // Every chat member with access may read it; nothing here is writable.
 func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
-	_, access, ok := p.chatRequest(w, r)
+	session, access, ok := p.chatRequest(w, r)
+	if !ok {
+		return
+	}
+	role, ok := p.currentRole(w, r, access, session.User.ID)
 	if !ok {
 		return
 	}
@@ -144,7 +148,7 @@ func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
 	// aggregate moderation count above.
 	recent := make([]overviewEvent, 0)
 	ids := make([]int64, 0)
-	if access.Role == RoleAdmin {
+	if role == RoleAdmin {
 		recentRows, err := moderation.ListForChat(access.ChatID, time.Time{}, overviewRecentLimit)
 		if err != nil {
 			log.WithError(err).Error("[Panel] Failed to list recent moderation events")
