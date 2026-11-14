@@ -142,3 +142,24 @@ func TestBackupRateLimiter_AcquireImport_AfterCooldown(t *testing.T) {
 		t.Errorf("expected remaining=0 after cooldown, got %v", remaining)
 	}
 }
+
+func TestBackupRateLimiter_AcquireReferralCreateIsPerMemberAndChat(t *testing.T) {
+	cache.SetupTestMemoryMarshaler(t)
+	limiter := &BackupRateLimiter{}
+	const chatID = int64(-100123)
+	const userID = int64(456)
+
+	allowed, remaining := limiter.AcquireReferralCreate(chatID, userID)
+	if !allowed || remaining != 0 {
+		t.Fatalf("first referral reservation = %v, %v; want true, 0", allowed, remaining)
+	}
+	if allowed, remaining = limiter.AcquireReferralCreate(chatID, userID); allowed || remaining <= 0 || remaining > DefaultReferralCreateCooldown {
+		t.Fatalf("duplicate referral reservation = %v, %v; want blocked with cooldown", allowed, remaining)
+	}
+	if allowed, remaining = limiter.AcquireReferralCreate(chatID, userID+1); !allowed || remaining != 0 {
+		t.Fatalf("different member reservation = %v, %v; want true, 0", allowed, remaining)
+	}
+	if allowed, remaining = limiter.AcquireReferralCreate(chatID-1, userID); !allowed || remaining != 0 {
+		t.Fatalf("different chat reservation = %v, %v; want true, 0", allowed, remaining)
+	}
+}

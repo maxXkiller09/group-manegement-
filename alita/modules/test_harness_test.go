@@ -565,6 +565,8 @@ func TestMain(m *testing.M) {
 		&models.ProbationSettings{},
 		&models.ProbationMember{},
 		&models.RecurringMessage{},
+		&models.ChatInviteLink{},
+		&models.ChatInviteAttribution{},
 		&models.NightModeSettings{},
 		&models.SpamSample{},
 		&models.SpamFilterSettings{},
