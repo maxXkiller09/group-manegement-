@@ -48,7 +48,7 @@ func (p *Panel) handleReferrals(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := referralDashboardResponse{
-		Links: make([]referralLinkItem, 0, len(rows)),
+		Links:       make([]referralLinkItem, 0, len(rows)),
 		Leaderboard: make([]referralLeaderItem, 0, len(leaders)),
 	}
 	for _, row := range rows {
