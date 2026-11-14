@@ -3159,6 +3159,7 @@ misc_extend_msg: |
   /github — look up a GitHub user or repo
   /wiki — search Wikipedia
   /ud — look up Urban Dictionary
+  /referral — create tracked invite links and view referral stats
   /runs — a random quip
 mutes_extend_msg: |
   /mute — mute a user
