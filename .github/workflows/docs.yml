@@ -75,15 +75,19 @@ jobs:
         run: bun run build
 
       - name: Install wrangler v4
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
         run: |
           bun install wrangler@4
 
       - name: Deploy to Cloudflare Workers
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != ''
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: docs
           command: deploy
+
+      - name: Skip Cloudflare deploy when credentials are unavailable
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (secrets.CLOUDFLARE_API_TOKEN == '' || secrets.CLOUDFLARE_ACCOUNT_ID == '')
+        run: echo "Documentation build passed; Cloudflare deploy skipped because repository deployment secrets are not configured."
