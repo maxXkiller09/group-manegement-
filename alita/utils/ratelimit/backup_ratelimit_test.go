@@ -163,3 +163,23 @@ func TestBackupRateLimiter_AcquireReferralCreateIsPerMemberAndChat(t *testing.T)
 		t.Fatalf("different chat reservation = %v, %v; want true, 0", allowed, remaining)
 	}
 }
+
+func TestBackupRateLimiter_ReleaseReferralCreateAllowsRetry(t *testing.T) {
+	cache.SetupTestMemoryMarshaler(t)
+	limiter := &BackupRateLimiter{}
+	const chatID = int64(-100124)
+	const userID = int64(457)
+
+	if allowed, _ := limiter.AcquireReferralCreate(chatID, userID); !allowed {
+		t.Fatal("first referral reservation should be allowed")
+	}
+	if allowed, _ := limiter.AcquireReferralCreate(chatID, userID); allowed {
+		t.Fatal("second referral reservation should be blocked")
+	}
+	if err := limiter.ReleaseReferralCreate(chatID, userID); err != nil {
+		t.Fatalf("release referral reservation: %v", err)
+	}
+	if allowed, remaining := limiter.AcquireReferralCreate(chatID, userID); !allowed || remaining != 0 {
+		t.Fatalf("retry after release = %v, %v; want true, 0", allowed, remaining)
+	}
+}

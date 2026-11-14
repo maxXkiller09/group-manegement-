@@ -55,6 +55,19 @@ func (r *BackupRateLimiter) AcquireReferralCreate(chatID, userID int64) (bool, t
 	return r.acquireOperation(key, DefaultReferralCreateCooldown)
 }
 
+// ReleaseReferralCreate releases a reservation when Telegram or persistence
+// fails before a tracked invite link can be delivered.
+func (r *BackupRateLimiter) ReleaseReferralCreate(chatID, userID int64) error {
+	key := referralCreateRatePrefix + strconv.FormatInt(chatID, 10) + ":" + strconv.FormatInt(userID, 10)
+	if client := cache.GetRedisClient(); client != nil {
+		return client.Del(cache.Context, key).Err()
+	}
+	if m := cache.GetMarshal(); m != nil {
+		return m.Delete(context.Background(), key)
+	}
+	return nil
+}
+
 func (r *BackupRateLimiter) acquireOperation(cacheKey string, cooldown time.Duration) (bool, time.Duration) {
 	if client := cache.GetRedisClient(); client != nil {
 		acquired, err := client.SetNX(cache.Context, cacheKey, time.Now().Unix(), cooldown).Result()
