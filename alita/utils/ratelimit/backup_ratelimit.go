@@ -24,16 +24,16 @@ func GetBackupRateLimiter() *BackupRateLimiter {
 }
 
 const (
-	exportRatePrefix = "backup:export:"
-	importRatePrefix = "backup:import:"
-	resetRatePrefix  = "backup:reset:"
+	exportRatePrefix         = "backup:export:"
+	importRatePrefix         = "backup:import:"
+	resetRatePrefix          = "backup:reset:"
 	referralCreateRatePrefix = "referral:create:"
 )
 
 const (
-	DefaultExportCooldown = 5 * time.Minute
-	DefaultImportCooldown = 10 * time.Minute
-	DefaultResetCooldown  = 1 * time.Hour
+	DefaultExportCooldown         = 5 * time.Minute
+	DefaultImportCooldown         = 10 * time.Minute
+	DefaultResetCooldown          = 1 * time.Hour
 	DefaultReferralCreateCooldown = 1 * time.Hour
 )
 
