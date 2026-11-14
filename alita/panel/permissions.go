@@ -60,12 +60,13 @@ func settingsPermission(changes map[string]any) permission {
 // access memo is intentionally short-lived, but a recent demotion or bot
 // permission change must never leave a stale write authorization in place.
 func (p *Panel) requirePermission(w http.ResponseWriter, r *http.Request, access chatAccess, userID int64, perm permission) bool {
-	if !p.requireAdmin(w, r, access, userID) {
-		return false
-	}
 	caller, err := p.bot.GetChatMemberWithContext(r.Context(), access.ChatID, userID, nil)
 	if err != nil {
 		writeJSONError(w, http.StatusBadGateway, "telegram_error", "Telegram could not return this member: "+err.Error())
+		return false
+	}
+	if role, member := memberRole(caller); !member || role != RoleAdmin {
+		writeJSONError(w, http.StatusForbidden, "not_admin", "only current chat admins can change this")
 		return false
 	}
 
