@@ -97,7 +97,7 @@ func trackJoin(chatID, userID int64) (count int, err error) {
 	}
 	now := time.Now().Unix()
 	ctx := cache.Context
-	member := fmt.Sprintf("%d:%d:%d", userID, now, time.Now().UnixNano())
+	member := strconv.FormatInt(userID, 10)
 	window := antiraidJoinWindowSeconds
 	cutoff := now - int64(antiraidJoinWindowSeconds)
 	res, err := trackJoinScript.Run(ctx, rdb, []string{joinsKey(chatID)}, now, member, window, cutoff).Int()
