@@ -95,9 +95,12 @@ func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	role, ok := p.currentRole(w, r, access, session.User.ID)
-	if !ok {
-		return
+	role := access.Role
+	if role == RoleAdmin {
+		role, ok = p.currentRole(w, r, access, session.User.ID)
+		if !ok {
+			return
+		}
 	}
 	days, ok := parseOverviewDays(r.URL.Query().Get("days"))
 	if !ok {
