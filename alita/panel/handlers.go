@@ -163,7 +163,6 @@ func (p *Panel) requireAdmin(w http.ResponseWriter, r *http.Request, access chat
 	return true
 }
 
-
 // parsePageLimit reads a ?limit= query value: def when absent, capped at max,
 // and a 400 for anything that is not a positive integer.
 func parsePageLimit(w http.ResponseWriter, raw string, def, max int) (int, bool) {
