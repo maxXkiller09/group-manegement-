@@ -32,12 +32,27 @@ function draw(root, data) {
 	root.append(summary);
 
 	root.append(section("Tracked invite links", Array.isArray(data.links) ? data.links : [], "No tracked invite joins yet. Create links with /referral create in the group.", (item, row) => {
-		const anchor = document.createElement("a");
-		anchor.href = String(row.invite_link ?? "");
-		anchor.target = "_blank";
-		anchor.rel = "noopener noreferrer";
-		anchor.textContent = "Open invite link";
-		item.append(anchor, textElement("span", `Inviter ${row.inviter_id} · ${row.joined} unique joins`, "event-parties"));
+		const inviteURL = String(row.invite_link ?? "");
+		let safeInviteURL = "";
+		try {
+			const parsed = new URL(inviteURL);
+			if (parsed.protocol === "https:" && parsed.hostname === "t.me") {
+				safeInviteURL = parsed.href;
+			}
+		} catch {
+			// A malformed stored value is shown as text, never made clickable.
+		}
+		if (safeInviteURL) {
+			const anchor = document.createElement("a");
+			anchor.href = safeInviteURL;
+			anchor.target = "_blank";
+			anchor.rel = "noopener noreferrer";
+			anchor.textContent = "Open invite link";
+			item.append(anchor);
+		} else {
+			item.append(textElement("span", "Invalid invite link"));
+		}
+		item.append(textElement("span", `Inviter ${row.inviter_id} · ${row.joined} unique joins`, "event-parties"));
 	}));
 
 	root.append(section("Top inviters", Array.isArray(data.leaderboard) ? data.leaderboard : [], "No attributed inviters yet.", (item, row) => {
