@@ -184,7 +184,7 @@ func (p *Panel) handleOverview(w http.ResponseWriter, r *http.Request) {
 		ModerationCount: moderationCount,
 		Recent:          recent,
 	}
-	if access.Role == RoleAdmin {
+	if role == RoleAdmin {
 		response.Names = userNames(r.Context(), ids)
 	}
 	writeJSON(w, http.StatusOK, response)
