@@ -46,3 +46,42 @@ func TestSettingsPatchCreatorSkipsRights(t *testing.T) {
 		t.Fatal("creator greeting write did not apply")
 	}
 }
+
+
+// A role cached by the initial chat lookup must not authorize a later write
+// after Telegram has revoked the user's administrator status.
+func TestSettingsPatchRechecksDemotedAdminBeforeWrite(t *testing.T) {
+	fixture, chatID := newSettingsFixture(t)
+	raw := readFixture(t, "initdata_main.txt")
+
+	if recorder := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), raw, "", ""); recorder.Code != http.StatusOK {
+		t.Fatalf("initial settings GET status = %d", recorder.Code)
+	}
+	fixture.client.statuses[settingsFixtureUserID] = "member"
+
+	recorder := panelRequest(t, fixture.handler, http.MethodPatch, settingsPath(chatID), raw,
+		`{"changes":{"greetings.welcome_enabled":false}}`, "application/json")
+	requireAPIError(t, recorder, http.StatusForbidden, "not_admin")
+	if count := countChatRows(t, &models.GreetingSettings{}, chatID); count != 0 {
+		t.Fatalf("demoted admin write created %d greeting rows", count)
+	}
+}
+
+// Bot admin status is also rechecked: a cached positive result cannot authorize
+// a settings write after the bot loses administrator rights.
+func TestSettingsPatchRechecksDemotedBotBeforeWrite(t *testing.T) {
+	fixture, chatID := newSettingsFixture(t)
+	raw := readFixture(t, "initdata_main.txt")
+
+	if recorder := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), raw, "", ""); recorder.Code != http.StatusOK {
+		t.Fatalf("initial settings GET status = %d", recorder.Code)
+	}
+	fixture.client.statuses[999] = "member"
+
+	recorder := panelRequest(t, fixture.handler, http.MethodPatch, settingsPath(chatID), raw,
+		`{"changes":{"greetings.welcome_enabled":false}}`, "application/json")
+	requireAPIError(t, recorder, http.StatusConflict, "bot_not_admin")
+	if count := countChatRows(t, &models.GreetingSettings{}, chatID); count != 0 {
+		t.Fatalf("write with demoted bot created %d greeting rows", count)
+	}
+}
