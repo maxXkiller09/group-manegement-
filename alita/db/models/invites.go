@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 // ChatInviteLink stores a bot-managed invite link for one Telegram chat.
 // The invite URL is the primary key because Telegram returns it as the
