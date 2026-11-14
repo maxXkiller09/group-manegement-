@@ -31,7 +31,6 @@ func TestSettingsPatchPermissionRefusalWritesNothing(t *testing.T) {
 	}
 }
 
-
 func TestWriteRechecksAdminAfterAccessMemo(t *testing.T) {
 	fixture, chatID := newSettingsFixture(t)
 	raw := readFixture(t, "initdata_main.txt")
