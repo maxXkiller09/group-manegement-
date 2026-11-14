@@ -5,6 +5,7 @@ import { renderOverview } from "./screens/overview.js";
 import { renderSettings } from "./screens/settings.js";
 import { renderTimeline } from "./screens/timeline.js";
 import { renderWarnings } from "./screens/warnings.js";
+import { renderReferrals } from "./screens/referrals.js";
 
 // Dashboard screens of one chat. Each screen module adds one entry
 // ({ key, label, description, render(root, chatID, chat) }); the chat screen
