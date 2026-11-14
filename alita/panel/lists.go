@@ -94,7 +94,7 @@ type listImportRequest struct {
 // admins, matching /get.
 func (p *Panel) handleListGet(kind listKind) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, access, ok := p.chatRequest(w, r)
+		session, access, ok := p.chatRequest(w, r)
 		if !ok {
 			return
 		}
@@ -102,7 +102,14 @@ func (p *Panel) handleListGet(kind listKind) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		admin := access.Role == RoleAdmin
+		admin := false
+		if kind == listNotes && access.Role == RoleAdmin {
+			role, roleOK := p.currentRole(w, r, access, session.User.ID)
+			if !roleOK {
+				return
+			}
+			admin = role == RoleAdmin
+		}
 
 		if r.URL.Query().Get("format") == "text" {
 			body, contentType, filename, err := exportList(r.Context(), kind, access.ChatID, query, admin)
