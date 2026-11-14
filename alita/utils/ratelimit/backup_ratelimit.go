@@ -49,7 +49,7 @@ func (r *BackupRateLimiter) AcquireReset(chatID int64) (bool, time.Duration) {
 	return r.acquireOperation(resetRatePrefix+strconv.FormatInt(chatID, 10), DefaultResetCooldown)
 }
 
-// AcquireReferralCreate limits each member to one tracked invite link per chat every ten minutes.
+// AcquireReferralCreate limits each member to one tracked invite link per chat every hour.
 func (r *BackupRateLimiter) AcquireReferralCreate(chatID, userID int64) (bool, time.Duration) {
 	key := referralCreateRatePrefix + strconv.FormatInt(chatID, 10) + ":" + strconv.FormatInt(userID, 10)
 	return r.acquireOperation(key, DefaultReferralCreateCooldown)
