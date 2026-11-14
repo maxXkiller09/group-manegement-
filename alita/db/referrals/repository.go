@@ -22,7 +22,7 @@ func SaveInviteLink(link models.ChatInviteLink) error {
 		return errors.New("invite link, chat ID and creator ID are required")
 	}
 	if err := db.DB.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "invite_link"}},
+		Columns:   []clause.Column{{Name: "invite_link"}},
 		DoUpdates: clause.AssignmentColumns([]string{"name", "revoked"}),
 	}).Create(&link).Error; err != nil {
 		return fmt.Errorf("save chat invite link: %w", err)
@@ -78,11 +78,17 @@ func ListLinkStats(chatID int64) ([]LinkStats, error) {
 // RecordManagedJoin attributes a membership update only when its invite URL was
 // created and stored by this bot for the same chat.
 func RecordManagedJoin(chatID, userID int64, inviteURL string, joinedAt time.Time) (bool, error) {
-	if db.DB == nil { return false, errors.New("database not initialized") }
-	if inviteURL == "" { return false, nil }
+	if db.DB == nil {
+		return false, errors.New("database not initialized")
+	}
+	if inviteURL == "" {
+		return false, nil
+	}
 	var link models.ChatInviteLink
 	if err := db.DB.Where("invite_link = ? AND chat_id = ? AND revoked = ?", inviteURL, chatID, false).First(&link).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) { return false, nil }
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
 		return false, fmt.Errorf("find managed chat invite link: %w", err)
 	}
 	return RecordJoin(chatID, userID, inviteURL, link.CreatorID, joinedAt)
