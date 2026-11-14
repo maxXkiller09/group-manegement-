@@ -188,11 +188,11 @@ func (p *Panel) handleGrowth(w http.ResponseWriter, r *http.Request) {
 // handleTopMembers ranks the chat's most active users in the window. It names
 // users, so it is admin-only like the timeline.
 func (p *Panel) handleTopMembers(w http.ResponseWriter, r *http.Request) {
-	_, access, ok := p.chatRequest(w, r)
+	session, access, ok := p.chatRequest(w, r)
 	if !ok {
 		return
 	}
-	if !requireAdmin(w, access) {
+	if !p.requireAdmin(w, r, access, session.User.ID) {
 		return
 	}
 	days, from, to, ok := p.analyticsWindow(w, r)
