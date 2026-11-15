@@ -13,7 +13,7 @@ import (
 )
 
 // docsAddToGroupUsername is the public bot the docs tell admins to add.
-const docsAddToGroupUsername = "Alita_Robot"
+const docsAddToGroupUsername = "NexGuardd_Bot"
 
 // docsAddToGroupPages hardcode the add-to-group URL because MDX cannot call Go.
 // TestDocsAddToGroupLinksMatchHelper keeps those copies equal to the helper.

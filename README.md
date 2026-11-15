@@ -1,12 +1,21 @@
 # NexGuard 🛡️
 
+<p align="center">
+  <img src="docs/public/nexguard-logo.svg" alt="NexGuard shield logo" width="180">
+</p>
+
+<p align="center"><strong>Smart Protection. Better Communities.</strong></p>
+
+<p align="center">
+  <a href="https://t.me/NexGuardd_Bot">Open NexGuard on Telegram</a> ·
+  <a href="docs/">Documentation</a>
+</p>
+
 <p align='center'>
   <a href="https://github.com/maxXkiller09/group-manegement-/actions/workflows/ci.yml"><img src="https://github.com/maxXkiller09/group-manegement-/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
 **NexGuard** is a Telegram group-management bot for **[@NexGuardd_Bot](https://t.me/NexGuardd_Bot)**, built with Go and gotgbot. It helps communities stay safer and better organized with moderation tools, filters, notes, greetings, anti-spam protection, CAPTCHA verification, backups, group analytics, and a Telegram Mini App dashboard.
-
-**Tagline:** Smart Protection. Better Communities.
 
 ## Quick Start
 
@@ -43,7 +52,3 @@ make test
 NexGuard is maintained in this repository and builds on the upstream Alita Robot project. The upstream project and its contributors retain their original attribution.
 
 [MIT](LICENSE) © 2020-2026 Divkix and contributors.
-
-<p align="center">
-  <a href="https://t.me/NexGuardd_Bot">Open NexGuard</a>
-</p>
