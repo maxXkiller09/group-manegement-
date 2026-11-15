@@ -16,8 +16,8 @@ import (
 const maxActionReasonRunes = 3000
 
 type directActionRequest struct {
-	Action    string `json:"action"`
-	TargetID  int64  `json:"target_user_id"`
+	Action          string `json:"action"`
+	TargetID        int64  `json:"target_user_id"`
 	Reason          string `json:"reason"`
 	DurationSeconds int64  `json:"duration_seconds"`
 	Confirmed       bool   `json:"confirmed"`
