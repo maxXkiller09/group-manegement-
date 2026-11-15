@@ -124,7 +124,9 @@ func (s *Server) RegisterHealth() {
 		w.Header().Set("Content-Type", "application/json")
 
 		dbHealthy := checkDatabase()
-		redisHealthy := checkRedis()
+		// Redis is an optional cache when DISABLE_CACHE=true; do not fail the
+		// service health check for a dependency the operator explicitly disabled.
+		redisHealthy := config.AppConfig.DisableCache || checkRedis()
 
 		status := HealthStatus{
 			Status: "healthy",
