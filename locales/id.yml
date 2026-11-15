@@ -727,7 +727,7 @@ languages_help_msg: "Tidak dapat mengubah bahasa bot?
   × /lang: Ubah bahasa bot untuk Anda atau grup.
 
 
-  Anda dapat membantu kami membawa bot ke lebih banyak bahasa dengan membantu di [Crowdin](https://crowdin.com/project/alita_robot)"
+  Anda dapat berkontribusi menerjemahkan melalui repositori NexGuard."
 locks_help_msg: "*Admin saja*:
 
   × /lock `<tipe> [tipe ...]`: Kunci satu atau lebih tipe kunci (lihat /locktypes).
