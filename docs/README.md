@@ -1,6 +1,6 @@
-# Alita Robot Documentation
+# NexGuard Documentation
 
-This is the documentation website for [Alita Robot](https://github.com/divkix/Alita_Robot), a modern Telegram group management bot built with Go.
+This is the documentation website for NexGuard, a Telegram group management bot built with Go. NexGuard is maintained in this repository and builds on the open-source Alita Robot project; see the upstream attribution below.
 
 Built with [Blume](https://useblume.dev/) — a fast, AI-ready, markdown-first documentation framework.
 
@@ -65,6 +65,6 @@ See the main [README](../README.md) for full contribution guidelines.
 
 ## Links
 
-- [Alita Robot Repository](https://github.com/divkix/Alita_Robot)
-- [Live Documentation](https://alita-docs.divkix.me)
-- [Support Group](https://t.me/DivideSupport)
+- [NexGuard Repository](https://github.com/maxXkiller09/group-manegement-)
+- [Open NexGuard on Telegram](https://t.me/NexGuardd_Bot)
+- [Upstream Alita Robot project](https://github.com/divkix/Alita_Robot) (original project attribution)
