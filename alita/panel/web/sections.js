@@ -6,12 +6,14 @@ import { renderSettings } from "./screens/settings.js";
 import { renderTimeline } from "./screens/timeline.js";
 import { renderWarnings } from "./screens/warnings.js";
 import { renderReferrals } from "./screens/referrals.js";
+import { renderCommands } from "./screens/commands.js";
 
 // Dashboard screens of one chat. Each screen module adds one entry
 // ({ key, label, description, render(root, chatID, chat) }); the chat screen
 // links to them and the router renders them at #/chats/<id>/<key>.
 export const sections = [
 	{ key: "overview", label: "Overview", description: "Activity, members and recent moderation", render: renderOverview },
+	{ key: "commands", label: "Command Center", description: "Commands aur unka kaam Hinglish mein", render: renderCommands },
 	{ key: "activity", label: "Activity", description: "Busiest hours and member growth", render: renderActivity },
 	{ key: "settings", label: "Settings", description: "Greetings, captcha, antiflood, locks and more", render: renderSettings },
 	{ key: "filters", label: "Filters", description: "Automatic replies to keywords", render: renderFilters },
