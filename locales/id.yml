@@ -632,7 +632,7 @@ greetings_help_msg:
 help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur.
 
 
-  NexGuard 🛡️ dikembangkan dan dikelola secara aktif oleh @DivideProjects!
+  
 
 
   NexGuard telah online sejak 2020 dan telah melayani ribuan grup dengan ratusan
@@ -645,7 +645,7 @@ help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur
 
   - Fitur Lengkap: Banyak fitur yang tidak dimiliki bot manajemen grup lain.
 
-  - Cepat: Tebak apa? Ini tidak dibuat menggunakan Python, kami menggunakan <a href='https://go.dev/'>Go</a>
+  - Cepat: Tebak apa? Ini tidak dibuat menggunakan Python, kami menggunakan Go
   sebagai bahasa pemrograman inti kami.
 
 
@@ -932,7 +932,7 @@ rules_help_msg:
   × /resetrulesbutton: Atur ulang teks tombol aturan ke default.
 
   × /resetrulesbtn: Sama seperti di atas."
-bot_updates_creators_plug: "\nIkuti @DivideProjects untuk bot yang lebih berguna dari kreator saya."
+bot_updates_creators_plug: ""
 bot_updates_make_me_admin: "\n\nJadikan saya admin agar semua fitur saya bisa digunakan!"
 warns_help_msg:
   "Jaga anggota Anda dengan peringatan; hentikan mereka keluar dari
