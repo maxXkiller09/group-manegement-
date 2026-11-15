@@ -1,4 +1,5 @@
-import { clear, textElement } from "../ui.js";
+import { api } from "../api.js";
+import { clear, loading, showError, textElement } from "../ui.js";
 
 function tile(title, description, href, symbol) {
   const link = document.createElement("a");
@@ -13,14 +14,50 @@ function tile(title, description, href, symbol) {
   return link;
 }
 
-export function renderHome(root, mode = "home") {
+function groupLink(chat, label, description, section = "activity") {
+  return tile(chat.title || "Telegram group", description, `#/chats/${encodeURIComponent(chat.id)}/${section}`, "▦");
+}
+
+async function loadSession(root, retry) {
+  clear(root);
+  root.append(loading("Loading your Telegram account…"));
+  try { return await api("session", { method: "POST" }); }
+  catch (error) { showError(root, error, retry); return null; }
+}
+
+export async function renderHome(root, mode = "home") {
   clear(root);
   if (mode === "account") {
-    root.append(textElement("h2", "Account", "home-heading"), textElement("p", "Your profile and access settings.", "home-welcome"), tile("My Groups", "Manage your Telegram groups", "#/groups", "▦"));
+    const data = await loadSession(root, () => void renderHome(root, mode));
+    if (!data) return;
+    clear(root);
+    const user = data.user || {};
+    const name = [user.first_name, user.last_name].filter(Boolean).join(" ") || "Telegram user";
+    root.append(textElement("h2", "Your account", "home-heading"), textElement("p", "This profile comes from your verified Telegram account.", "home-welcome"));
+    const card = document.createElement("section");
+    card.className = "callout account-profile";
+    card.append(textElement("span", "TELEGRAM PROFILE", "guide-eyebrow"), textElement("h3", name, "account-name"));
+    if (user.username) card.append(textElement("p", `@${user.username}`, "account-detail"));
+    card.append(textElement("p", `Telegram ID: ${user.id}`, "account-detail"));
+    if (user.language_code) card.append(textElement("p", `Language: ${user.language_code}`, "account-detail"));
+    card.append(textElement("p", `${(data.chats || []).length} connected group(s)`, "account-detail"));
+    root.append(card, textElement("p", "Your group permissions are checked again whenever you open or change a group setting.", "section-footer"), tile("My Groups", "Open your connected groups", "#/groups", "▦"));
     return;
   }
   if (mode === "activity") {
-    root.append(textElement("h2", "Inbox", "home-heading"), textElement("p", "Updates and recent group activity.", "home-welcome"), tile("Activity & Analytics", "View group activity and insights", "#/groups/activity", "▤"));
+    const data = await loadSession(root, () => void renderHome(root, mode));
+    if (!data) return;
+    clear(root);
+    root.append(textElement("h2", "Group updates", "home-heading"), textElement("p", "Choose a group to see its recent activity and insights.", "home-welcome"));
+    const chats = Array.isArray(data.chats) ? data.chats : [];
+    if (!chats.length) {
+      root.append(textElement("p", "Your connected groups will appear here after you add NexGuard to a group.", "empty"), tile("Connect a group", "Follow the simple setup steps", "#/groups", "＋"));
+      return;
+    }
+    const list = document.createElement("section");
+    list.className = "home-grid inbox-groups";
+    for (const chat of chats) list.append(groupLink(chat, "Activity & Analytics", "Open this group's updates and insights"));
+    root.append(list);
     return;
   }
 
@@ -33,11 +70,11 @@ export function renderHome(root, mode = "home") {
   grid.className = "home-grid";
   grid.setAttribute("aria-label", "NexGuard tools");
   grid.append(
-    tile("Security", "Keep your group safe", "#/groups/settings", "◈"),
-    tile("Moderation", "Manage member issues", "#/groups/warnings", "⚑"),
-    tile("Content Tools", "Filters and blocked words", "#/groups/filters", "▤"),
-    tile("Activity", "See group activity", "#/groups/activity", "▥"),
-    tile("All Commands", "Simple step-by-step guide", "#/groups/commands", "⌘"),
+    tile("Security", "Keep your group safe", "#/groups", "◈"),
+    tile("Moderation", "Manage member issues", "#/groups", "⚑"),
+    tile("Content Tools", "Filters and blocked words", "#/groups", "▤"),
+    tile("Activity", "See group activity", "#/groups", "▥"),
+    tile("All Commands", "Simple step-by-step guide", "#/groups", "⌘"),
   );
   root.append(grid, textElement("p", "You can come back here anytime. Your group settings stay in your dashboard.", "section-footer"));
 }
