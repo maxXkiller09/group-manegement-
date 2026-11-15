@@ -1160,7 +1160,7 @@ help_configuration_step-3: "Excellent !
 
 
   Si vous rencontrez des difficultés pour me configurer dans votre groupe, n'hésitez pas
-  à venir sur @DivideSupport.
+  à venir sur NexGuard support.
 
   Nous serons ravis de vous aider."
 help_donatetext: "Vous voulez faire un don ? Incroyable !
@@ -1212,7 +1212,7 @@ help_pm_intro: |
   - /help : Envoie ce message ; je vous en dirai plus sur moi-même !
   - /donate : Vous donne des infos sur comment me soutenir ainsi que mon créateur.
 
-  Si vous avez des bugs ou des questions sur comment m'utiliser, consultez mon <a href="https://alita-docs.divkix.me">site web</a>, ou rendez-vous sur @DivideSupport.
+  Si vous avez des bugs ou des questions sur comment m'utiliser, consultez mon <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">site web</a>, ou rendez-vous sur NexGuard support.
 
 # Misc module strings
 misc_help_msg:
