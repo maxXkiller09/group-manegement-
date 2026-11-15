@@ -1327,3 +1327,8 @@ body{background:var(--bg);padding-bottom:calc(92px + env(safe-area-inset-bottom)
 .group-tool-link{min-height:60px;padding:10px 13px;border:1px solid var(--separator);border-radius:14px;background:var(--card)}
 .group-tool-link .nav-title{font-size:14px}
 .group-tool-link .nav-subtitle{font-size:11px;line-height:1.35}
+
+.account-profile{display:flex;flex-direction:column;gap:7px;padding:16px;border-radius:16px}
+.account-name{margin:0;font-size:20px}
+.account-detail{margin:0;color:var(--subtitle);font-size:13px;overflow-wrap:anywhere}
+.inbox-groups{grid-template-columns:1fr;gap:8px}
