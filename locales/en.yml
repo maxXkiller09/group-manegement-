@@ -1672,7 +1672,7 @@ formatting_press_button: "Press the button below to get Markdown Help!"
 formatting_large_options: "NexGuard supports a large number of formatting options to make your messages more expressive. Take a look!"
 
 # Help module additional strings
-help_bot_intro: "Hey there! My name is NexGuard 🛡️.\nI'm here to help you manage your groups!\nHit /help to find out more about how to use me to my full potential.\n"
+help_bot_intro: "Hey there! My name is NexGuard 🛡️.\nI'm here to help you manage your groups!\nHit /help to find out more about how to use me to my full potential.\n\nSmart Protection. Better Communities."
 help_pm_intro: |
   Hey %s!
   My name is NexGuard 🛡️.
