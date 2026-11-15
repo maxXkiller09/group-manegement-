@@ -1119,7 +1119,7 @@ help_about: "@%s est l'un des gestionnaires de groupe les plus rapides et les pl
 
   - Complet : De nombreuses fonctionnalités que d'autres bots de gestion de groupe n'ont pas.
 
-  - Rapide : Devinez quoi ? Il n'est pas fait en Python, nous utilisons <a href='https://go.dev/'>Go</a>
+  - Rapide : Devinez quoi ? Il n'est pas fait en Python, nous utilisons Go
   comme langage de programmation principal.
 
 
@@ -1457,7 +1457,7 @@ reports_automute_applied: "{user} a été rendu muet jusqu'à ce qu'un admin exa
 mute_reply_to_dmute: Vous devez répondre à un message pour le supprimer et rendre l'utilisateur muet !
 
 # Bot updates module strings
-bot_updates_creators_plug: "\nSuivez @DivideProjects pour plus de bots utiles de mes créateurs."
+bot_updates_creators_plug: ""
 bot_updates_make_me_admin: "\n\nFaites-moi administrateur pour profiter de toutes mes fonctionnalités !"
 bot_updates_need_admin: Vous devez être admin pour faire cela !
 bot_updates_need_supergroup: "Désolé, mais pour utiliser toutes mes fonctionnalités, vous devez convertir ce groupe en supergroupe."
