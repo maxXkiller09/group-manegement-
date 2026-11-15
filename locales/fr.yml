@@ -1199,7 +1199,7 @@ help_markdown_help_button: "Aide Markdown"
 help_markdown_formatting_button: "Formatage Markdown"
 help_fillings_button: "Remplissages"
 help_random_content_button: "Contenu aléatoire"
-help_bot_intro: "Salut ! Je m'appelle NexGuard 🛡️.\nJe suis là pour vous aider à gérer vos groupes !\nTapez /help pour en savoir plus sur comment m'utiliser au maximum.\n"
+help_bot_intro: "Salut ! Je m'appelle NexGuard 🛡️.\nJe suis là pour vous aider à gérer vos groupes !\nTapez /help pour en savoir plus sur comment m'utiliser au maximum.\n\nSmart Protection. Better Communities."
 help_pm_intro: |
   Salut %s !
   Je m'appelle NexGuard 🛡️.
