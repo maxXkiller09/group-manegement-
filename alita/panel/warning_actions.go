@@ -19,13 +19,13 @@ type issueWarningRequest struct {
 }
 
 type issueWarningResponse struct {
-	Added       bool   `json:"added"`
-	UserID      int64  `json:"user_id"`
-	Warnings    int    `json:"warnings"`
-	WarnLimit   int    `json:"warn_limit"`
+	Added             bool   `json:"added"`
+	UserID            int64  `json:"user_id"`
+	Warnings          int    `json:"warnings"`
+	WarnLimit         int    `json:"warn_limit"`
 	LimitAction       string `json:"limit_action,omitempty"`
 	LimitActionFailed bool   `json:"limit_action_failed,omitempty"`
-	Message     string `json:"message"`
+	Message           string `json:"message"`
 }
 
 // handleIssueWarning follows the same persistence and warn-limit punishment
