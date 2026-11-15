@@ -688,7 +688,7 @@ help_about: "@%s  is one of the fastest and most feature-filled group managers.
 
   - Featured: Many features which other group management bots don't have.
 
-  - Fast: Guess what? It's not made using Python, we use <a href='https://go.dev/'>Go</a>
+  - Fast: Guess what? It's not made using Python, we use Go
   as our core programming language.
 
 
@@ -978,7 +978,7 @@ rules_help_msg:
   × /resetrulesbutton: Reset the text of the rules button to default.
 
   × /resetrulesbtn: Same as above."
-bot_updates_creators_plug: "\nFollow @DivideProjects for more useful bots from my creators."
+bot_updates_creators_plug: ""
 bot_updates_make_me_admin: "\n\nMake me admin to use me with my full abilities!"
 warns_help_msg:
   "Keep your members in check with warnings; stop them getting out of
