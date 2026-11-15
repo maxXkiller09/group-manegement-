@@ -105,9 +105,9 @@ func (p *Panel) handleDirectAction(w http.ResponseWriter, r *http.Request) {
 		})
 	case "unban":
 		result, err = punishment.Lift(r.Context(), p.bot, punishment.LiftRequest{
-			ChatID: access.ChatID,
-			Target: punishment.Target{ID: request.TargetID},
-			Mode: punishment.Ban,
+			ChatID:  access.ChatID,
+			Target:  punishment.Target{ID: request.TargetID},
+			Mode:    punishment.Ban,
 			ActorID: session.User.ID,
 		})
 	}
