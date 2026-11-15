@@ -1,3 +1,18 @@
+help_configuration_step-1: "Selamat datang di konfigurasi NexGuard. Tambahkan NexGuard 🛡️ ke grup menggunakan tombol di bawah, pilih grup Anda, lalu tekan Done untuk melanjutkan.\n\n"
+help_configuration_step-2: "Bagus! Agar berfungsi dengan benar, NexGuard memerlukan izin admin di grup Anda. Buka pengaturan grup, pilih Administrator, tambahkan @%s, lalu konfirmasi izinnya.\n\n"
+help_configuration_step-3: "Sempurna! NexGuard siap digunakan. Semua perintah dimulai dengan /. Jika perlu bantuan pengaturan, hubungi dukungan NexGuard.\n\n"
+help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
+
+  Ketika Anda berdonasi, semua dana masuk ke pengembangan saya yang membuat cepat dan
+  responsif.
+
+  Donasi Anda mungkin juga memberi saya fitur baru, yang tidak dapat saya dapatkan
+  karena keterbatasan server.
+
+  Semua dana akan dimasukkan ke layanan saya seperti database, penyimpanan, dan hosting!
+
+  Anda dapat berdonasi dengan menghubungi pemilik saya di sini: @DivideProjectsBot"
+
 language_flag: "🇮🇩"
 language_name: "Bahasa Indonesia"
 admin_adminlist: "Admin di <b>%s</b>:"
@@ -636,7 +651,7 @@ help_configuration_step-1: "Selamat datang di Konfigurasi Alita
   Hal pertama yang harus dilakukan adalah menambahkan Alita ✨ ke grup Anda! Untuk melakukan itu, tekan
   tombol di bawah dan pilih grup Anda, lalu tekan Selesai untuk melanjutkan tutorial."
 
-undefined "Jadi Anda ingin donasi? Luar biasa!
+
 
   Ketika Anda berdonasi, semua dana masuk ke pengembangan saya yang membuat cepat dan
   responsif.
