@@ -1,8 +1,8 @@
 import { clear, textElement } from "../ui.js";
 
-function tile(title, description, href, symbol, className = "") {
+function tile(title, description, href, symbol) {
   const link = document.createElement("a");
-  link.className = `home-tile ${className}`.trim();
+  link.className = "home-tile";
   link.href = href;
   const icon = textElement("span", symbol, "home-tile-icon");
   icon.setAttribute("aria-hidden", "true");
@@ -16,28 +16,28 @@ function tile(title, description, href, symbol, className = "") {
 export function renderHome(root, mode = "home") {
   clear(root);
   if (mode === "account") {
-    root.append(textElement("p", "Your NexGuard account and access", "home-welcome"), textElement("h2", "Account", "home-heading"), tile("My Groups", "Manage the groups you administer", "#/groups", "▦"), textElement("p", "Your access is verified by Telegram for every group action.", "section-footer"));
+    root.append(textElement("h2", "Account", "home-heading"), textElement("p", "Your profile and access settings.", "home-welcome"), tile("My Groups", "Manage your Telegram groups", "#/groups", "▦"));
     return;
   }
   if (mode === "activity") {
-    root.append(textElement("p", "Your recent group activity", "home-welcome"), textElement("h2", "Inbox", "home-heading"), tile("Activity & Analytics", "Choose a group to view its activity and insights", "#/groups/activity", "▤"));
+    root.append(textElement("h2", "Inbox", "home-heading"), textElement("p", "Updates and recent group activity.", "home-welcome"), tile("Activity & Analytics", "View group activity and insights", "#/groups/activity", "▤"));
     return;
   }
-  const top = document.createElement("div");
-  top.className = "home-topline";
-  top.append(textElement("span", "NEXGUARD", "home-eyebrow"), textElement("span", "● SMART PROTECTION", "home-live-status"));
-  root.append(top, textElement("h2", "Your communities.\nUnder control.", "home-heading"), textElement("p", "Smart Protection. Better Communities.", "home-welcome"));
-  const hero = document.createElement("section");
-  hero.className = "home-hero";
-  hero.append(textElement("span", "🛡️", "home-shield"), textElement("h3", "Protect what you build", "home-hero-title"), textElement("p", "Manage security, members and conversations from one simple dashboard.", "home-hero-copy"), tile("Open My Groups", "View your connected communities", "#/groups", "▦", "home-primary-tile"));
-  root.append(hero, textElement("h3", "MANAGE YOUR WORKSPACE", "home-section-label"));
+
+  const intro = document.createElement("section");
+  intro.className = "home-intro";
+  intro.append(textElement("span", "🛡️", "home-shield"), textElement("h2", "Welcome to NexGuard", "home-heading"), textElement("p", "Manage and protect your Telegram groups in a few simple steps.", "home-welcome"), tile("My Groups", "Start here to connect and manage a group", "#/groups", "▦"));
+  root.append(intro, textElement("h3", "What would you like to do?", "home-section-label"));
+
   const grid = document.createElement("section");
   grid.className = "home-grid";
   grid.setAttribute("aria-label", "NexGuard tools");
-  grid.append(tile("Security", "Protection & filters", "#/groups/settings", "◈"), tile("Moderation", "Warnings & actions", "#/groups/warnings", "⚑"), tile("Content Tools", "Filters & blacklists", "#/groups/filters", "▤"), tile("Analytics", "Activity & insights", "#/groups/activity", "▥"), tile("Commands", "Guides & quick actions", "#/groups/commands", "⌘"));
-  root.append(grid);
-  const footer = document.createElement("section");
-  footer.className = "home-quick-actions";
-  footer.append(textElement("strong", "Need a quick start?", "home-quick-title"), textElement("span", "Add NexGuard to a group and open its dashboard to configure protection.", "home-quick-copy"), tile("Add to Telegram Group", "Start protecting a community", "https://t.me/NexGuardd_Bot?startgroup=true", "＋", "home-add-tile"));
-  root.append(footer);
+  grid.append(
+    tile("Security", "Keep your group safe", "#/groups/settings", "◈"),
+    tile("Moderation", "Manage member issues", "#/groups/warnings", "⚑"),
+    tile("Content Tools", "Filters and blocked words", "#/groups/filters", "▤"),
+    tile("Activity", "See group activity", "#/groups/activity", "▥"),
+    tile("All Commands", "Simple step-by-step guide", "#/groups/commands", "⌘"),
+  );
+  root.append(grid, textElement("p", "You can come back here anytime. Your group settings stay in your dashboard.", "section-footer"));
 }
