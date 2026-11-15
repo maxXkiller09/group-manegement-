@@ -64,7 +64,7 @@ export async function renderWarnings(root, chatID, chat) {
 			}
 			const approved = await confirmDestructive({
 				title: "Issue warning?",
-					message: `Warning for Telegram user ${userID}${reason.value.trim() ? `\\nReason: ${reason.value.trim()}` : ""}. The group's configured warn-limit action may also apply.`,
+					message: `Warning for Telegram user ${userID}${reason.value.trim() ? `\nReason: ${reason.value.trim()}` : ""}. The group's configured warn-limit action may also apply.`,
 				action: "Issue warning",
 			});
 			if (!approved) return;
