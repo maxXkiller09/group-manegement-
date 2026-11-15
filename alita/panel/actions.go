@@ -96,11 +96,11 @@ func (p *Panel) handleDirectAction(w http.ResponseWriter, r *http.Request) {
 	case "ban", "kick", "mute":
 		mode := punishment.Mode(request.Action)
 		result, err = punishment.Apply(r.Context(), p.bot, punishment.Request{
-			ChatID: access.ChatID,
-			Target: punishment.Target{ID: request.TargetID},
-			Mode: mode,
-			Source: "mini_app",
-			Reason: request.Reason,
+			ChatID:  access.ChatID,
+			Target:  punishment.Target{ID: request.TargetID},
+			Mode:    mode,
+			Source:  "mini_app",
+			Reason:  request.Reason,
 			ActorID: session.User.ID,
 		})
 	case "unban":
@@ -125,9 +125,12 @@ func (p *Panel) handleDirectAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	event := models.ModerationEvent{
-		ChatId: access.ChatID, ActorId: session.User.ID,
-		TargetUserId: request.TargetID, Action: request.Action,
-		Reason: request.Reason, CreatedAt: time.Now().UTC(),
+		ChatId:       access.ChatID,
+		ActorId:      session.User.ID,
+		TargetUserId: request.TargetID,
+		Action:       request.Action,
+		Reason:       request.Reason,
+		CreatedAt:    time.Now().UTC(),
 	}
 	if err := db.DB.WithContext(r.Context()).Create(&event).Error; err != nil {
 		log.WithError(err).WithFields(log.Fields{
