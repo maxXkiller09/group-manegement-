@@ -454,7 +454,7 @@ devs_help_msg:
   × /leavechat: Paksa bot untuk meninggalkan chat yang ditentukan."
 filters_help_msg:
   "Filter tidak peka huruf besar/kecil; setiap kali seseorang mengucapkan kata pemicu
-  Anda, Alita akan membalas sesuatu yang lain! Ini dapat digunakan untuk membuat perintah Anda
+  Anda, NexGuard akan membalas sesuatu yang lain! Ini dapat digunakan untuk membuat perintah Anda
   sendiri, jika diinginkan.
 
 
@@ -519,7 +519,7 @@ formatting_fillings: "<b>Isian</b>
   - <code>{preview}</code>: Mengaktifkan pratinjau tautan (hanya catatan).
 
   - <code>{nonotif}</code>: Menonaktifkan notifikasi untuk pesan itu (hanya catatan)."
-formatting_help_msg: "Alita mendukung banyak opsi pemformatan untuk membuat pesan Anda lebih ekspresif. Lihat dengan mengklik tombol di bawah!
+formatting_help_msg: "NexGuard mendukung banyak opsi pemformatan untuk membuat pesan Anda lebih ekspresif. Lihat dengan mengklik tombol di bawah!
 
   *Perintah pengguna*:
 
@@ -584,7 +584,7 @@ formatting_random: |
   Ini akan secara acak memilih antara mengirim pesan pertama, "halo", atau pesan kedua,
   "apa kabar".
 
-  Gunakan ini untuk membuat Alita terasa sedikit lebih disesuaikan! (hanya berfungsi di filter/catatan)
+  Gunakan ini untuk membuat NexGuard terasa sedikit lebih disesuaikan! (hanya berfungsi di filter/catatan)
 
   Contoh filter:
 
@@ -632,14 +632,14 @@ greetings_help_msg:
 help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur.
 
 
-  Alita ✨ dikembangkan dan dikelola secara aktif oleh @DivideProjects!
+  NexGuard 🛡️ dikembangkan dan dikelola secara aktif oleh NexGuard team!
 
 
-  Alita telah online sejak 2020 dan telah melayani ribuan grup dengan ratusan
+  NexGuard telah online sejak 2020 dan telah melayani ribuan grup dengan ratusan
   ribu pengguna!
 
 
-  <b>Mengapa Alita:</b>
+  <b>Mengapa NexGuard:</b>
 
   - Sederhana: Penggunaan mudah dan kompatibel dengan banyak perintah bot.
 
@@ -650,10 +650,10 @@ help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur
 
 
   <b>Versi Saat Ini:</b> %s"
-help_configuration_step-1: "Selamat datang di Konfigurasi Alita
+help_configuration_step-1: "Selamat datang di Konfigurasi NexGuard
 
 
-  Hal pertama yang harus dilakukan adalah menambahkan Alita ✨ ke grup Anda! Untuk melakukan itu, tekan
+  Hal pertama yang harus dilakukan adalah menambahkan NexGuard 🛡️ ke grup Anda! Untuk melakukan itu, tekan
   tombol di bawah dan pilih grup Anda, lalu tekan Selesai untuk melanjutkan tutorial."
 help_configuration_step-2: "Ok, bagus!
 
@@ -686,7 +686,7 @@ help_configuration_step-3: "Sangat bagus!
 
 
   Jika Anda menghadapi kesulitan dalam menyiapkan saya di grup Anda, jangan ragu
-  untuk datang ke @DivideSupport.
+  untuk datang ke NexGuard support.
 
   Kami akan dengan senang hati membantu Anda."
 help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
@@ -699,9 +699,9 @@ help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
 
   Semua dana akan dimasukkan ke layanan saya seperti database, penyimpanan, dan hosting!
 
-  Anda dapat berdonasi dengan menghubungi pemilik saya di sini: @DivideProjectsBot"
+  Anda dapat berdonasi dengan menghubungi pemilik saya di sini: NexGuard teamBot"
 help_help_msg:
-  "Titik masuk utama dan sistem navigasi untuk Alita Robot.
+  "Titik masuk utama dan sistem navigasi untuk NexGuard Robot.
 
   *Perintah Navigasi:*
 
@@ -902,7 +902,7 @@ reports_help_msg:
   × /reports `mute <N>` / `mute off`: bisukan pengguna setelah N (2-20) anggota berbeda memiliki laporan terbuka terhadapnya, sampai admin memutuskan dan paling lama 24 jam. Nonaktif secara default; tidak pernah berlaku untuk admin atau pengguna yang disetujui.
 
 
-  Untuk melaporkan pengguna, cukup balas pesannya dengan @admin atau /report; Alita
+  Untuk melaporkan pengguna, cukup balas pesannya dengan @admin atau /report; NexGuard
   akan kemudian membalas dengan pesan yang menyatakan bahwa admin telah diberitahu.
 
   Anda HARUS membalas pesan untuk melaporkan pengguna; Anda tidak bisa hanya menggunakan @admin untuk menandai
@@ -932,7 +932,7 @@ rules_help_msg:
   × /resetrulesbutton: Atur ulang teks tombol aturan ke default.
 
   × /resetrulesbtn: Sama seperti di atas."
-bot_updates_creators_plug: "\nIkuti @DivideProjects untuk bot yang lebih berguna dari kreator saya."
+bot_updates_creators_plug: "\nIkuti NexGuard team untuk bot yang lebih berguna dari kreator saya."
 bot_updates_make_me_admin: "\n\nJadikan saya admin agar semua fitur saya bisa digunakan!"
 warns_help_msg:
   "Jaga anggota Anda dengan peringatan; hentikan mereka keluar dari
@@ -1477,8 +1477,8 @@ main_bot_command_start: "Memulai Bot"
 main_bot_command_help: "Periksa Bagian Bantuan bot"
 
 # Help module strings
-help_info_about_header: "Info & Tentang\n\nBerikut adalah beberapa FAQ tentang Alita."
-help_news_channel_text: "Bergabunglah dengan <a href='https://t.me/AlitaRobotUpdates'>Kanal Berita</a> saya untuk mendapatkan informasi tentang semua pembaruan terbaru."
+help_info_about_header: "Info & Tentang\n\nBerikut adalah beberapa FAQ tentang NexGuard."
+help_news_channel_text: ""
 help_all_commands_usage: "Semua perintah diawali dengan /"
 help_button_about_me: "Tentang saya 👨‍💻"
 help_button_news_channel: "Kanal Berita 📢"
@@ -1486,9 +1486,9 @@ help_button_support_group: "Grup Dukungan 👥"
 help_button_configuration: "Konfigurasi ⚙️"
 help_button_about: "Tentang ✨"
 help_button_add_to_chat: "➕ Tambahkan saya ke obrolan!"
-help_button_add_alita: "➕ Tambahkan Alita ke obrolan!"
+help_button_add_alita: "➕ Tambahkan NexGuard ke obrolan!"
 help_button_share: "📤 Bagikan"
-help_share_text: "Alita Robot — bot manajemen grup Telegram yang gratis dan open source."
+help_share_text: "NexGuard Robot — bot manajemen grup Telegram yang gratis dan open source."
 help_about_panel_hint: "\n\n📊 Admin: buka dasbor kapan saja dari tombol menu di samping kotak pesan."
 help_button_commands_help: "📚 Perintah & Bantuan"
 help_button_language: "Bahasa 🌏"
@@ -1657,13 +1657,13 @@ bot_updates_button_expired: "Tombol ini telah kedaluwarsa, Silakan gunakan perin
 
 # Formatting module additional strings
 formatting_press_button: "Tekan tombol di bawah untuk mendapatkan Bantuan Markdown!"
-formatting_large_options: "Alita mendukung banyak opsi pemformatan untuk membuat pesan Anda lebih ekspresif. Lihatlah!"
+formatting_large_options: "NexGuard mendukung banyak opsi pemformatan untuk membuat pesan Anda lebih ekspresif. Lihatlah!"
 
 # Help module additional strings
-help_bot_intro: "Hai! Nama saya Alita ✨.\nSaya di sini untuk membantu Anda mengelola grup Anda!\nTekan /help untuk mengetahui lebih lanjut tentang cara menggunakan saya sepenuhnya.\n"
+help_bot_intro: "Hai! Nama saya NexGuard 🛡️.\nSaya di sini untuk membantu Anda mengelola grup Anda!\nTekan /help untuk mengetahui lebih lanjut tentang cara menggunakan saya sepenuhnya.\n"
 help_pm_intro: |
   Hai %s!
-  Nama saya Alita ✨.
+  Nama saya NexGuard 🛡️.
 
   Saya adalah bot manajemen grup, di sini untuk membantu Anda berkeliling dan menjaga ketertiban di grup Anda!
   Saya punya banyak fitur praktis, seperti kontrol flood, sistem peringatan, sistem penyimpanan catatan, dan bahkan balasan yang telah ditentukan pada kata kunci tertentu.
@@ -1673,7 +1673,7 @@ help_pm_intro: |
   - /help: Mengirim pesan ini; Saya akan memberi tahu Anda lebih banyak tentang diri saya!
   - /donate: Memberi Anda info tentang cara mendukung saya dan kreator saya.
 
-  Jika Anda memiliki bug atau pertanyaan tentang cara menggunakan saya, lihat <a href="https://alita-docs.divkix.me">situs web saya</a>, atau pergi ke @DivideSupport.
+  Jika Anda memiliki bug atau pertanyaan tentang cara menggunakan saya, lihat <a href="https://github.com/maxXkiller09/group-manegement-">situs web saya</a>, atau pergi ke NexGuard support.
 
 # Captcha module strings
 captcha_settings_header: "<b>Pengaturan Captcha:</b>"
