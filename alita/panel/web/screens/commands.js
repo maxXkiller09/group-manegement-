@@ -4,44 +4,44 @@ const commandGroups = [
   {
     title: "Moderation",
     commands: [
-      ["/ban", "Kisi member ko group se remove karke dobara join hone se rokta hai.", "Admin", "/ban @username reason"],
-      ["/tban", "Member ko sirf diye gaye time ke liye ban karta hai.", "Admin", "/tban @username 1d reason"],
-      ["/unban", "Pehle ban kiye gaye member ko wapas join karne deta hai.", "Admin", "/unban @username"],
-      ["/kick", "Member ko group se remove karta hai; woh dobara join kar sakta hai.", "Admin", "/kick @username reason"],
-      ["/mute", "Member ke messages bhejne ki permission rokta hai.", "Admin", "/mute @username reason"],
-      ["/tmute", "Member ko limited time ke liye mute karta hai.", "Admin", "/tmute @username 1h reason"],
-      ["/unmute", "Member ka mute hatata hai.", "Admin", "/unmute @username"],
-      ["/warn", "Member ko rule todne par warning deta hai.", "Admin", "/warn @username reason"],
-      ["/warns", "Warnings ki list ya apni warning details dikhata hai.", "Member / Admin", "/warns"],
-      ["/rmwarn", "Member ki ek warning remove karta hai.", "Admin", "/rmwarn @username"],
+      ["/ban", "Kisi member ko group se remove karke dobara join hone se rokta hai.", "admin", "/ban @username reason"],
+      ["/tban", "Member ko sirf diye gaye time ke liye ban karta hai.", "admin", "/tban @username 1d reason"],
+      ["/unban", "Pehle ban kiye gaye member ko wapas join karne deta hai.", "admin", "/unban @username"],
+      ["/kick", "Member ko group se remove karta hai; woh dobara join kar sakta hai.", "admin", "/kick @username reason"],
+      ["/mute", "Member ke messages bhejne ki permission rokta hai.", "admin", "/mute @username reason"],
+      ["/tmute", "Member ko limited time ke liye mute karta hai.", "admin", "/tmute @username 1h reason"],
+      ["/unmute", "Member ka mute hatata hai.", "admin", "/unmute @username"],
+      ["/warn", "Member ko rule todne par warning deta hai.", "admin", "/warn @username reason"],
+      ["/warns", "Warnings ki list ya apni warning details dikhata hai.", "member", "/warns"],
+      ["/rmwarn", "Member ki ek warning remove karta hai.", "admin", "/rmwarn @username"],
     ],
   },
   {
     title: "Group protection",
     commands: [
-      ["/antiraid", "Join raid ke dauran group ko temporary protection mode mein rakhta hai.", "Admin", "/antiraid"],
-      ["/setflood", "Ek saath bahut messages bhejne par action set karta hai.", "Admin", "/setflood 5"],
-      ["/setfloodmode", "Flood detect hone par kya action lena hai, set karta hai.", "Admin", "/setfloodmode mute"],
-      ["/captcha", "Naye members ke liye verification settings manage karta hai.", "Admin", "/captcha"],
-      ["/aispam", "Automatic spam detection settings manage karta hai.", "Admin", "/aispam"],
-      ["/lock", "Group ke selected message type ko members ke liye lock karta hai.", "Admin", "/lock url"],
-      ["/unlock", "Pehle lagaya gaya selected lock hataata hai.", "Admin", "/unlock url"],
-      ["/blacklists", "Blocked words aur unke automatic actions manage karta hai.", "Admin", "/blacklists"],
+      ["/antiraid", "Join raid ke dauran group ko temporary protection mode mein rakhta hai.", "admin", "/antiraid"],
+      ["/setflood", "Ek saath bahut messages bhejne par action set karta hai.", "admin", "/setflood 5"],
+      ["/setfloodmode", "Flood detect hone par kya action lena hai, set karta hai.", "admin", "/setfloodmode mute"],
+      ["/captcha", "Naye members ke liye verification settings manage karta hai.", "admin", "/captcha"],
+      ["/aispam", "Automatic spam detection settings manage karta hai.", "admin", "/aispam"],
+      ["/lock", "Group ke selected message type ko members ke liye lock karta hai.", "admin", "/lock url"],
+      ["/unlock", "Pehle lagaya gaya selected lock hataata hai.", "admin", "/unlock url"],
+      ["/blacklists", "Blocked words aur unke automatic actions manage karta hai.", "admin", "/blacklists"],
     ],
   },
   {
     title: "Group tools",
     commands: [
-      ["/setrules", "Group ke rules set ya update karta hai.", "Admin", "/setrules Be respectful"],
-      ["/rules", "Group ke rules members ko dikhata hai.", "Member", "/rules"],
-      ["/setwelcome", "Naye members ke liye welcome message set karta hai.", "Admin", "/setwelcome Welcome {first}"],
-      ["/welcome", "Welcome message settings dekhta ya update karta hai.", "Admin", "/welcome"],
-      ["/filters", "Keyword-based automatic replies manage karta hai.", "Admin", "/filters"],
-      ["/notes", "Saved notes ki list dikhata hai.", "Member / Admin", "/notes"],
-      ["/setlog", "Group activity log ke liye channel connect karta hai.", "Admin", "/setlog"],
-      ["/adminlist", "Group ke admins ki list dikhata hai.", "Member", "/adminlist"],
-      ["/invitelink", "Group ka invite link dikhata hai.", "Member / Admin", "/invitelink"],
-      ["/connect", "Private chat ko group se connect karne ka setup shuru karta hai.", "Member / Admin", "/connect"],
+      ["/setrules", "Group ke rules set ya update karta hai.", "admin", "/setrules Be respectful"],
+      ["/rules", "Group ke rules members ko dikhata hai.", "member", "/rules"],
+      ["/setwelcome", "Naye members ke liye welcome message set karta hai.", "admin", "/setwelcome Welcome {first}"],
+      ["/welcome", "Welcome message settings dekhta ya update karta hai.", "admin", "/welcome"],
+      ["/filters", "Keyword-based automatic replies manage karta hai.", "admin", "/filters"],
+      ["/notes", "Saved notes ki list dikhata hai.", "member", "/notes"],
+      ["/setlog", "Group activity log ke liye channel connect karta hai.", "admin", "/setlog"],
+      ["/adminlist", "Group ke admins ki list dikhata hai.", "member", "/adminlist"],
+      ["/invitelink", "Group ka invite link dikhata hai.", "member", "/invitelink"],
+      ["/connect", "Private chat ko group se connect karne ka setup shuru karta hai.", "member", "/connect"],
     ],
   },
 ];
@@ -69,7 +69,7 @@ function commandCard(command, chatID) {
   card.className = "callout command-card";
   const head = document.createElement("div");
   head.className = "command-card-head";
-  head.append(textElement("strong", name), textElement("span", access, "pill accent"));
+  head.append(textElement("strong", name), textElement("span", access === "admin" ? "Admin" : "Sabhi members", "pill accent"));
   card.append(head, textElement("p", description, "command-description"));
   const exampleRow = document.createElement("div");
   exampleRow.className = "command-example";
@@ -79,7 +79,7 @@ function commandCard(command, chatID) {
   copy.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(example);
-      toast("Command copied. Group mein paste karke send karein.");
+      toast("Command copy ho gaya. Group mein paste karke send karein.");
     } catch {
       toast("Clipboard access nahi mila. Command ko manually copy karein.", "error");
     }
@@ -95,9 +95,9 @@ function commandCard(command, chatID) {
   return card;
 }
 
-export function renderCommands(root, chatID) {
+export function renderCommands(root, chatID, chat) {
   root.append(
-    textElement("p", "Har command ka kaam Hinglish mein samjhein. Example copy karke group mein bhej sakte hain; supported settings ko yahin Mini App mein manage karein.", "callout"),
+    textElement("p", "Har command ka kaam Hinglish mein samjhein. Example copy karke group mein bhejein; supported settings ko yahin Mini App mein manage karein.", "callout"),
   );
 
   const search = document.createElement("input");
@@ -116,6 +116,7 @@ export function renderCommands(root, chatID) {
     let count = 0;
     for (const group of commandGroups) {
       const matches = group.commands.filter((command) =>
+        (chat?.role === "admin" || command[2] !== "admin") &&
         command.join(" ").toLocaleLowerCase().includes(needle),
       );
       if (matches.length === 0) continue;
