@@ -105,7 +105,7 @@ export function renderCommands(root, chatID, chat) {
 
     const action = document.createElement("select");
     action.setAttribute("aria-label", "Moderation action");
-    for (const [value, label] of [["ban", "Ban"], ["kick", "Kick"], ["mute", "Mute"], ["unban", "Unban"]]) {
+    for (const [value, label] of [["ban", "Ban"], ["tban", "Timed ban"], ["kick", "Kick"], ["mute", "Mute"], ["tmute", "Timed mute"], ["unban", "Unban"], ["unmute", "Unmute"]]) {
       const option = document.createElement("option");
       option.value = value;
       option.textContent = label;
@@ -150,6 +150,18 @@ export function renderCommands(root, chatID, chat) {
       fallback.textContent = "Member list unavailable — enter an ID below";
       memberPicker.append(fallback);
     });
+    const duration = document.createElement("input");
+    duration.type = "number";
+    duration.min = "1";
+    duration.max = String(366 * 24 * 60 * 60);
+    duration.step = "1";
+    duration.value = "3600";
+    duration.placeholder = "Duration in seconds (e.g. 3600 = 1 hour)";
+    duration.setAttribute("aria-label", "Timed moderation duration in seconds");
+    duration.hidden = true;
+    action.addEventListener("change", () => {
+      duration.hidden = action.value !== "tban" && action.value !== "tmute";
+    });
     const reason = document.createElement("textarea");
     reason.maxLength = 3000;
     reason.placeholder = "Reason (optional)";
@@ -163,9 +175,15 @@ export function renderCommands(root, chatID, chat) {
         return;
       }
       const chosen = action.value;
+      const timed = chosen === "tban" || chosen === "tmute";
+      const durationSeconds = timed ? Number(duration.value) : 0;
+      if (timed && (!Number.isSafeInteger(durationSeconds) || durationSeconds < 1 || durationSeconds > 366 * 24 * 60 * 60)) {
+        toast("Timed action ke liye 1 se 31622400 seconds ki valid duration dein.", "error");
+        return;
+      }
       const approved = await confirmDestructive({
         title: chosen.toUpperCase() + " member?",
-        message: "Group action: " + chosen + "\\nTarget user ID: " + targetID + (reason.value.trim() ? "\\nReason: " + reason.value.trim() : ""),
+        message: "Group action: " + chosen + "\\nTarget user ID: " + targetID + (timed ? "\\nDuration: " + durationSeconds + " seconds" : "") + (reason.value.trim() ? "\\nReason: " + reason.value.trim() : ""),
         action: "Confirm " + chosen,
       });
       if (!approved) return;
@@ -173,7 +191,7 @@ export function renderCommands(root, chatID, chat) {
       try {
         const result = await api(`chats/${encodeURIComponent(chatID)}/actions`, {
           method: "POST",
-          body: { action: chosen, target_user_id: targetID, reason: reason.value.trim(), confirmed: true },
+          body: { action: chosen, target_user_id: targetID, reason: reason.value.trim(), duration_seconds: durationSeconds, confirmed: true },
         });
         toast(result.message || "Action successfully applied.");
       } catch (error) {
@@ -182,7 +200,7 @@ export function renderCommands(root, chatID, chat) {
         execute.disabled = false;
       }
     });
-    actionBox.append(action, memberPicker, target, reason, execute);
+    actionBox.append(action, duration, memberPicker, target, reason, execute);
     root.append(actionBox);
   }
   root.append(
