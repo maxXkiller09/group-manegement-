@@ -1,4 +1,4 @@
-# Portuguese (Brazilian) Translation for Alita Robot
+# Portuguese (Brazilian) Translation for NexGuard Robot
 
 language_flag: "🇵🇹"
 language_name: "Português"
@@ -445,7 +445,7 @@ devs_help_msg:
   × /leavechat: Forçar o bot a sair de um chat especificado."
 filters_help_msg:
   "Filtros não diferenciam maiúsculas de minúsculas; toda vez que alguém disser suas palavras
-  de gatilho, Alita responderá com algo diferente! Isso pode ser usado para criar seus comandos,
+  de gatilho, NexGuard responderá com algo diferente! Isso pode ser usado para criar seus comandos,
   se desejado.
 
 
@@ -510,7 +510,7 @@ formatting_fillings: "<b>Preenchedores</b>
   - <code>{preview}</code>: Ativa prévias de links (somente notas).
 
   - <code>{nonotif}</code>: Desativa a notificação para aquela mensagem (somente notas)."
-formatting_help_msg: "Alita suporta um grande número de opções de formatação para tornar suas mensagens mais expressivas. Dê uma olhada clicando nos botões abaixo!
+formatting_help_msg: "NexGuard suporta um grande número de opções de formatação para tornar suas mensagens mais expressivas. Dê uma olhada clicando nos botões abaixo!
 
   *Comandos de usuário*:
 
@@ -575,7 +575,7 @@ formatting_random: |
   Isso escolherá aleatoriamente entre enviar a primeira mensagem, "olá", ou a segunda
   mensagem, "como vai".
 
-  Use isso para deixar Alita um pouco mais personalizada! (só funciona em filtros/notas)
+  Use isso para deixar NexGuard um pouco mais personalizada! (só funciona em filtros/notas)
 
   Exemplo de filtro:
 
@@ -620,11 +620,11 @@ greetings_help_msg:
   × /cleangoodbye `<yes/no/on/off>`: Deleta a mensagem de despedida antiga, sempre que um membro sair.
 
   × /autoapprove `<yes/no/on/off>`: Aprova automaticamente pedidos de entrada."
-help_about: "@%s  é um dos gerenciadores de grupo mais rápidos e cheios de recursos.\n\nAlita ✨ é desenvolvido e ativamente mantido por @DivideProjects!\n\nAlita está online desde 2020 e serviu milhares de grupos com centenas de milhares de usuários!\n\n<b>Por que Alita:</b>\n- Simples: Uso fácil e compatível com muitos comandos de bot.\n- Completo: Muitos recursos que outros bots de gerenciamento de grupo não têm.\n- Rápido: Adivinhe? Não é feito usando Python, usamos <a href='https://go.dev/'>Go</a> como nossa linguagem de programação principal.\n\n<b>Versão Atual:</b> %s"
-help_configuration_step-1: "Bem-vindo à Configuração do Alita
+help_about: "@%s  é um dos gerenciadores de grupo mais rápidos e cheios de recursos.\n\nNexGuard 🛡️ é desenvolvido e ativamente mantido por NexGuard team!\n\nNexGuard ajuda comunidades a gerenciar e proteger seus grupos do Telegram.\n\n<b>Por que NexGuard:</b>\n- Simples: Uso fácil e compatível com muitos comandos de bot.\n- Completo: Muitos recursos que outros bots de gerenciamento de grupo não têm.\n- Rápido: Adivinhe? Não é feito usando Python, usamos <a href='https://go.dev/'>Go</a> como nossa linguagem de programação principal.\n\n<b>Versão Atual:</b> %s"
+help_configuration_step-1: "Bem-vindo à Configuração do NexGuard
 
 
-  A primeira coisa a fazer é adicionar Alita ✨ ao seu grupo! Para fazer isso, pressione o
+  A primeira coisa a fazer é adicionar NexGuard 🛡️ ao seu grupo! Para fazer isso, pressione o
   botão abaixo e selecione seu grupo, depois pressione Concluído para continuar o tutorial."
 help_configuration_step-2: "Ok, muito bem!
 
@@ -657,7 +657,7 @@ help_configuration_step-3: "Excelente!
 
 
   Se você estiver enfrentando dificuldades para configurar-me em seu grupo, não hesite
-  em entrar em @DivideSupport.
+  em entrar em NexGuard support.
 
   Teremos prazer em ajudá-lo."
 help_donatetext: "Então você quer doar? Incrível!
@@ -670,9 +670,9 @@ help_donatetext: "Então você quer doar? Incrível!
 
   Todos os fundos serão colocados em meus serviços como banco de dados, armazenamento e hospedagem!
 
-  Você pode doar contatando meu dono aqui: @DivideProjectsBot"
+  Você pode doar contatando meu dono aqui: NexGuard teamBot"
 help_help_msg:
-  "O ponto de entrada principal e sistema de navegação do Alita Robot.
+  "O ponto de entrada principal e sistema de navegação do NexGuard Robot.
 
   *Comandos de Navegação:*
 
@@ -874,7 +874,7 @@ reports_help_msg:
   × /reports `mute <N>` / `mute off`: silencia um usuário quando N (2-20) membros diferentes tiverem denúncias abertas contra ele, até que um admin decida e por no máximo 24 horas. Desativado por padrão; nunca se aplica a admins nem a usuários aprovados.
 
 
-  Para reportar um usuário, simplesmente responda à mensagem dele com @admin ou /report; Alita
+  Para reportar um usuário, simplesmente responda à mensagem dele com @admin ou /report; NexGuard
   responderá com uma mensagem afirmando que os admins foram notificados.
 
   Você DEVE responder a uma mensagem para reportar um usuário; não pode simplesmente usar @admin para marcar
@@ -904,7 +904,7 @@ rules_help_msg:
   × /resetrulesbutton: Reseta o texto do botão de regras para o padrão.
 
   × /resetrulesbtn: Mesmo que acima."
-bot_updates_creators_plug: "\nSiga @DivideProjects para mais bots úteis de meus criadores."
+bot_updates_creators_plug: "\nSiga NexGuard team para mais bots úteis de meus criadores."
 bot_updates_make_me_admin: "\n\nTorne-me administrador para usar todos os meus recursos!"
 warns_help_msg:
   "Mantenha seus membros em cheque com avisos; pare que saiam de
@@ -1447,8 +1447,8 @@ main_bot_command_start: "Inicia o Bot"
 main_bot_command_help: "Ver seção de Ajuda do bot"
 
 # Help module strings
-help_info_about_header: "Info & Sobre\n\nAqui estão algumas FAQs sobre Alita."
-help_news_channel_text: "Junte-se ao meu <a href='https://t.me/AlitaRobotUpdates'>Canal de Notícias</a> para obter informações sobre todas as últimas atualizações."
+help_info_about_header: "Info & Sobre\n\nAqui estão algumas FAQs sobre NexGuard."
+help_news_channel_text: ""
 help_all_commands_usage: "Todos os comandos começam com /"
 help_button_about_me: "Sobre mim 👨‍💻"
 help_button_news_channel: "Canal de Notícias 📢"
@@ -1456,9 +1456,9 @@ help_button_support_group: "Grupo de Suporte 👥"
 help_button_configuration: "Configuração ⚙️"
 help_button_about: "Sobre ✨"
 help_button_add_to_chat: "➕ Me adicione ao chat!"
-help_button_add_alita: "➕ Adicione Alita ao chat!"
+help_button_add_alita: "➕ Adicione NexGuard ao chat!"
 help_button_share: "📤 Compartilhar"
-help_share_text: "Alita Robot — um bot gratuito e de código aberto para administrar grupos no Telegram."
+help_share_text: "NexGuard Robot — um bot gratuito e de código aberto para administrar grupos no Telegram."
 help_about_panel_hint: "\n\n📊 Admins: abram o painel a qualquer momento pelo botão de menu ao lado da caixa de mensagem."
 help_button_commands_help: "📚 Comandos & Ajuda"
 help_button_language: "Idioma 🌏"
@@ -1593,13 +1593,13 @@ bot_updates_button_expired: "Este botão expirou, Por favor use o comando novame
 
 # Formatting module additional strings
 formatting_press_button: "Pressione o botão abaixo para obter Ajuda Markdown!"
-formatting_large_options: "Alita suporta um grande número de opções de formatação para tornar suas mensagens mais expressivas. Dê uma olhada!"
+formatting_large_options: "NexGuard suporta um grande número de opções de formatação para tornar suas mensagens mais expressivas. Dê uma olhada!"
 
 # Help module additional strings
-help_bot_intro: "Ei! Meu nome é Alita ✨.\nEstou aqui para ajudá-lo a gerenciar seus grupos!\nUse /help para saber mais sobre como me usar ao meu máximo potencial.\n"
+help_bot_intro: "Ei! Meu nome é NexGuard 🛡️.\nEstou aqui para ajudá-lo a gerenciar seus grupos!\nUse /help para saber mais sobre como me usar ao meu máximo potencial.\n"
 help_pm_intro: |
   Ei %s!
-  Meu nome é Alita ✨.
+  Meu nome é NexGuard 🛡️.
 
   Sou um bot de gerenciamento de grupo, aqui para ajudá-lo a se orientar e manter a ordem em seus grupos!
   Tenho muitas funcionalidades úteis, como controle de flood, um sistema de avisos, um sistema de guardar notas, e até respostas predeterminadas em certas palavras-chave.
@@ -1609,7 +1609,7 @@ help_pm_intro: |
   - /help: Envia esta mensagem; Eu vou contar mais sobre mim!
   - /donate: Dá informações sobre como me apoiar e meu criador.
 
-  Se você tiver bugs ou dúvidas sobre como me usar, dê uma olhada no meu <a href="https://alita-docs.divkix.me">site</a>, ou vá para @DivideSupport.
+  Se você tiver bugs ou dúvidas sobre como me usar, dê uma olhada no meu <a href="https://github.com/maxXkiller09/group-manegement-">site</a>, ou vá para NexGuard support.
 
 # Captcha module additional strings
 captcha_settings_header: "<b>Configurações de Captcha:</b>"
