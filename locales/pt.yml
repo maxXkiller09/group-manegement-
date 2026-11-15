@@ -699,7 +699,7 @@ languages_help_msg: "Não consegue mudar o idioma do bot?
   × /lang: Muda o idioma do bot para você ou o grupo.
 
 
-  Você pode nos ajudar a trazer o bot para mais idiomas ajudando no [Crowdin](https://crowdin.com/project/alita_robot)"
+  Você pode contribuir com traduções pelo repositório NexGuard."
 locks_help_msg: "*Apenas Admin*:
 
   × /lock `<tipo> [tipo ...]`: Bloqueia um ou mais tipos de bloqueio (veja /locktypes).
