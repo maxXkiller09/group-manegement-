@@ -36,10 +36,63 @@ export async function renderWarnings(root, chatID, chat) {
 	const loadMore = textElement("button", "Load more");
 	loadMore.type = "button";
 	loadMore.hidden = true;
-	container.append(status, list, loadMore);
-	if (readOnly) {
-		container.append(textElement("p", "Read-only: warnings cannot be removed in this chat.", "muted"));
+	container.append(status);
+	if (!readOnly) {
+		const issueBox = document.createElement("section");
+		issueBox.className = "callout warning-create";
+		issueBox.append(textElement("h3", "Issue a warning"));
+		const target = document.createElement("input");
+		target.type = "number";
+		target.min = "1";
+		target.step = "1";
+		target.inputMode = "numeric";
+		target.placeholder = "Member Telegram user ID";
+		target.setAttribute("aria-label", "Member Telegram user ID");
+		const reason = document.createElement("textarea");
+		reason.maxLength = 3000;
+		reason.rows = 2;
+		reason.placeholder = "Reason (optional)";
+		reason.setAttribute("aria-label", "Warning reason");
+		const issue = textElement("button", "Review warning");
+		issue.type = "button";
+		issue.addEventListener("click", async () => {
+			const userID = Number(target.value);
+			if (!Number.isSafeInteger(userID) || userID <= 0) {
+				status.className = "error";
+				status.textContent = "Valid Telegram user ID enter karein.";
+				return;
+			}
+			const approved = await confirmDestructive({
+				title: "Issue warning?",
+					message: `Warning for Telegram user ${userID}${reason.value.trim() ? `\\nReason: ${reason.value.trim()}` : ""}. The group's configured warn-limit action may also apply.`,
+				action: "Issue warning",
+			});
+			if (!approved) return;
+			issue.disabled = true;
+			try {
+				const result = await api(`chats/${encodeURIComponent(chatID)}/warnings`, {
+					method: "POST",
+					body: { user_id: userID, reason: reason.value.trim() },
+				});
+				target.value = "";
+				reason.value = "";
+				await loadPage(true);
+				haptic("success");
+				status.textContent = `${result.message} Current warnings: ${result.warnings}/${result.warn_limit}.`;
+			} catch (error) {
+				haptic("error");
+				status.className = "error";
+				status.textContent = errorMessage(error, "Could not issue this warning.");
+			} finally {
+				issue.disabled = false;
+			}
+		});
+		issueBox.append(target, reason, issue);
+		container.append(issueBox);
+	} else {
+		container.append(textElement("p", "Read-only: warnings cannot be changed in this chat.", "muted"));
 	}
+	container.append(list, loadMore);
 
 	const state = { cursor: 0, loading: false };
 
