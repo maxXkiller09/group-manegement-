@@ -1,4 +1,4 @@
-import { toast, textElement, confirmDestructive } from "../ui.js";
+import { toast, textElement, confirmDestructive, userLabel } from "../ui.js";
 import { api } from "../api.js";
 
 const commandGroups = [
@@ -111,12 +111,45 @@ export function renderCommands(root, chatID, chat) {
       option.textContent = label;
       action.append(option);
     }
+    const memberPicker = document.createElement("select");
+    memberPicker.setAttribute("aria-label", "Choose a recently active member");
+    const initialOption = document.createElement("option");
+    initialOption.value = "";
+    initialOption.textContent = "Recent active members load ho rahe hain…";
+    memberPicker.append(initialOption);
+
     const target = document.createElement("input");
     target.type = "number";
     target.min = "1";
     target.step = "1";
-    target.placeholder = "Target Telegram user ID";
+    target.placeholder = "Or enter Telegram user ID manually";
     target.setAttribute("aria-label", "Target Telegram user ID");
+    memberPicker.addEventListener("change", () => {
+      if (memberPicker.value) target.value = memberPicker.value;
+    });
+    api(`chats/${encodeURIComponent(chatID)}/top-members?days=90`).then((data) => {
+      memberPicker.replaceChildren();
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Select a tracked member (optional)";
+      memberPicker.append(placeholder);
+      const members = Array.isArray(data?.members) ? data.members : [];
+      for (const member of members) {
+        const option = document.createElement("option");
+        option.value = String(member.user_id);
+        option.textContent = userLabel(data.names, member.user_id);
+        memberPicker.append(option);
+      }
+      if (members.length === 0) {
+        placeholder.textContent = "No tracked members yet — enter an ID below";
+      }
+    }).catch(() => {
+      memberPicker.replaceChildren();
+      const fallback = document.createElement("option");
+      fallback.value = "";
+      fallback.textContent = "Member list unavailable — enter an ID below";
+      memberPicker.append(fallback);
+    });
     const reason = document.createElement("textarea");
     reason.maxLength = 3000;
     reason.placeholder = "Reason (optional)";
@@ -149,7 +182,7 @@ export function renderCommands(root, chatID, chat) {
         execute.disabled = false;
       }
     });
-    actionBox.append(action, target, reason, execute);
+    actionBox.append(action, memberPicker, target, reason, execute);
     root.append(actionBox);
   }
   root.append(
