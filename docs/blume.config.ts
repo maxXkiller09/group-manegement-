@@ -1,32 +1,24 @@
 import { defineConfig } from "blume";
 
-// Blume configuration for the Alita Robot documentation site.
+// NexGuard documentation site configuration.
 // See https://useblume.dev/docs/configuration for the full reference.
 export default defineConfig({
-	title: "Alita Robot",
+	title: "NexGuard",
 	description:
-		"A modern Telegram group management bot built with Go — 30+ modules, 210+ commands, 7+ languages, and blazing-fast performance powered by Redis caching and PostgreSQL.",
-	logo: { image: "/favicon.svg", text: "Alita Robot" },
-	github: { owner: "divkix", repo: "Alita_Robot" },
+		"NexGuard — Smart Protection. Better Communities. A Telegram group management bot with moderation, anti-spam protection, CAPTCHA, automation, analytics, and a mobile-friendly Mini App.",
+	logo: { image: "/favicon.svg", text: "NexGuard" },
+	github: { owner: "maxXkiller09", repo: "group-manegement-" },
 
-	// Content stays where Starlight had it; the Go docs generator still
-	// writes here (output path unchanged).
 	content: { root: "src/content/docs" },
-
-	// Static output keeps the existing Cloudflare Workers deployment as-is.
+	// Keep the currently configured docs hosting URL until a NexGuard domain is configured.
 	deployment: { site: "https://alita-docs.divkix.me" },
 
-	// Built-in AI artifacts (on by default): llms.txt, llms-full.txt, and a
-	// raw .md/.mdx mirror of every page. No API key needed for these.
 	agents: { llmsTxt: true },
-
 	seo: {
 		og: { enabled: true },
 		sitemap: true,
 		robots: true,
 		structuredData: true,
 	},
-
-	// Collapsible sidebar groups, matching the previous Starlight layout.
 	navigation: { sidebar: { display: "group" } },
 });
