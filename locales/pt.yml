@@ -13,7 +13,7 @@ help_donatetext: "Então você quer doar? Incrível!
 
   Todos os fundos serão colocados em meus serviços como banco de dados, armazenamento e hospedagem!
 
-  Você pode doar contatando meu dono aqui: @DivideProjectsBot"
+  Você pode doar contatando meu dono aqui: NexGuard team"
 
 language_flag: "🇵🇹"
 language_name: "Português"
@@ -636,10 +636,10 @@ greetings_help_msg:
 
   × /autoapprove `<yes/no/on/off>`: Aprova automaticamente pedidos de entrada."
 help_about: "@%s é o NexGuard 🛡️, criado para ajudar comunidades a gerenciar e proteger seus grupos do Telegram.\n\n<b>Por que NexGuard:</b>\n- Simples: ferramentas claras para gerenciar grupos.\n- Completo: moderação, antispam, CAPTCHA e automação.\n- Rápido: desenvolvido com <a href='https://go.dev/'>Go</a>.\n\n<b>Versão atual:</b> %s"
-help_configuration_step-1: "Bem-vindo à Configuração do Alita
+help_configuration_step-1: "Bem-vindo à Configuração do NexGuard
 
 
-  A primeira coisa a fazer é adicionar Alita ✨ ao seu grupo! Para fazer isso, pressione o
+  A primeira coisa a fazer é adicionar NexGuard 🛡️ ao seu grupo! Para fazer isso, pressione o
   botão abaixo e selecione seu grupo, depois pressione Concluído para continuar o tutorial."
 
 
