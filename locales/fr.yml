@@ -1,5 +1,20 @@
 # French locale for NexGuard Robot
 # Language metadata
+help_configuration_step-1: "Bienvenue dans la configuration de NexGuard. Ajoutez NexGuard 🛡️ à votre groupe avec le bouton ci-dessous, sélectionnez le groupe, puis appuyez sur Done pour continuer.\n\n"
+help_configuration_step-2: "Très bien ! Pour fonctionner correctement, NexGuard a besoin des droits d'administrateur. Ouvrez les paramètres du groupe, choisissez Administrateurs, ajoutez @%s et confirmez les autorisations.\n\n"
+help_configuration_step-3: "Excellent ! NexGuard est prêt. Toutes les commandes commencent par /. Pour obtenir de l'aide sur la configuration, contactez le support NexGuard.\n\n"
+help_donatetext: "Vous voulez faire un don ? Incroyable !
+
+  Quand vous faites un don, tous les fonds vont vers mon développement, ce qui me rend rapide et
+  réactif.
+
+  Votre don pourrait aussi me permettre d'obtenir une ou deux nouvelles fonctionnalités, que je n'étais pas en mesure d'avoir
+  en raison des limitations du serveur.
+
+  Tous les fonds seront utilisés pour mes services tels que la base de données, le stockage et l'hébergement !
+
+  Vous pouvez faire un don en contactant mon propriétaire ici : @DivideProjectsBot"
+
 language_flag: 🇫🇷
 language_name: Français
 
@@ -1110,7 +1125,7 @@ help_configuration_step-1: "Bienvenue dans la configuration d'Alita
   La première chose à faire est d'ajouter Alita ✨ à votre groupe ! Pour ce faire, appuyez sur le
   bouton ci-dessous et sélectionnez votre groupe, puis appuyez sur Terminé pour continuer le tutoriel."
 
-undefined "Vous voulez faire un don ? Incroyable !
+
 
   Quand vous faites un don, tous les fonds vont vers mon développement, ce qui me rend rapide et
   réactif.
