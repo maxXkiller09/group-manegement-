@@ -1104,7 +1104,13 @@ extraction_invalid_time_format: "Format de temps invalide spécifié."
 
 # Help module strings
 help_about: "@%s est NexGuard 🛡️, conçu pour aider les communautés à gérer et protéger leurs groupes Telegram.\n\n<b>Pourquoi NexGuard :</b>\n- Simple : des outils clairs pour gérer les groupes.\n- Complet : modération, anti-spam, CAPTCHA et automatisation.\n- Rapide : développé avec <a href='https://go.dev/'>Go</a>.\n\n<b>Version actuelle :</b> %s"
-help_donatetext: "Vous voulez faire un don ? Incroyable !
+help_configuration_step-1: "Bienvenue dans la configuration d'Alita
+
+
+  La première chose à faire est d'ajouter Alita ✨ à votre groupe ! Pour ce faire, appuyez sur le
+  bouton ci-dessous et sélectionnez votre groupe, puis appuyez sur Terminé pour continuer le tutoriel."
+
+undefined "Vous voulez faire un don ? Incroyable !
 
   Quand vous faites un don, tous les fonds vont vers mon développement, ce qui me rend rapide et
   réactif.
