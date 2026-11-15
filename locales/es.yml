@@ -634,65 +634,7 @@ greetings_help_msg:
   × /cleangoodbye `<yes/no/on/off>`: Eliminar el mensaje de despedida antiguo, cuando un miembro se va.
 
   × /autoapprove `<yes/no/on/off>`: Aprobar automáticamente las solicitudes de ingreso."
-help_about:
-  "@%s es uno de los administradores de grupos más rápidos y con más funciones.
-
-
-  NexGuard 🛡️ es desarrollado y mantenido activamente por NexGuard team!
-
-
-  NexGuard ayuda a las comunidades a gestionar y proteger sus grupos de Telegram.
-
-
-  <b>Por qué NexGuard:</b>
-
-  - Simple: Uso fácil y compatible con muchos comandos de bot.
-
-  - Con funciones: Muchas funciones que otros bots de administración de grupos no tienen.
-
-  - Rápido: ¿Adivina qué? No está hecho usando Python, usamos <a href='https://go.dev/'>Go</a>
-  como nuestro lenguaje de programación principal.
-
-
-  <b>Versión actual:</b> %s"
-help_configuration_step-1: "Bienvenido a la Configuración de NexGuard
-
-
-  ¡Lo primero que debes hacer es añadir NexGuard 🛡️ a tu grupo! Para hacer eso, presiona el
-  botón de abajo y selecciona tu grupo, luego presiona Listo para continuar el tutorial."
-help_configuration_step-2: "¡Ok, bien hecho!
-
-
-  Ahora para dejarme trabajar correctamente, ¡necesitas hacerme Administrador de tu Grupo!
-
-  Para hacer eso, sigue estos sencillos pasos:
-
-  ▫️ Ve a tu grupo
-
-  ▫️ Presiona el nombre del Grupo
-
-  ▫️ Presiona Modificar
-
-  ▫️ Presiona en Administrador
-
-  ▫️ Presiona Añadir Administrador
-
-  ▫️ Presiona la Lupa
-
-  ▫️ Busca @%s
-
-  ▫️ Confirma"
-help_configuration_step-3: "¡Excelente!
-
-  ¡Ahora el Bot está listo para usar!
-
-  Todos los comandos empiezan con /
-
-
-  Si tienes alguna dificultad configurándome en tu grupo, no dudes
-  en venir a NexGuard support.
-
-  Nos encantaría ayudarte."
+help_about: "@%s es NexGuard 🛡️, creado para ayudar a las comunidades a administrar y proteger sus grupos de Telegram.\n\n<b>Por qué NexGuard:</b>\n- Sencillo: herramientas claras para gestionar grupos.\n- Completo: moderación, antispam, CAPTCHA y automatización.\n- Rápido: desarrollado con <a href='https://go.dev/'>Go</a>.\n\n<b>Versión actual:</b> %s"
 help_donatetext: "¿Así que quieres donar? ¡Increíble!
 
   Cuando donas, todos los fondos van hacia mi desarrollo lo que me hace rápido y
@@ -734,7 +676,7 @@ languages_help_msg: "¿No puedes cambiar el idioma del bot?
   × /lang: Cambia el idioma del bot para ti o el grupo.
 
 
-  Puedes ayudarnos a llevar el bot a más idiomas ayudando en [Crowdin](https://crowdin.com/project/alita_robot)"
+  Puedes contribuir con las traducciones a través del repositorio de NexGuard."
 locks_help_msg: "*Solo administrador*:
 
   × /lock `<tipo> [tipo ...]`: Bloquear uno o más tipos de bloqueo (ver /locktypes).
@@ -1485,8 +1427,8 @@ help_info_about_header: "Información y Acerca de\n\nAquí están algunas de las
 help_news_channel_text: ""
 help_all_commands_usage: "Todos los comandos empiezan con /"
 help_button_about_me: "Acerca de mí 👨‍💻"
-help_button_news_channel: "Canal de Noticias 📢"
-help_button_support_group: "Grupo de Soporte 👥"
+help_button_news_channel: ""
+help_button_support_group: ""
 help_button_configuration: "Configuración ⚙️"
 help_button_about: "Acerca de ✨"
 help_button_add_to_chat: "➕ ¡Añádeme al chat!"
