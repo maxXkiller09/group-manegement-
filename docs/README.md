@@ -1,5 +1,7 @@
 # NexGuard Documentation
 
+> Smart Protection. Better Communities.
+
 This is the documentation website for NexGuard, a Telegram group management bot built with Go. NexGuard is maintained in this repository and builds on the open-source Alita Robot project; see the upstream attribution below.
 
 Built with [Blume](https://useblume.dev/) — a fast, AI-ready, markdown-first documentation framework.
