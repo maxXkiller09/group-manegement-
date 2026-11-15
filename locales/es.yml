@@ -635,7 +635,13 @@ greetings_help_msg:
 
   × /autoapprove `<yes/no/on/off>`: Aprobar automáticamente las solicitudes de ingreso."
 help_about: "@%s es NexGuard 🛡️, creado para ayudar a las comunidades a administrar y proteger sus grupos de Telegram.\n\n<b>Por qué NexGuard:</b>\n- Sencillo: herramientas claras para gestionar grupos.\n- Completo: moderación, antispam, CAPTCHA y automatización.\n- Rápido: desarrollado con <a href='https://go.dev/'>Go</a>.\n\n<b>Versión actual:</b> %s"
-help_donatetext: "¿Así que quieres donar? ¡Increíble!
+help_configuration_step-1: "Bienvenido a la Configuración de Alita
+
+
+  ¡Lo primero que debes hacer es añadir Alita ✨ a tu grupo! Para hacer eso, presiona el
+  botón de abajo y selecciona tu grupo, luego presiona Listo para continuar el tutorial."
+
+undefined "¿Así que quieres donar? ¡Increíble!
 
   Cuando donas, todos los fondos van hacia mi desarrollo lo que me hace rápido y
   receptivo.
