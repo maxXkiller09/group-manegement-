@@ -1660,7 +1660,7 @@ formatting_press_button: "Tekan tombol di bawah untuk mendapatkan Bantuan Markdo
 formatting_large_options: "NexGuard mendukung banyak opsi pemformatan untuk membuat pesan Anda lebih ekspresif. Lihatlah!"
 
 # Help module additional strings
-help_bot_intro: "Hai! Nama saya NexGuard 🛡️.\nSaya di sini untuk membantu Anda mengelola grup Anda!\nTekan /help untuk mengetahui lebih lanjut tentang cara menggunakan saya sepenuhnya.\n"
+help_bot_intro: "Hai! Nama saya NexGuard 🛡️.\nSaya di sini untuk membantu Anda mengelola grup Anda!\nTekan /help untuk mengetahui lebih lanjut tentang cara menggunakan saya sepenuhnya.\n\nSmart Protection. Better Communities."
 help_pm_intro: |
   Hai %s!
   Nama saya NexGuard 🛡️.

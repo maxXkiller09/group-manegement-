@@ -2037,7 +2037,7 @@ help_markdown_help_button: "मार्कडाउन सहायता"
 help_markdown_formatting_button: "मार्कडाउन फॉर्मेटिंग"
 help_fillings_button: "फिलिंग्स"
 help_random_content_button: "रैंडम कंटेंट"
-help_bot_intro: "हेलो! मेरा नाम NexGuard 🛡️ है।\nमैं आपके ग्रुप्स को प्रबंधित करने में आपकी मदद करने के लिए यहां हूं!\nमुझे पूरी तरह से उपयोग करने का तरीका जानने के लिए /help दबाएं।\n"
+help_bot_intro: "हेलो! मेरा नाम NexGuard 🛡️ है।\nमैं आपके ग्रुप्स को प्रबंधित करने में आपकी मदद करने के लिए यहां हूं!\nमुझे पूरी तरह से उपयोग करने का तरीका जानने के लिए /help दबाएं।\n\nSmart Protection. Better Communities."
 
 # Bot updates keys
 bot_updates_creators_plug: ""
