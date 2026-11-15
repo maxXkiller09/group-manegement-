@@ -1,123 +1,17 @@
 import { telegram } from "./api.js";
 import { renderChat, renderSection } from "./screens/chat.js";
 import { renderChats } from "./screens/chats.js";
+import { renderHome } from "./screens/home.js";
 import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, supports } from "./ui.js";
-
-telegram?.ready();
-telegram?.expand();
-
-// The page ground is the secondary background, with grouped sections on the
-// primary one, the layout of Telegram's own settings screens. The header and
-// page colours follow it so the Mini App reads as part of the client.
-if (supports("6.1")) {
-	telegram.setHeaderColor("secondary_bg_color");
-	telegram.setBackgroundColor("secondary_bg_color");
-}
-
-const root = document.getElementById("app");
-
-// launchChatID reads the chat this Mini App was opened for: ?chat=<id> from
-// the PM web_app button (panel.WebAppURL), or the chat_<id> start_param of a
-// direct Mini App link (panel.EntryURL).
-function launchChatID() {
-	const queryChat = new URLSearchParams(window.location.search).get("chat");
-	const startParamChat = /^chat_(-?\d+)$/.exec(telegram?.initDataUnsafe?.start_param ?? "")?.[1];
-	const value = queryChat || startParamChat || "";
-	return /^-?\d+$/.test(value) && value !== "0" ? value : null;
-}
-
-const routePattern = /^#\/chats\/(-?\d+)(?:\/([a-z-]+))?$/;
-
-// parentRoute is where Back leads: a section returns to its chat, a chat to
-// the chat list, and the chat list has no parent.
-function parentRoute(hash) {
-	const match = routePattern.exec(hash);
-	if (!match) {
-		return null;
-	}
-	return match[2] ? `#/chats/${match[1]}` : "#/";
-}
-
-function syncBackButton() {
-	if (!supports("6.1")) {
-		return;
-	}
-	if (parentRoute(window.location.hash)) {
-		telegram.BackButton.show();
-	} else {
-		telegram.BackButton.hide();
-	}
-}
-
-function render() {
-	leaveScreen();
-	syncBackButton();
-	window.scrollTo(0, 0);
-	const match = routePattern.exec(window.location.hash);
-	if (match && match[2]) {
-		return renderSection(root, match[1], match[2]);
-	}
-	if (match) {
-		return renderChat(root, match[1]);
-	}
-	return renderChats(root);
-}
-
-// currentHash is the route on screen. A hash change away from a screen with
-// unsaved work puts it back and asks first; leaving then follows the user's
-// original target. Putting it back replaces the history entry, which only a
-// browser's own Back can notice: Telegram's Back button pushes a new hash.
-let currentHash = "";
-let confirming = false;
-
-async function navigate() {
-	const target = window.location.hash;
-	if (target === currentHash) {
-		return;
-	}
-	if (blocksLeave()) {
-		history.replaceState(null, "", currentHash || `${window.location.pathname}${window.location.search}`);
-		// Telegram allows one popup at a time; a second Back while it is open
-		// is dropped.
-		if (confirming) {
-			return;
-		}
-		confirming = true;
-		const leave = await confirmDestructive({
-			title: "Discard changes?",
-			message: "You have unsaved changes on this screen. Leaving now loses them.",
-			action: "Discard",
-		}).finally(() => {
-			confirming = false;
-		});
-		if (!leave) {
-			return;
-		}
-		setLeaveGuard(null);
-		window.location.hash = target;
-		return;
-	}
-	currentHash = target;
-	render();
-}
-
-if (root) {
-	if (!window.location.hash) {
-		const chatID = launchChatID();
-		if (chatID) {
-			history.replaceState(null, "", `#/chats/${chatID}`);
-		}
-	}
-	if (supports("6.1")) {
-		telegram.BackButton.onClick(() => {
-			const parent = parentRoute(window.location.hash);
-			if (parent) {
-				haptic("light");
-				window.location.hash = parent;
-			}
-		});
-	}
-	window.addEventListener("hashchange", navigate);
-	currentHash = window.location.hash;
-	render();
-}
+telegram?.ready(); telegram?.expand();
+if (supports("6.1")) { telegram.setHeaderColor("secondary_bg_color"); telegram.setBackgroundColor("secondary_bg_color"); }
+const root=document.getElementById("app");
+function launchChatID(){const q=new URLSearchParams(window.location.search).get("chat");const s=/^chat_(-?\d+)$/.exec(telegram?.initDataUnsafe?.start_param??"")?.[1];const v=q||s||"";return /^-?\d+$/.test(v)&&v!=="0"?v:null;}
+const routePattern=/^#\/chats\/(-?\d+)(?:\/([a-z-]+))?$/;
+function parentRoute(hash){const m=routePattern.exec(hash);if(!m)return null;return m[2]?`#/chats/${m[1]}`:"#/groups";}
+function syncBackButton(){if(!supports("6.1"))return;if(parentRoute(location.hash))telegram.BackButton.show();else telegram.BackButton.hide();}
+function renderNavigation(){document.getElementById("nexguard-nav")?.remove();const nav=document.createElement("nav");nav.id="nexguard-nav";nav.className="bottom-nav";nav.setAttribute("aria-label","Main navigation");const h=location.hash;const active=h.startsWith("#/chats/")||h==="#/groups"?"groups":h==="#/account"?"account":h==="#/activity"?"inbox":"home";for(const [key,glyph,label,href] of [["home","⌂","Home","#/"],["groups","▦","Groups","#/groups"],["add","+","Add","add"],["inbox","▤","Inbox","#/activity"],["account","◉","Account","#/account"]]){const a=document.createElement("a");a.className="bottom-nav-item"+(key===active?" active":"")+(key==="add"?" add-tab":"");a.href=key==="add"?"https://t.me/NexGuardd_Bot?startgroup=true":href;a.append(document.createTextNode(glyph),Object.assign(document.createElement("span"),{textContent:label}));nav.append(a);}document.body.append(nav);}
+function render(){leaveScreen();syncBackButton();renderNavigation();window.scrollTo(0,0);const h=location.hash,m=routePattern.exec(h);if(m&&m[2])return renderSection(root,m[1],m[2]);if(m)return renderChat(root,m[1]);const groupRoute=/^#\/groups(?:\/([a-z-]+))?$/.exec(h);if(groupRoute)return renderChats(root,groupRoute[1]||"");if(h==="#/account")return renderHome(root,"account");if(h==="#/activity")return renderHome(root,"activity");return renderHome(root);}
+let currentHash="",confirming=false;
+async function navigate(){const target=location.hash;if(target===currentHash)return;if(blocksLeave()){history.replaceState(null,"",currentHash||location.pathname+location.search);if(confirming)return;confirming=true;const ok=await confirmDestructive({title:"Discard changes?",message:"You have unsaved changes on this screen. Leaving now loses them.",action:"Discard"}).finally(()=>confirming=false);if(!ok)return;setLeaveGuard(null);location.hash=target;return;}currentHash=target;render();}
+if(root){if(!location.hash){const id=launchChatID();if(id)history.replaceState(null,"",`#/chats/${id}`);}if(supports("6.1"))telegram.BackButton.onClick(()=>{const p=parentRoute(location.hash);if(p){haptic("light");location.hash=p;}});window.addEventListener("hashchange",navigate);currentHash=location.hash;render();}

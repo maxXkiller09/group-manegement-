@@ -7,20 +7,16 @@ import { renderTimeline } from "./screens/timeline.js";
 import { renderWarnings } from "./screens/warnings.js";
 import { renderReferrals } from "./screens/referrals.js";
 import { renderCommands } from "./screens/commands.js";
-
-// Dashboard screens of one chat. Each screen module adds one entry
-// ({ key, label, description, render(root, chatID, chat) }); the chat screen
-// links to them and the router renders them at #/chats/<id>/<key>.
-export const sections = [
-	{ key: "overview", label: "Overview", description: "Activity, members and recent moderation", render: renderOverview },
-	{ key: "commands", label: "Command Center", description: "Commands aur unka kaam Hinglish mein", render: renderCommands },
-	{ key: "activity", label: "Activity", description: "Busiest hours and member growth", render: renderActivity },
-	{ key: "settings", label: "Settings", description: "Greetings, captcha, antiflood, locks and more", render: renderSettings },
-	{ key: "filters", label: "Filters", description: "Automatic replies to keywords", render: renderFilters },
-	{ key: "notes", label: "Notes", description: "Saved messages members can fetch", render: renderNotes },
-	{ key: "blacklists", label: "Blacklists", description: "Words that trigger an action", render: renderBlacklists },
-	{ key: "warnings", label: "Warnings", description: "Warned members and their warns", render: renderWarnings, adminOnly: true },
-	{ key: "timeline", label: "Timeline", description: "Every ban, kick, mute and unban", render: renderTimeline, adminOnly: true },
-	{ key: "members", label: "Top members", description: "Who sent the most messages", render: renderMembers, adminOnly: true },
-	{ key: "referrals", label: "Referrals", description: "Tracked invite links and top inviters", render: renderReferrals, adminOnly: true },
+export const sections=[
+{key:"overview",label:"Group Overview",description:"Group health, member activity and recent actions",render:renderOverview},
+{key:"settings",label:"Security Center",description:"Welcome, captcha, antiflood, locks and protection",render:renderSettings},
+{key:"warnings",label:"Moderation",description:"Warnings and member moderation",render:renderWarnings,adminOnly:true},
+{key:"commands",label:"All Commands",description:"Hinglish guide and available one-tap actions",render:renderCommands},
+{key:"filters",label:"Content Tools · Filters",description:"Automatic keyword replies",render:renderFilters},
+{key:"blacklists",label:"Content Tools · Blacklists",description:"Blocked words and automatic actions",render:renderBlacklists},
+{key:"notes",label:"Content Tools · Notes",description:"Saved messages for members",render:renderNotes},
+{key:"activity",label:"Activity & Analytics",description:"Busiest hours and member growth",render:renderActivity},
+{key:"timeline",label:"Moderation History",description:"Ban, kick, mute and unban audit trail",render:renderTimeline,adminOnly:true},
+{key:"members",label:"Top Members",description:"Most active tracked members",render:renderMembers,adminOnly:true},
+{key:"referrals",label:"Referrals",description:"Tracked invite links and inviters",render:renderReferrals,adminOnly:true},
 ];
