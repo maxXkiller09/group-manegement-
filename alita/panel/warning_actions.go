@@ -23,7 +23,8 @@ type issueWarningResponse struct {
 	UserID      int64  `json:"user_id"`
 	Warnings    int    `json:"warnings"`
 	WarnLimit   int    `json:"warn_limit"`
-	LimitAction string `json:"limit_action,omitempty"`
+	LimitAction       string `json:"limit_action,omitempty"`
+	LimitActionFailed bool   `json:"limit_action_failed,omitempty"`
 	Message     string `json:"message"`
 }
 
@@ -99,13 +100,17 @@ func (p *Panel) handleIssueWarning(w http.ResponseWriter, r *http.Request) {
 			result, applyErr := punishment.Apply(r.Context(), p.bot, punishRequest)
 			if applyErr != nil {
 				log.WithError(applyErr).WithFields(log.Fields{"chat_id": access.ChatID, "target_user_id": request.UserID, "warn_mode": preferences.WarnMode}).Error("[Panel] Warn-limit action failed")
-				writeJSONError(w, http.StatusBadGateway, "warn_limit_action_failed", "warning was saved, but the configured limit action failed")
+				response.LimitActionFailed = true
+				response.Message = "Warning was saved, but the configured limit action failed. Do not retry this warning; check the group and try the action separately."
+				writeJSON(w, http.StatusOK, response)
 				return
 			}
 			if result.Applied {
 				if _, resetErr := warns.ResetUserWarns(request.UserID, access.ChatID); resetErr != nil {
 					log.WithError(resetErr).Error("[Panel] Warn-limit action succeeded but warnings could not be reset")
-					writeJSONError(w, http.StatusInternalServerError, "warn_reset_failed", "limit action succeeded, but warning reset failed; contact the bot owner")
+					response.LimitAction = preferences.WarnMode
+					response.Message = "Configured limit action succeeded, but warning reset failed. Do not retry; contact the bot owner."
+					writeJSON(w, http.StatusOK, response)
 					return
 				}
 				response.LimitAction = preferences.WarnMode
