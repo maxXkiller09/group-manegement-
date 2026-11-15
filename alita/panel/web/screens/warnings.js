@@ -48,6 +48,20 @@ export async function renderWarnings(root, chatID, chat) {
 		target.inputMode = "numeric";
 		target.placeholder = "Member Telegram user ID";
 		target.setAttribute("aria-label", "Member Telegram user ID");
+		const memberPicker = document.createElement("select");
+		memberPicker.setAttribute("aria-label", "Choose a tracked member");
+		memberPicker.append(new Option("Choose a tracked member (optional)", ""));
+		memberPicker.addEventListener("change", () => {
+			if (memberPicker.value) target.value = memberPicker.value;
+		});
+		api(`chats/${encodeURIComponent(chatID)}/top-members?days=90&limit=50`).then((data) => {
+			memberPicker.replaceChildren(new Option("Choose a tracked member (optional)", ""));
+			for (const member of data.members ?? []) {
+				memberPicker.append(new Option(userLabel(data.names, member.user_id), String(member.user_id)));
+			}
+		}).catch(() => {
+			memberPicker.replaceChildren(new Option("Member list unavailable — enter ID below", ""));
+		});
 		const reason = document.createElement("textarea");
 		reason.maxLength = 3000;
 		reason.rows = 2;
@@ -87,7 +101,7 @@ export async function renderWarnings(root, chatID, chat) {
 				issue.disabled = false;
 			}
 		});
-		issueBox.append(target, reason, issue);
+		issueBox.append(memberPicker, target, reason, issue);
 		container.append(issueBox);
 	} else {
 		container.append(textElement("p", "Read-only: warnings cannot be changed in this chat.", "muted"));
