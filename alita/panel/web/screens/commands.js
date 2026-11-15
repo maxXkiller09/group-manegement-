@@ -62,9 +62,17 @@ const manageRoutes = {
   "/setfloodmode": "settings",
   "/lock": "settings",
   "/unlock": "settings",
+  "/warn": "warnings",
+  "/warns": "warnings",
+  "/rmwarn": "warnings",
 };
 
-function commandCard(command, chatID) {
+const directActionCommands = new Map([
+  ["/ban", "ban"], ["/tban", "tban"], ["/kick", "kick"],
+  ["/mute", "mute"], ["/tmute", "tmute"], ["/unban", "unban"], ["/unmute", "unmute"],
+]);
+
+function commandCard(command, chatID, actionControls) {
   const [name, description, access, example] = command;
   const card = document.createElement("article");
   card.className = "callout command-card";
@@ -87,6 +95,17 @@ function commandCard(command, chatID) {
   });
   exampleRow.append(copy);
   card.append(exampleRow);
+  const directAction = directActionCommands.get(name);
+  if (directAction && actionControls.box && actionControls.select) {
+    const manage = textElement("button", "Open action controls  ›", "command-manage");
+    manage.type = "button";
+    manage.addEventListener("click", () => {
+      actionControls.select.value = directAction;
+      actionControls.select.dispatchEvent(new Event("change"));
+      actionControls.box.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    card.append(manage);
+  }
   const route = manageRoutes[name];
   if (route) {
     const manage = textElement("a", "Mini App mein manage karein  ›", "command-manage");
@@ -97,14 +116,17 @@ function commandCard(command, chatID) {
 }
 
 export function renderCommands(root, chatID, chat) {
+  const actionControls = { box: null, select: null };
   if (chat?.role === "admin") {
     const actionBox = document.createElement("section");
+    actionControls.box = actionBox;
     actionBox.className = "callout direct-action";
     actionBox.append(textElement("h2", "Direct moderation actions", "section-header"));
     actionBox.append(textElement("p", "Member ID enter karein, action choose karein, phir confirmation ke baad group mein apply hoga. Telegram permissions har request par dobara verify hongi.", "command-description"));
 
     const action = document.createElement("select");
     action.setAttribute("aria-label", "Moderation action");
+    actionControls.select = action;
     for (const [value, label] of [["ban", "Ban"], ["tban", "Timed ban"], ["kick", "Kick"], ["mute", "Mute"], ["tmute", "Timed mute"], ["unban", "Unban"], ["unmute", "Unmute"]]) {
       const option = document.createElement("option");
       option.value = value;
@@ -229,7 +251,7 @@ export function renderCommands(root, chatID, chat) {
       if (matches.length === 0) continue;
       results.append(textElement("h2", group.title, "section-header"));
       for (const command of matches) {
-        results.append(commandCard(command, chatID));
+        results.append(commandCard(command, chatID, actionControls));
         count += 1;
       }
     }
