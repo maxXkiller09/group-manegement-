@@ -691,7 +691,7 @@ help_configuration_step-3: "¡Excelente!
 
 
   Si tienes alguna dificultad configurándome en tu grupo, no dudes
-  en venir a @DivideSupport.
+  en venir a NexGuard support.
 
   Nos encantaría ayudarte."
 help_donatetext: "¿Así que quieres donar? ¡Increíble!
@@ -1646,7 +1646,7 @@ help_pm_intro: |
   - /help: Te envía este mensaje; ¡Te contaré más sobre mí!
   - /donate: Te da información sobre cómo apoyarme y a mi creador.
 
-  Si tienes algún error o preguntas sobre cómo usarme, echa un vistazo a mi <a href="https://alita-docs.divkix.me">sitio web</a>, o dirígete a @DivideSupport.
+  Si tienes algún error o preguntas sobre cómo usarme, echa un vistazo a mi <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">sitio web</a>, o dirígete a NexGuard support.
 
 # Captcha module additional strings
 captcha_settings_header: "<b>Configuración de Captcha:</b>"
