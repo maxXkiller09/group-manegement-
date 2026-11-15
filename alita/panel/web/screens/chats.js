@@ -16,7 +16,7 @@ function firstUseGuide() {
   guide.setAttribute("aria-labelledby", "first-use-title");
   guide.append(
     textElement("span", "LET'S GET STARTED", "guide-eyebrow"),
-    textElement("h2", "Set up your first group", "guide-title"),
+    Object.assign(textElement("h2", "Set up your first group", "guide-title"), { id: "first-use-title" }),
     textElement("p", "You only need to do this once. Follow these three easy steps.", "guide-copy"),
   );
   const steps = document.createElement("ol");
@@ -29,10 +29,7 @@ function firstUseGuide() {
     const item = document.createElement("li");
     item.append(
       textElement("span", number, "setup-step-number"),
-      Object.assign(document.createElement("span"), {
-        className: "setup-step-copy",
-        innerHTML: "",
-      }),
+      Object.assign(document.createElement("span"), { className: "setup-step-copy" }),
     );
     const copy = item.lastElementChild;
     copy.append(textElement("strong", title), textElement("span", description));
