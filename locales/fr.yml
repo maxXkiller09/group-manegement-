@@ -1551,7 +1551,7 @@ languages_help_msg: "Vous n'arrivez pas à changer la langue du bot ?
   × /lang: Changer la langue du bot pour vous ou le groupe.
 
 
-  Vous pouvez nous aider à apporter le bot dans plus de langues en contribuant sur [Crowdin](https://crowdin.com/project/alita_robot)"
+  Vous pouvez contribuer aux traductions via le dépôt NexGuard."
 
 # Antiflood module help message
 antiflood_help_msg:
