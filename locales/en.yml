@@ -673,45 +673,9 @@ greetings_help_msg:
 
   × /autoapprove `<yes/no/on/off>`: Automatically approve chat join requests."
 help_about: "@%s is NexGuard 🛡️, built to help communities manage and protect their Telegram groups.\n\n<b>Why NexGuard:</b>\n- Simple: Clear tools for everyday group management.\n- Capable: Moderation, anti-spam, CAPTCHA, automation, and more.\n- Fast: Built with <a href='https://go.dev/'>Go</a>.\n\n<b>Current Version:</b> %s"
-help_configuration_step-1: "Welcome to the NexGuard Configuration
-
-
-  The first thing to do is to add NexGuard 🛡️ to your group! For doing that, press the
-  under button and select your group, then press Done to continue the tutorial."
-help_configuration_step-2: "Ok, well done!
-
-
-  Now to let me work correctly, you need to make me Admin of your Group!
-
-  To do that, follow these easy steps:
-
-  ▫️ Go to your group
-
-  ▫️ Press the Group's name
-
-  ▫️ Press Modify
-
-  ▫️ Press on Administrator
-
-  ▫️ Press Add Administrator
-
-  ▫️ Press the Magnifying Glass
-
-  ▫️ Search @%s
-
-  ▫️ Confirm"
-help_configuration_step-3: "Excellent!
-
-
-  Now the Bot is ready to use!
-
-  All commands start with /
-
-
-  If you're facing any difficulties in setting up me in your group, so don't hesitate
-  to come in @DivideSupport.
-
-  We would love to help you."
+help_configuration_step-1: "Welcome to NexGuard Configuration. Add NexGuard 🛡️ to your group using the button below, select your group, then press Done to continue.\n\n"
+help_configuration_step-2: "Great! To work correctly, NexGuard needs admin permissions in your group. Open your group settings, choose Administrators, add @%s, and confirm the permissions.\n\n"
+help_configuration_step-3: "Excellent! NexGuard is ready to use. All commands start with /. If you need setup help, contact NexGuard support.\n\n"
 help_donatetext: "So you want to donate? Amazing!
 
   When you donate, all the fund goes towards my development which makes on fast and
@@ -723,6 +687,7 @@ help_donatetext: "So you want to donate? Amazing!
   All the funds would be put into my services such as database, storage, and hosting!
 
   You can donate by contacting my owner here: @DivideProjectsBot"
+
 language_flag: 🇺🇸
 language_name: English
 help_help_msg:
