@@ -37,9 +37,9 @@ func helpTestTranslator(t *testing.T) *i18n.Translator {
 	t.Helper()
 
 	tr, err := i18n.NewTestTranslator(`
-help_info_about_header: "About Alita"
+help_info_about_header: "About NexGuard"
 help_bot_intro: "Intro. "
-help_news_channel_text: "News."
+help_news_channel_text: ""
 help_pm_intro: "Hi %s. "
 help_all_commands_usage: "Use commands."
 help_button_about_me: "About me"
@@ -64,10 +64,10 @@ func TestHelpTextRendering(t *testing.T) {
 	t.Parallel()
 
 	tr := helpTestTranslator(t)
-	if got := getAboutText(tr); got != "About Alita" {
+	if got := getAboutText(tr); got != "About NexGuard" {
 		t.Fatalf("getAboutText() = %q", got)
 	}
-	if got := getStartHelp(tr); got != "Intro. News." {
+	if got := getStartHelp(tr); got != "Intro. " {
 		t.Fatalf("getStartHelp() = %q", got)
 	}
 	if got := getMainHelp(tr, "Div"); got != "Hi Div. Use commands." {
@@ -79,9 +79,9 @@ func TestHelpKeyboardsUseCallbackCodecAndBotUsername(t *testing.T) {
 	t.Parallel()
 
 	tr := helpTestTranslator(t)
-	aboutKb := getAboutKb(tr, "AlitaRobot")
-	if len(aboutKb.InlineKeyboard) != 5 {
-		t.Fatalf("getAboutKb() rows = %d, want 5", len(aboutKb.InlineKeyboard))
+	aboutKb := getAboutKb(tr, "NexGuardd_Bot")
+	if len(aboutKb.InlineKeyboard) != 4 {
+		t.Fatalf("getAboutKb() rows = %d, want 4", len(aboutKb.InlineKeyboard))
 	}
 	if aboutKb.InlineKeyboard[0][0].Text != "Add" {
 		t.Fatalf("add-to-chat button text = %q", aboutKb.InlineKeyboard[0][0].Text)
@@ -96,11 +96,11 @@ func TestHelpKeyboardsUseCallbackCodecAndBotUsername(t *testing.T) {
 		t.Fatalf("about callback = %q, want encoded about callback", aboutKb.InlineKeyboard[1][0].CallbackData)
 	}
 
-	startKb := getStartMarkup(tr, "AlitaRobot")
+	startKb := getStartMarkup(tr, "NexGuardd_Bot")
 	if len(startKb.InlineKeyboard) != 4 {
 		t.Fatalf("getStartMarkup() rows = %d, want 4", len(startKb.InlineKeyboard))
 	}
-	if got := startKb.InlineKeyboard[1][0].Url; !strings.HasPrefix(got, "https://t.me/AlitaRobot?startgroup=botstart&") {
+	if got := startKb.InlineKeyboard[1][0].Url; !strings.HasPrefix(got, "https://t.me/NexGuardd_Bot?startgroup=botstart&") {
 		t.Fatalf("add-to-chat URL = %q", got)
 	}
 	if !strings.HasPrefix(startKb.InlineKeyboard[2][0].CallbackData, "helpq|v1|") {
