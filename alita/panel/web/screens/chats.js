@@ -3,11 +3,11 @@ import { clear, emptyState, initials, loading, relativeTime, setHeader, showErro
 
 // chatRow is one tappable group: an initials avatar, the title, and either
 // the group the panel was opened from or when the user was last active there.
-function chatRow(chat, pinned) {
+function chatRow(chat, pinned, targetSection) {
 	const item = document.createElement("li");
 	const link = document.createElement("a");
 	link.className = "nav-row";
-	link.href = `#/chats/${chat.id}`;
+	link.href = targetSection ? `#/chats/${chat.id}/${targetSection}` : `#/chats/${chat.id}`;
 
 	const title = chat.title || String(chat.id);
 	const avatar = textElement("span", initials(title), "avatar");
@@ -27,7 +27,7 @@ function chatRow(chat, pinned) {
 	return item;
 }
 
-export async function renderChats(root) {
+export async function renderChats(root, targetSection = "") {
 	setHeader("Your groups");
 	clear(root);
 	root.append(loading("Loading chats…"));
@@ -36,7 +36,7 @@ export async function renderChats(root) {
 	try {
 		data = await api("session", { method: "POST" });
 	} catch (error) {
-		showError(root, error, () => renderChats(root));
+		showError(root, error, () => renderChats(root, targetSection));
 		return;
 	}
 
@@ -59,7 +59,7 @@ export async function renderChats(root) {
 	const list = document.createElement("ul");
 	list.className = "group-list";
 	for (const chat of ordered) {
-		list.append(chatRow(chat, String(chat.id) === pinnedID));
+		list.append(chatRow(chat, String(chat.id) === pinnedID, targetSection));
 	}
 	root.append(textElement("h2", "Groups", "section-header"), list);
 	root.append(textElement("p", "Groups where I have seen you, most recently active first.", "section-footer"));
