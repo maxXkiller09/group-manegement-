@@ -629,66 +629,7 @@ greetings_help_msg:
   × /cleangoodbye `<yes/no/on/off>`: Hapus pesan selamat tinggal lama, setiap kali anggota keluar.
 
   × /autoapprove `<yes/no/on/off>`: Setujui permintaan bergabung secara otomatis."
-help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur.
-
-
-  NexGuard 🛡️ dikembangkan dan dikelola secara aktif oleh NexGuard team!
-
-
-  NexGuard telah online sejak 2020 dan telah melayani ribuan grup dengan ratusan
-  ribu pengguna!
-
-
-  <b>Mengapa NexGuard:</b>
-
-  - Sederhana: Penggunaan mudah dan kompatibel dengan banyak perintah bot.
-
-  - Fitur Lengkap: Banyak fitur yang tidak dimiliki bot manajemen grup lain.
-
-  - Cepat: Tebak apa? Ini tidak dibuat menggunakan Python, kami menggunakan <a href='https://go.dev/'>Go</a>
-  sebagai bahasa pemrograman inti kami.
-
-
-  <b>Versi Saat Ini:</b> %s"
-help_configuration_step-1: "Selamat datang di Konfigurasi NexGuard
-
-
-  Hal pertama yang harus dilakukan adalah menambahkan NexGuard 🛡️ ke grup Anda! Untuk melakukan itu, tekan
-  tombol di bawah dan pilih grup Anda, lalu tekan Selesai untuk melanjutkan tutorial."
-help_configuration_step-2: "Ok, bagus!
-
-
-  Sekarang untuk membiarkan saya bekerja dengan benar, Anda perlu menjadikan saya Admin dari Grup Anda!
-
-  Untuk melakukan itu, ikuti langkah-langkah mudah ini:
-
-  ▫️ Pergi ke grup Anda
-
-  ▫️ Tekan Nama Grup
-
-  ▫️ Tekan Modifikasi
-
-  ▫️ Tekan pada Administrator
-
-  ▫️ Tekan Tambah Administrator
-
-  ▫️ Tekan Kaca Pembesar
-
-  ▫️ Cari @%s
-
-  ▫️ Konfirmasi"
-help_configuration_step-3: "Sangat bagus!
-
-
-  Sekarang Bot siap digunakan!
-
-  Semua perintah diawali dengan /
-
-
-  Jika Anda menghadapi kesulitan dalam menyiapkan saya di grup Anda, jangan ragu
-  untuk datang ke NexGuard support.
-
-  Kami akan dengan senang hati membantu Anda."
+help_about: "@%s adalah NexGuard 🛡️, dibuat untuk membantu komunitas mengelola dan melindungi grup Telegram mereka.\n\n<b>Mengapa NexGuard:</b>\n- Sederhana: alat yang mudah untuk pengelolaan grup.\n- Lengkap: moderasi, anti-spam, CAPTCHA, dan otomatisasi.\n- Cepat: dibuat dengan <a href='https://go.dev/'>Go</a>.\n\n<b>Versi saat ini:</b> %s"
 help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
 
   Ketika Anda berdonasi, semua dana masuk ke pengembangan saya yang membuat cepat dan
@@ -727,7 +668,7 @@ languages_help_msg: "Tidak dapat mengubah bahasa bot?
   × /lang: Ubah bahasa bot untuk Anda atau grup.
 
 
-  Anda dapat membantu kami membawa bot ke lebih banyak bahasa dengan membantu di [Crowdin](https://crowdin.com/project/alita_robot)"
+  Anda dapat berkontribusi menerjemahkan melalui repositori NexGuard."
 locks_help_msg: "*Admin saja*:
 
   × /lock `<tipe> [tipe ...]`: Kunci satu atau lebih tipe kunci (lihat /locktypes).
@@ -1481,8 +1422,8 @@ help_info_about_header: "Info & Tentang\n\nBerikut adalah beberapa FAQ tentang N
 help_news_channel_text: ""
 help_all_commands_usage: "Semua perintah diawali dengan /"
 help_button_about_me: "Tentang saya 👨‍💻"
-help_button_news_channel: "Kanal Berita 📢"
-help_button_support_group: "Grup Dukungan 👥"
+help_button_news_channel: ""
+help_button_support_group: ""
 help_button_configuration: "Konfigurasi ⚙️"
 help_button_about: "Tentang ✨"
 help_button_add_to_chat: "➕ Tambahkan saya ke obrolan!"
