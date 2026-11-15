@@ -10,8 +10,6 @@ export default defineConfig({
 	github: { owner: "maxXkiller09", repo: "group-manegement-" },
 
 	content: { root: "src/content/docs" },
-	// Keep the currently configured docs hosting URL until a NexGuard domain is configured.
-	deployment: { site: "https://alita-docs.divkix.me" },
 
 	agents: { llmsTxt: true },
 	seo: {
