@@ -686,7 +686,7 @@ help_configuration_step-3: "Sangat bagus!
 
 
   Jika Anda menghadapi kesulitan dalam menyiapkan saya di grup Anda, jangan ragu
-  untuk datang ke @DivideSupport.
+  untuk datang ke NexGuard support.
 
   Kami akan dengan senang hati membantu Anda."
 help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
@@ -1673,7 +1673,7 @@ help_pm_intro: |
   - /help: Mengirim pesan ini; Saya akan memberi tahu Anda lebih banyak tentang diri saya!
   - /donate: Memberi Anda info tentang cara mendukung saya dan kreator saya.
 
-  Jika Anda memiliki bug atau pertanyaan tentang cara menggunakan saya, lihat <a href="https://alita-docs.divkix.me">situs web saya</a>, atau pergi ke @DivideSupport.
+  Jika Anda memiliki bug atau pertanyaan tentang cara menggunakan saya, lihat <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">situs web saya</a>, atau pergi ke NexGuard support.
 
 # Captcha module strings
 captcha_settings_header: "<b>Pengaturan Captcha:</b>"
