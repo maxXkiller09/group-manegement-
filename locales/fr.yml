@@ -1,5 +1,20 @@
-# French locale for Alita Robot
+# French locale for NexGuard Robot
 # Language metadata
+help_configuration_step-1: "Bienvenue dans la configuration de NexGuard. Ajoutez NexGuard 🛡️ à votre groupe avec le bouton ci-dessous, sélectionnez le groupe, puis appuyez sur Done pour continuer.\n\n"
+help_configuration_step-2: "Très bien ! Pour fonctionner correctement, NexGuard a besoin des droits d'administrateur. Ouvrez les paramètres du groupe, choisissez Administrateurs, ajoutez @%s et confirmez les autorisations.\n\n"
+help_configuration_step-3: "Excellent ! NexGuard est prêt. Toutes les commandes commencent par /. Pour obtenir de l'aide sur la configuration, contactez le support NexGuard.\n\n"
+help_donatetext: "Vous voulez faire un don ? Incroyable !
+
+  Quand vous faites un don, tous les fonds vont vers mon développement, ce qui me rend rapide et
+  réactif.
+
+  Votre don pourrait aussi me permettre d'obtenir une ou deux nouvelles fonctionnalités, que je n'étais pas en mesure d'avoir
+  en raison des limitations du serveur.
+
+  Tous les fonds seront utilisés pour mes services tels que la base de données, le stockage et l'hébergement !
+
+  Vous pouvez faire un don en contactant mon propriétaire ici : NexGuard team"
+
 language_flag: 🇫🇷
 language_name: Français
 
@@ -692,7 +707,7 @@ greetings_clean_service_not: "Je ne supprime actuellement pas les messages d'arr
 # Filters module strings
 filters_help_msg:
   "Les filtres ne sont pas sensibles à la casse ; chaque fois que quelqu'un dit vos mots
-  déclencheurs, Alita répondra autre chose ! Cela peut être utilisé pour créer vos propres commandes,
+  déclencheurs, NexGuard répondra autre chose ! Cela peut être utilisé pour créer vos propres commandes,
   si désiré.
 
 
@@ -1103,67 +1118,14 @@ extraction_invalid_time_type: "Type de temps invalide spécifié. Attendu m, h, 
 extraction_invalid_time_format: "Format de temps invalide spécifié."
 
 # Help module strings
-help_about: "@%s est l'un des gestionnaires de groupe les plus rapides et les plus complets.
+help_about: "@%s est NexGuard 🛡️, conçu pour aider les communautés à gérer et protéger leurs groupes Telegram.\n\n<b>Pourquoi NexGuard :</b>\n- Simple : des outils clairs pour gérer les groupes.\n- Complet : modération, anti-spam, CAPTCHA et automatisation.\n- Rapide : développé avec <a href='https://go.dev/'>Go</a>.\n\n<b>Version actuelle :</b> %s"
+help_configuration_step-1: "Bienvenue dans la configuration d'NexGuard
 
 
-  Alita ✨ est développé et activement maintenu par @DivideProjects !
-
-
-  Alita est en ligne depuis 2020 et a servi des milliers de groupes avec des centaines
-  de milliers d'utilisateurs !
-
-
-  <b>Pourquoi Alita :</b>
-
-  - Simple : Utilisation facile et compatible avec de nombreuses commandes de bot.
-
-  - Complet : De nombreuses fonctionnalités que d'autres bots de gestion de groupe n'ont pas.
-
-  - Rapide : Devinez quoi ? Il n'est pas fait en Python, nous utilisons <a href='https://go.dev/'>Go</a>
-  comme langage de programmation principal.
-
-
-  <b>Version actuelle :</b> %s"
-help_configuration_step-1: "Bienvenue dans la configuration d'Alita
-
-
-  La première chose à faire est d'ajouter Alita ✨ à votre groupe ! Pour ce faire, appuyez sur le
+  La première chose à faire est d'ajouter NexGuard 🛡️ à votre groupe ! Pour ce faire, appuyez sur le
   bouton ci-dessous et sélectionnez votre groupe, puis appuyez sur Terminé pour continuer le tutoriel."
-help_configuration_step-2: "Ok, bien joué !
 
 
-  Maintenant, pour que je fonctionne correctement, vous devez me faire Admin de votre Groupe !
-
-  Pour ce faire, suivez ces étapes simples :
-
-  ▫️ Allez dans votre groupe
-
-  ▫️ Appuyez sur le nom du groupe
-
-  ▫️ Appuyez sur Modifier
-
-  ▫️ Appuyez sur Administrateur
-
-  ▫️ Appuyez sur Ajouter un administrateur
-
-  ▫️ Appuyez sur la loupe
-
-  ▫️ Recherchez @%s
-
-  ▫️ Confirmez"
-help_configuration_step-3: "Excellent !
-
-
-  Maintenant le Bot est prêt à l'emploi !
-
-  Toutes les commandes commencent par /
-
-
-  Si vous rencontrez des difficultés pour me configurer dans votre groupe, n'hésitez pas
-  à venir sur @DivideSupport.
-
-  Nous serons ravis de vous aider."
-help_donatetext: "Vous voulez faire un don ? Incroyable !
 
   Quand vous faites un don, tous les fonds vont vers mon développement, ce qui me rend rapide et
   réactif.
@@ -1173,21 +1135,21 @@ help_donatetext: "Vous voulez faire un don ? Incroyable !
 
   Tous les fonds seront utilisés pour mes services tels que la base de données, le stockage et l'hébergement !
 
-  Vous pouvez faire un don en contactant mon propriétaire ici : @DivideProjectsBot"
+  Vous pouvez faire un don en contactant mon propriétaire ici : NexGuard teamBot"
 help_pm_questions: "Salut :) Envoyez-moi un MP si vous avez des questions sur mon utilisation !"
 help_config_private_only: La configuration ne fonctionne qu'en privé
-help_info_about_header: "Info & À propos\n\nVoici quelques FAQ sur Alita."
-help_news_channel_text: "Rejoignez mon <a href='https://t.me/AlitaRobotUpdates'>canal d'actualités</a> pour obtenir des informations sur toutes les dernières mises à jour."
+help_info_about_header: "Info & À propos\n\nVoici quelques FAQ sur NexGuard."
+help_news_channel_text: ""
 help_all_commands_usage: "Toutes les commandes commencent par /"
 help_button_about_me: "À propos de moi 👨‍💻"
-help_button_news_channel: "Canal d'actualités 📢"
-help_button_support_group: "Groupe de support 👥"
+help_button_news_channel: ""
+help_button_support_group: ""
 help_button_configuration: "Configuration ⚙️"
 help_button_about: "À propos ✨"
 help_button_add_to_chat: "➕ Ajoute-moi au chat !"
-help_button_add_alita: "➕ Ajouter Alita au chat !"
+help_button_add_alita: "➕ Ajouter NexGuard au chat !"
 help_button_share: "📤 Partager"
-help_share_text: "Alita Robot — un bot libre et open source pour gérer les groupes Telegram."
+help_share_text: "NexGuard Robot — un bot libre et open source pour gérer les groupes Telegram."
 help_about_panel_hint: "\n\n📊 Admins : ouvrez le tableau de bord à tout moment depuis le bouton de menu à côté du champ de message."
 help_button_commands_help: "📚 Commandes & Aide"
 help_button_language: "Langue 🌏"
@@ -1199,10 +1161,10 @@ help_markdown_help_button: "Aide Markdown"
 help_markdown_formatting_button: "Formatage Markdown"
 help_fillings_button: "Remplissages"
 help_random_content_button: "Contenu aléatoire"
-help_bot_intro: "Salut ! Je m'appelle Alita ✨.\nJe suis là pour vous aider à gérer vos groupes !\nTapez /help pour en savoir plus sur comment m'utiliser au maximum.\n"
+help_bot_intro: "Salut ! Je m'appelle NexGuard 🛡️.\nJe suis là pour vous aider à gérer vos groupes !\nTapez /help pour en savoir plus sur comment m'utiliser au maximum.\n"
 help_pm_intro: |
   Salut %s !
-  Je m'appelle Alita ✨.
+  Je m'appelle NexGuard 🛡️.
 
   Je suis un bot de gestion de groupe, là pour vous aider à naviguer et maintenir l'ordre dans vos groupes !
   J'ai plein de fonctionnalités pratiques, comme le contrôle du flood, un système d'avertissements, un système de notes, et même des réponses prédéfinies sur certains mots-clés.
@@ -1212,7 +1174,7 @@ help_pm_intro: |
   - /help : Envoie ce message ; je vous en dirai plus sur moi-même !
   - /donate : Vous donne des infos sur comment me soutenir ainsi que mon créateur.
 
-  Si vous avez des bugs ou des questions sur comment m'utiliser, consultez mon <a href="https://alita-docs.divkix.me">site web</a>, ou rendez-vous sur @DivideSupport.
+  Si vous avez des bugs ou des questions sur comment m'utiliser, consultez mon <a href="https://github.com/maxXkiller09/group-manegement-">site web</a>, ou rendez-vous sur NexGuard support.
 
 # Misc module strings
 misc_help_msg:
@@ -1389,7 +1351,7 @@ reports_help_msg:
   × /reports `mute <N>` / `mute off` : Rend muet un utilisateur dès que N (2-20) membres différents ont des signalements ouverts contre lui, jusqu'à la décision d'un admin et pour 24 heures au maximum. Désactivé par défaut ; ne s'applique jamais aux admins ni aux utilisateurs approuvés.
 
 
-  Pour signaler un utilisateur, répondez simplement à son message avec @admin ou /report ; Alita
+  Pour signaler un utilisateur, répondez simplement à son message avec @admin ou /report ; NexGuard
   répondra alors avec un message indiquant que les admins ont été notifiés.
 
   Vous DEVEZ répondre à un message pour signaler un utilisateur ; vous ne pouvez pas utiliser @admin
@@ -1457,7 +1419,7 @@ reports_automute_applied: "{user} a été rendu muet jusqu'à ce qu'un admin exa
 mute_reply_to_dmute: Vous devez répondre à un message pour le supprimer et rendre l'utilisateur muet !
 
 # Bot updates module strings
-bot_updates_creators_plug: "\nSuivez @DivideProjects pour plus de bots utiles de mes créateurs."
+bot_updates_creators_plug: "\nSuivez NexGuard team pour plus de bots utiles de mes créateurs."
 bot_updates_make_me_admin: "\n\nFaites-moi administrateur pour profiter de toutes mes fonctionnalités !"
 bot_updates_need_admin: Vous devez être admin pour faire cela !
 bot_updates_need_supergroup: "Désolé, mais pour utiliser toutes mes fonctionnalités, vous devez convertir ce groupe en supergroupe."
@@ -1520,11 +1482,11 @@ format_user_id: "ID utilisateur : %d"
 
 # Formatting module additional strings
 formatting_press_button: "Appuyez sur le bouton ci-dessous pour obtenir l'aide Markdown !"
-formatting_large_options: "Alita supporte un grand nombre d'options de formatage pour rendre vos messages plus expressifs. Jetez un œil !"
+formatting_large_options: "NexGuard supporte un grand nombre d'options de formatage pour rendre vos messages plus expressifs. Jetez un œil !"
 
 # Languages help module strings
 help_help_msg:
-  "Le point d'entrée principal et le système de navigation d'Alita Robot.
+  "Le point d'entrée principal et le système de navigation d'NexGuard Robot.
 
   *Commandes de navigation:*
 
@@ -1551,7 +1513,7 @@ languages_help_msg: "Vous n'arrivez pas à changer la langue du bot ?
   × /lang: Changer la langue du bot pour vous ou le groupe.
 
 
-  Vous pouvez nous aider à apporter le bot dans plus de langues en contribuant sur [Crowdin](https://crowdin.com/project/alita_robot)"
+  Vous pouvez contribuer aux traductions via le dépôt NexGuard."
 
 # Antiflood module help message
 antiflood_help_msg:
@@ -2188,7 +2150,7 @@ users_extended_docs: |
   • D'autres modules, comme <code>/info</code>, dépendent des données collectées par ce module
 
 # Formatting module help message
-formatting_help_msg: "Alita supporte un grand nombre d'options de formatage pour rendre vos messages plus expressifs. Jetez un œil en cliquant sur les boutons ci-dessous !
+formatting_help_msg: "NexGuard supporte un grand nombre d'options de formatage pour rendre vos messages plus expressifs. Jetez un œil en cliquant sur les boutons ci-dessous !
 
   *Commandes utilisateur* :
 
@@ -2256,7 +2218,7 @@ formatting_random: |
   Cela choisira aléatoirement entre envoyer le premier message, "bonjour", ou le second
   message, "comment ça va".
 
-  Utilisez ceci pour rendre Alita un peu plus personnalisé ! (fonctionne uniquement dans les filtres/notes)
+  Utilisez ceci pour rendre NexGuard un peu plus personnalisé ! (fonctionne uniquement dans les filtres/notes)
 
   Exemple de filtre :
 

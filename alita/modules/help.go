@@ -72,9 +72,8 @@ func getAboutText(tr *i18n.Translator) string {
 }
 
 func getStartHelp(tr *i18n.Translator) string {
-	text1, _ := tr.GetString("help_bot_intro")
-	text2, _ := tr.GetString("help_news_channel_text")
-	return text1 + text2
+	text, _ := tr.GetString("help_bot_intro")
+	return text
 }
 
 func getMainHelp(tr *i18n.Translator, firstName string) string {
@@ -89,8 +88,6 @@ func getAboutKb(tr *i18n.Translator, botUsername string) gotgbot.InlineKeyboardM
 	addToChatText, _ := tr.GetString("help_button_add_to_chat")
 	shareText, _ := tr.GetString("help_button_share")
 	shareSummary, _ := tr.GetString("help_share_text")
-	newsChannelText, _ := tr.GetString("help_button_news_channel")
-	supportGroupText, _ := tr.GetString("help_button_support_group")
 	configurationText, _ := tr.GetString("help_button_configuration")
 	backText, _ := tr.GetString("common_back_arrow_alt")
 
@@ -110,16 +107,6 @@ func getAboutKb(tr *i18n.Translator, botUsername string) gotgbot.InlineKeyboardM
 				{
 					Text:         aboutMeText,
 					CallbackData: encodeCallbackData("about", map[string]string{"a": "me"}),
-				},
-			},
-			{
-				{
-					Text: newsChannelText,
-					Url:  "https://t.me/AlitaRobotUpdates",
-				},
-				{
-					Text: supportGroupText,
-					Url:  "https://t.me/DivideSupport",
 				},
 			},
 			{
@@ -151,7 +138,6 @@ func shareBotURL(botUsername, text string) string {
 func getStartMarkup(tr *i18n.Translator, botUsername string) gotgbot.InlineKeyboardMarkup {
 	aboutText, _ := tr.GetString("help_button_about")
 	addToChatText, _ := tr.GetString("help_button_add_to_chat")
-	supportGroupText, _ := tr.GetString("help_button_support_group")
 	commandsHelpText, _ := tr.GetString("help_button_commands_help")
 	languageText, _ := tr.GetString("help_button_language")
 
@@ -169,10 +155,6 @@ func getStartMarkup(tr *i18n.Translator, botUsername string) gotgbot.InlineKeybo
 				{
 					Text: addToChatText,
 					Url:  addToChatUrl,
-				},
-				{
-					Text: supportGroupText,
-					Url:  "https://t.me/DivideSupport",
 				},
 			},
 			{
