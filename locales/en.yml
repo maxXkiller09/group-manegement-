@@ -673,7 +673,13 @@ greetings_help_msg:
 
   × /autoapprove `<yes/no/on/off>`: Automatically approve chat join requests."
 help_about: "@%s is NexGuard 🛡️, built to help communities manage and protect their Telegram groups.\n\n<b>Why NexGuard:</b>\n- Simple: Clear tools for everyday group management.\n- Capable: Moderation, anti-spam, CAPTCHA, automation, and more.\n- Fast: Built with <a href='https://go.dev/'>Go</a>.\n\n<b>Current Version:</b> %s"
-help_donatetext: "So you want to donate? Amazing!
+help_configuration_step-1: "Welcome to the Alita Configuration
+
+
+  The first thing to do is to add Alita ✨ to your group! For doing that, press the
+  under button and select your group, then press Done to continue the tutorial."
+
+undefined "So you want to donate? Amazing!
 
   When you donate, all the fund goes towards my development which makes on fast and
   responsive.
