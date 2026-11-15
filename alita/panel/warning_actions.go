@@ -109,6 +109,7 @@ func (p *Panel) handleIssueWarning(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				response.LimitAction = preferences.WarnMode
+				response.Warnings = 0
 				response.Message = "Warning added; configured limit action applied and warnings reset."
 			} else {
 				response.Message = "Warning added; configured limit action was not applied: " + result.Refusal
