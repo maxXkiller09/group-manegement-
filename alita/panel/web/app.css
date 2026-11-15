@@ -1190,3 +1190,54 @@ body.has-save-bar .toast {
 		animation: none;
 	}
 }
+
+
+/* Hinglish command directory. */
+.command-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.command-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--separator);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--card) 92%, #173b72);
+}
+
+.command-card-head,
+.command-example {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.command-description {
+  margin: 0;
+  color: var(--subtitle);
+}
+
+.command-example {
+  padding: 8px;
+  border-radius: var(--radius-small);
+  background: color-mix(in srgb, var(--hint) 10%, transparent);
+}
+
+.command-example code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.command-manage {
+  align-self: flex-start;
+  min-height: 40px;
+  padding: 8px 0;
+  text-decoration: none;
+  font-weight: 600;
+}
