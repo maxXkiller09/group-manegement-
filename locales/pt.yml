@@ -1,5 +1,20 @@
 # Portuguese (Brazilian) Translation for NexGuard Robot
 
+help_configuration_step-1: "Bem-vindo à configuração do NexGuard. Adicione o NexGuard 🛡️ ao seu grupo pelo botão abaixo, selecione o grupo e pressione Done para continuar.\n\n"
+help_configuration_step-2: "Ótimo! Para funcionar corretamente, o NexGuard precisa de permissões de administrador no grupo. Abra as configurações, escolha Administradores, adicione @%s e confirme as permissões.\n\n"
+help_configuration_step-3: "Excelente! O NexGuard está pronto. Todos os comandos começam com /. Se precisar de ajuda na configuração, fale com o suporte NexGuard.\n\n"
+help_donatetext: "Então você quer doar? Incrível!
+
+  Quando você doa, todo o fundo vai para meu desenvolvimento que me torna rápida e
+  responsiva.
+
+  Sua doação pode também me trazer um novo recurso ou dois, que não consegui
+  obter devido a limitações de servidor.
+
+  Todos os fundos serão colocados em meus serviços como banco de dados, armazenamento e hospedagem!
+
+  Você pode doar contatando meu dono aqui: @DivideProjectsBot"
+
 language_flag: "🇵🇹"
 language_name: "Português"
 
@@ -627,7 +642,7 @@ help_configuration_step-1: "Bem-vindo à Configuração do Alita
   A primeira coisa a fazer é adicionar Alita ✨ ao seu grupo! Para fazer isso, pressione o
   botão abaixo e selecione seu grupo, depois pressione Concluído para continuar o tutorial."
 
-undefined "Então você quer doar? Incrível!
+
 
   Quando você doa, todo o fundo vai para meu desenvolvimento que me torna rápida e
   responsiva.
