@@ -1,18 +1,3 @@
-help_configuration_step-1: "Selamat datang di konfigurasi NexGuard. Tambahkan NexGuard 🛡️ ke grup menggunakan tombol di bawah, pilih grup Anda, lalu tekan Done untuk melanjutkan.\n\n"
-help_configuration_step-2: "Bagus! Agar berfungsi dengan benar, NexGuard memerlukan izin admin di grup Anda. Buka pengaturan grup, pilih Administrator, tambahkan @%s, lalu konfirmasi izinnya.\n\n"
-help_configuration_step-3: "Sempurna! NexGuard siap digunakan. Semua perintah dimulai dengan /. Jika perlu bantuan pengaturan, hubungi dukungan NexGuard.\n\n"
-help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
-
-  Ketika Anda berdonasi, semua dana masuk ke pengembangan saya yang membuat cepat dan
-  responsif.
-
-  Donasi Anda mungkin juga memberi saya fitur baru, yang tidak dapat saya dapatkan
-  karena keterbatasan server.
-
-  Semua dana akan dimasukkan ke layanan saya seperti database, penyimpanan, dan hosting!
-
-  Anda dapat berdonasi dengan menghubungi pemilik saya di sini: NexGuard team"
-
 language_flag: "🇮🇩"
 language_name: "Bahasa Indonesia"
 admin_adminlist: "Admin di <b>%s</b>:"
@@ -644,14 +629,67 @@ greetings_help_msg:
   × /cleangoodbye `<yes/no/on/off>`: Hapus pesan selamat tinggal lama, setiap kali anggota keluar.
 
   × /autoapprove `<yes/no/on/off>`: Setujui permintaan bergabung secara otomatis."
-help_about: "@%s adalah NexGuard 🛡️, dibuat untuk membantu komunitas mengelola dan melindungi grup Telegram mereka.\n\n<b>Mengapa NexGuard:</b>\n- Sederhana: alat yang mudah untuk pengelolaan grup.\n- Lengkap: moderasi, anti-spam, CAPTCHA, dan otomatisasi.\n- Cepat: dibuat dengan <a href='https://go.dev/'>Go</a>.\n\n<b>Versi saat ini:</b> %s"
+help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur.
+
+
+  NexGuard 🛡️ dikembangkan dan dikelola secara aktif oleh @DivideProjects!
+
+
+  NexGuard telah online sejak 2020 dan telah melayani ribuan grup dengan ratusan
+  ribu pengguna!
+
+
+  <b>Mengapa NexGuard:</b>
+
+  - Sederhana: Penggunaan mudah dan kompatibel dengan banyak perintah bot.
+
+  - Fitur Lengkap: Banyak fitur yang tidak dimiliki bot manajemen grup lain.
+
+  - Cepat: Tebak apa? Ini tidak dibuat menggunakan Python, kami menggunakan <a href='https://go.dev/'>Go</a>
+  sebagai bahasa pemrograman inti kami.
+
+
+  <b>Versi Saat Ini:</b> %s"
 help_configuration_step-1: "Selamat datang di Konfigurasi NexGuard
 
 
   Hal pertama yang harus dilakukan adalah menambahkan NexGuard 🛡️ ke grup Anda! Untuk melakukan itu, tekan
   tombol di bawah dan pilih grup Anda, lalu tekan Selesai untuk melanjutkan tutorial."
+help_configuration_step-2: "Ok, bagus!
 
 
+  Sekarang untuk membiarkan saya bekerja dengan benar, Anda perlu menjadikan saya Admin dari Grup Anda!
+
+  Untuk melakukan itu, ikuti langkah-langkah mudah ini:
+
+  ▫️ Pergi ke grup Anda
+
+  ▫️ Tekan Nama Grup
+
+  ▫️ Tekan Modifikasi
+
+  ▫️ Tekan pada Administrator
+
+  ▫️ Tekan Tambah Administrator
+
+  ▫️ Tekan Kaca Pembesar
+
+  ▫️ Cari @%s
+
+  ▫️ Konfirmasi"
+help_configuration_step-3: "Sangat bagus!
+
+
+  Sekarang Bot siap digunakan!
+
+  Semua perintah diawali dengan /
+
+
+  Jika Anda menghadapi kesulitan dalam menyiapkan saya di grup Anda, jangan ragu
+  untuk datang ke @DivideSupport.
+
+  Kami akan dengan senang hati membantu Anda."
+help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
 
   Ketika Anda berdonasi, semua dana masuk ke pengembangan saya yang membuat cepat dan
   responsif.
@@ -661,7 +699,7 @@ help_configuration_step-1: "Selamat datang di Konfigurasi NexGuard
 
   Semua dana akan dimasukkan ke layanan saya seperti database, penyimpanan, dan hosting!
 
-  Anda dapat berdonasi dengan menghubungi pemilik saya di sini: NexGuard teamBot"
+  Anda dapat berdonasi dengan menghubungi pemilik saya di sini: NexGuard team"
 help_help_msg:
   "Titik masuk utama dan sistem navigasi untuk NexGuard Robot.
 
@@ -689,7 +727,7 @@ languages_help_msg: "Tidak dapat mengubah bahasa bot?
   × /lang: Ubah bahasa bot untuk Anda atau grup.
 
 
-  Anda dapat berkontribusi menerjemahkan melalui repositori NexGuard."
+  Anda dapat membantu kami membawa bot ke lebih banyak bahasa dengan membantu di [Crowdin](https://crowdin.com/project/alita_robot)"
 locks_help_msg: "*Admin saja*:
 
   × /lock `<tipe> [tipe ...]`: Kunci satu atau lebih tipe kunci (lihat /locktypes).
@@ -894,7 +932,7 @@ rules_help_msg:
   × /resetrulesbutton: Atur ulang teks tombol aturan ke default.
 
   × /resetrulesbtn: Sama seperti di atas."
-bot_updates_creators_plug: "\nIkuti NexGuard team untuk bot yang lebih berguna dari kreator saya."
+bot_updates_creators_plug: "\nIkuti @DivideProjects untuk bot yang lebih berguna dari kreator saya."
 bot_updates_make_me_admin: "\n\nJadikan saya admin agar semua fitur saya bisa digunakan!"
 warns_help_msg:
   "Jaga anggota Anda dengan peringatan; hentikan mereka keluar dari
@@ -1635,7 +1673,7 @@ help_pm_intro: |
   - /help: Mengirim pesan ini; Saya akan memberi tahu Anda lebih banyak tentang diri saya!
   - /donate: Memberi Anda info tentang cara mendukung saya dan kreator saya.
 
-  Jika Anda memiliki bug atau pertanyaan tentang cara menggunakan saya, lihat <a href="https://github.com/maxXkiller09/group-manegement-">situs web saya</a>, atau pergi ke NexGuard support.
+  Jika Anda memiliki bug atau pertanyaan tentang cara menggunakan saya, lihat <a href="https://alita-docs.divkix.me">situs web saya</a>, atau pergi ke @DivideSupport.
 
 # Captcha module strings
 captcha_settings_header: "<b>Pengaturan Captcha:</b>"
