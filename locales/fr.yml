@@ -1103,66 +1103,7 @@ extraction_invalid_time_type: "Type de temps invalide spécifié. Attendu m, h, 
 extraction_invalid_time_format: "Format de temps invalide spécifié."
 
 # Help module strings
-help_about: "@%s est l'un des gestionnaires de groupe les plus rapides et les plus complets.
-
-
-  NexGuard 🛡️ est développé et activement maintenu par NexGuard team !
-
-
-  NexGuard est en ligne depuis 2020 et a servi des milliers de groupes avec des centaines
-  de milliers d'utilisateurs !
-
-
-  <b>Pourquoi NexGuard :</b>
-
-  - Simple : Utilisation facile et compatible avec de nombreuses commandes de bot.
-
-  - Complet : De nombreuses fonctionnalités que d'autres bots de gestion de groupe n'ont pas.
-
-  - Rapide : Devinez quoi ? Il n'est pas fait en Python, nous utilisons <a href='https://go.dev/'>Go</a>
-  comme langage de programmation principal.
-
-
-  <b>Version actuelle :</b> %s"
-help_configuration_step-1: "Bienvenue dans la configuration d'NexGuard
-
-
-  La première chose à faire est d'ajouter NexGuard 🛡️ à votre groupe ! Pour ce faire, appuyez sur le
-  bouton ci-dessous et sélectionnez votre groupe, puis appuyez sur Terminé pour continuer le tutoriel."
-help_configuration_step-2: "Ok, bien joué !
-
-
-  Maintenant, pour que je fonctionne correctement, vous devez me faire Admin de votre Groupe !
-
-  Pour ce faire, suivez ces étapes simples :
-
-  ▫️ Allez dans votre groupe
-
-  ▫️ Appuyez sur le nom du groupe
-
-  ▫️ Appuyez sur Modifier
-
-  ▫️ Appuyez sur Administrateur
-
-  ▫️ Appuyez sur Ajouter un administrateur
-
-  ▫️ Appuyez sur la loupe
-
-  ▫️ Recherchez @%s
-
-  ▫️ Confirmez"
-help_configuration_step-3: "Excellent !
-
-
-  Maintenant le Bot est prêt à l'emploi !
-
-  Toutes les commandes commencent par /
-
-
-  Si vous rencontrez des difficultés pour me configurer dans votre groupe, n'hésitez pas
-  à venir sur NexGuard support.
-
-  Nous serons ravis de vous aider."
+help_about: "@%s est NexGuard 🛡️, conçu pour aider les communautés à gérer et protéger leurs groupes Telegram.\n\n<b>Pourquoi NexGuard :</b>\n- Simple : des outils clairs pour gérer les groupes.\n- Complet : modération, anti-spam, CAPTCHA et automatisation.\n- Rapide : développé avec <a href='https://go.dev/'>Go</a>.\n\n<b>Version actuelle :</b> %s"
 help_donatetext: "Vous voulez faire un don ? Incroyable !
 
   Quand vous faites un don, tous les fonds vont vers mon développement, ce qui me rend rapide et
@@ -1180,8 +1121,8 @@ help_info_about_header: "Info & À propos\n\nVoici quelques FAQ sur NexGuard."
 help_news_channel_text: ""
 help_all_commands_usage: "Toutes les commandes commencent par /"
 help_button_about_me: "À propos de moi 👨‍💻"
-help_button_news_channel: "Canal d'actualités 📢"
-help_button_support_group: "Groupe de support 👥"
+help_button_news_channel: ""
+help_button_support_group: ""
 help_button_configuration: "Configuration ⚙️"
 help_button_about: "À propos ✨"
 help_button_add_to_chat: "➕ Ajoute-moi au chat !"
@@ -1551,7 +1492,7 @@ languages_help_msg: "Vous n'arrivez pas à changer la langue du bot ?
   × /lang: Changer la langue du bot pour vous ou le groupe.
 
 
-  Vous pouvez nous aider à apporter le bot dans plus de langues en contribuant sur [Crowdin](https://crowdin.com/project/alita_robot)"
+  Vous pouvez contribuer aux traductions via le dépôt NexGuard."
 
 # Antiflood module help message
 antiflood_help_msg:
