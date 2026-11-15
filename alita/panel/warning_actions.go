@@ -72,7 +72,7 @@ func (p *Panel) handleIssueWarning(w http.ResponseWriter, r *http.Request) {
 
 	count, _, err := warns.WarnUser(request.UserID, access.ChatID, models.WarnEntry{
 		WarnedBy: session.User.ID,
-		Reason: request.Reason,
+		Reason:   request.Reason,
 	})
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"chat_id": access.ChatID, "actor_id": session.User.ID, "target_user_id": request.UserID}).Error("[Panel] Failed to add warning")
