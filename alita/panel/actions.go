@@ -18,8 +18,9 @@ const maxActionReasonRunes = 3000
 type directActionRequest struct {
 	Action    string `json:"action"`
 	TargetID  int64  `json:"target_user_id"`
-	Reason    string `json:"reason"`
-	Confirmed bool   `json:"confirmed"`
+	Reason          string `json:"reason"`
+	DurationSeconds int64  `json:"duration_seconds"`
+	Confirmed       bool   `json:"confirmed"`
 }
 
 type directActionResponse struct {
@@ -46,9 +47,16 @@ func decodeDirectAction(r *http.Request, actorID, botID int64) (directActionRequ
 		return request, "reason must be 3000 characters or fewer"
 	}
 	switch request.Action {
-	case "ban", "kick", "mute", "unban":
+	case "ban", "kick", "mute", "unban", "tban", "tmute", "unmute":
 	default:
-		return request, "supported actions are ban, kick, mute and unban"
+		return request, "supported actions are ban, tban, kick, mute, tmute, unban and unmute"
+	}
+	timed := request.Action == "tban" || request.Action == "tmute"
+	if timed && (request.DurationSeconds <= 0 || request.DurationSeconds > 366*24*60*60) {
+		return request, "timed actions require duration_seconds between 1 and 31622400"
+	}
+	if !timed && request.DurationSeconds != 0 {
+		return request, "duration_seconds is only valid for tban and tmute"
 	}
 	if !request.Confirmed {
 		return request, "review the action and confirm it in the Mini App"
@@ -76,13 +84,27 @@ func (p *Panel) verifyDirectActionTarget(r *http.Request, w http.ResponseWriter,
 
 func (p *Panel) applyDirectAction(r *http.Request, chatID, actorID int64, request directActionRequest) (punishment.Result, error) {
 	target := punishment.Target{ID: request.TargetID}
-	if request.Action == "unban" {
+	if request.Action == "unban" || request.Action == "unmute" {
+		mode := punishment.Ban
+		if request.Action == "unmute" {
+			mode = punishment.Mute
+		}
 		return punishment.Lift(r.Context(), p.bot, punishment.LiftRequest{
-			ChatID: chatID, Target: target, Mode: punishment.Ban, ActorID: actorID,
+			ChatID: chatID, Target: target, Mode: mode, ActorID: actorID,
 		})
 	}
+	mode := punishment.Mode(request.Action)
+	duration := time.Duration(0)
+	switch request.Action {
+	case "tban":
+		mode = punishment.Ban
+		duration = time.Duration(request.DurationSeconds) * time.Second
+	case "tmute":
+		mode = punishment.Mute
+		duration = time.Duration(request.DurationSeconds) * time.Second
+	}
 	return punishment.Apply(r.Context(), p.bot, punishment.Request{
-		ChatID: chatID, Target: target, Mode: punishment.Mode(request.Action),
+		ChatID: chatID, Target: target, Mode: mode, Duration: duration,
 		Source: "mini_app", Reason: request.Reason, ActorID: actorID,
 	})
 }
