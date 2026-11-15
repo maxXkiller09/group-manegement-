@@ -651,7 +651,7 @@ help_about:
 
   - Con funciones: Muchas funciones que otros bots de administración de grupos no tienen.
 
-  - Rápido: ¿Adivina qué? No está hecho usando Python, usamos <a href='https://go.dev/'>Go</a>
+  - Rápido: ¿Adivina qué? No está hecho usando Python, usamos Go
   como nuestro lenguaje de programación principal.
 
 
@@ -1625,7 +1625,7 @@ language_invalid_selection: "Selección de idioma inválida."
 bot_updates_need_supergroup: "Lo siento, pero para usar todas mis funciones, necesitas convertir este grupo en supergrupo."
 bot_updates_thanks_for_adding: "¡Gracias por añadirme en tu grupo!"
 bot_updates_button_expired: "Este botón ha expirado, Por favor usa el comando de nuevo."
-bot_updates_creators_plug: "\nSigue a @DivideProjects para más bots útiles de mis creadores."
+bot_updates_creators_plug: ""
 bot_updates_make_me_admin: "\n\n¡Hazme administrador para usar todas mis funciones!"
 
 # Formatting module additional strings
