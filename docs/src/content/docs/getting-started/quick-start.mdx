@@ -1,97 +1,83 @@
 ---
 title: Quick Start Guide
-description: Add Alita Robot to your Telegram group in under 2 minutes.
+description: Add NexGuard to your Telegram group in a few simple steps.
 ---
 
-Get Alita Robot running in your group in just a few steps.
+Get **NexGuard** running in your Telegram group in just a few steps.
 
 <Steps>
-  <Step title="Add the Bot">
+  <Step title="Add NexGuard">
     <Badge variant="accent">Step 1</Badge>
-
     <Tabs>
       <Tab title="Add to existing group">
-        1. Open Telegram and search for **@Alita_Robot** (or your self-hosted bot)
-        2. Click **Start** to begin a conversation
-        3. Click the **Add to Group** button, or use this link: [Add Alita to Group][add-to-group]
+        1. Open [@NexGuardd_Bot](https://t.me/NexGuardd_Bot) on Telegram
+        2. Tap **Start**
+        3. Choose **Add to Group**, or use this link: [Add NexGuard to a Group][add-to-group]
         4. Select your group and confirm
       </Tab>
       <Tab title="Create a new group">
-        1. Open Telegram and create a new group
-        2. During member selection, search for **@Alita_Robot** and add it
-        3. Complete group creation — Alita will be added automatically
-        4. Alternatively, create the group first, then use the link: [Add Alita to Group][add-to-group]
+        1. Create a Telegram group
+        2. Add **@NexGuardd_Bot** from the member-selection screen
+        3. Complete group creation
+        4. You can also add NexGuard later using the group link above
       </Tab>
     </Tabs>
   </Step>
-
-  <Step title="Make the Bot Admin">
+  <Step title="Grant required admin permissions">
     <Badge variant="accent">Step 2</Badge>
-
     :::caution[Admin permissions are required]
-    Alita **cannot** moderate your group without admin permissions. Without them, commands like ban, mute, and delete will not work; Alita replies that it is not an admin or lacks the needed right (for example "I'm not admin!").
+    NexGuard needs relevant Telegram admin permissions to perform moderation actions. Without them, actions such as deleting messages or restricting members may fail.
     :::
-
     1. Open your group settings
     2. Go to **Administrators**
-    3. Click **Add Administrator**
-    4. Select **Alita Robot**
-    5. Enable these permissions:
+    3. Select **NexGuard**
+    4. Enable only the permissions your group needs, such as:
        - Delete messages
        - Ban users
        - Invite users via link
        - Pin messages
        - Manage video chats (optional)
   </Step>
-
-  <Step title="Configure Basic Settings">
+  <Step title="Configure your group">
     <Badge variant="accent">Step 3</Badge>
-
-    **Set Group Rules**
+    **Set group rules**
     ```
     /setrules Your group rules here.
     Be respectful and follow the guidelines.
     ```
-
-    **Set Welcome Message**
+    **Set a welcome message**
     ```
     /setwelcome Welcome {mention}! Please read our /rules before chatting.
     ```
-
-    **Enable CAPTCHA (Recommended)**
+    **Enable CAPTCHA (recommended)**
     ```
     /captcha on
     /captchamode math
     ```
-
     :::tip[Pro tip]
-    Use `{mention}` in welcome messages to tag new members (by @username, or by first name if they have none). Other placeholders include `{chatname}` for the group name and `{count}` for member count.
+    Use `{mention}` to mention new members. Other supported placeholders may include `{chatname}` and `{count}`.
     :::
   </Step>
-
-  <Step title="Explore Commands">
+  <Step title="Explore commands">
     <Badge variant="accent">Step 4</Badge>
-
-    Use `/help` to see all available commands organized by category.
-
-    Popular commands to try:
-    - `/adminlist` — See all group admins
+    Send `/help` in your group to see the available commands.
+    Popular commands:
+    - `/adminlist` — See group administrators
     - `/rules` — Display group rules
     - `/notes` — List saved notes
     - `/filters` — List active filters
-    - `/locks` — See current lock settings
+    - `/locks` — Review lock settings
   </Step>
 </Steps>
 
-## Next Steps
-
-- [Command Reference](/commands/) — Full list of all commands
-- [Welcome Messages](/commands/greetings/) — Customize welcome/goodbye messages
-- [Bans](/commands/bans/) — Learn about bans, mutes, and warnings
-- [CAPTCHA](/commands/captcha/) — Configure verification settings
+## Next steps
+- [Command Reference](/commands/) — Browse available commands
+- [Welcome Messages](/commands/greetings/) — Configure greetings
+- [Bans](/commands/bans/) — Learn about moderation actions
+- [CAPTCHA](/commands/captcha/) — Configure new-member verification
 
 :::tip[Need help?]
-Use `/help` in the bot for quick reference, join the [Support Group](https://t.me/DivideSupport) for assistance, or check the [Troubleshooting](/self-hosting/troubleshooting/) guide for common issues.
+Use `/help` in NexGuard or read the [Troubleshooting](/self-hosting/troubleshooting/) guide.
 :::
 
-[add-to-group]: https://t.me/Alita_Robot?startgroup=botstart&admin=change_info+delete_messages+restrict_members+invite_users+pin_messages+promote_members
+[add-to-group]: https://t.me/NexGuardd_Bot?startgroup=botstart&admin=change_info+delete_messages+restrict_members+invite_users+pin_messages
