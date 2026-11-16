@@ -112,7 +112,7 @@ function statusHeader(chat) {
   if (!userAdmin) {
     status.append(textElement("p", "Ask a group admin to give you admin access if you need to change settings.", "ng-fix-line warn"));
   } else if (!botAdmin) {
-    status.append(textElement("p", "To turn protection on, make NexGuard an admin in Telegram. Open your group → tap its name → Edit → Administrators → Add Admin → choose NexGuard. Only allow the permissions needed for the features you want to use. You can change them later in Telegram.", "ng-fix-line warn"));
+    status.append(textElement("p", "To turn protection on, make NexGuard an admin in Telegram. Open your group → tap its name → Edit → Administrators → Add Admin → choose NexGuard.", "ng-fix-line warn"));
   } else {
     status.append(textElement("p", "You’re ready. Choose what you want to manage below.", "ng-fix-line"));
   }
