@@ -5,44 +5,44 @@ const commandGroups = [
   {
     title: "Moderation",
     commands: [
-      ["/ban", "Kisi member ko group se remove karke dobara join hone se rokta hai.", "admin", "/ban @username reason"],
-      ["/tban", "Member ko sirf diye gaye time ke liye ban karta hai.", "admin", "/tban @username 1d reason"],
-      ["/unban", "Pehle ban kiye gaye member ko wapas join karne deta hai.", "admin", "/unban @username"],
-      ["/kick", "Member ko group se remove karta hai; woh dobara join kar sakta hai.", "admin", "/kick @username reason"],
-      ["/mute", "Member ke messages bhejne ki permission rokta hai.", "admin", "/mute @username reason"],
-      ["/tmute", "Member ko limited time ke liye mute karta hai.", "admin", "/tmute @username 1h reason"],
-      ["/unmute", "Member ka mute hatata hai.", "admin", "/unmute @username"],
-      ["/warn", "Member ko rule todne par warning deta hai.", "admin", "/warn @username reason"],
-      ["/warns", "Warnings ki list ya apni warning details dikhata hai.", "member", "/warns"],
-      ["/rmwarn", "Member ki ek warning remove karta hai.", "admin", "/rmwarn @username"],
+      ["/ban", "Removes a member and stops them from joining again.", "admin", "/ban @username reason"],
+      ["/tban", "Blocks a member for the set time.", "admin", "/tban @username 1d reason"],
+      ["/unban", "Allows a blocked member to join again.", "admin", "/unban @username"],
+      ["/kick", "Removes a member. They can join again.", "admin", "/kick @username reason"],
+      ["/mute", "Stops a member from sending messages.", "admin", "/mute @username reason"],
+      ["/tmute", "Stops a member from sending messages for a set time.", "admin", "/tmute @username 1h reason"],
+      ["/unmute", "Allows a member to send messages again.", "admin", "/unmute @username"],
+      ["/warn", "Sends a warning when a member breaks a group rule.", "admin", "/warn @username reason"],
+      ["/warns", "Shows the warning list or your own warnings.", "member", "/warns"],
+      ["/rmwarn", "Removes one warning from a member.", "admin", "/rmwarn @username"],
     ],
   },
   {
     title: "Group protection",
     commands: [
-      ["/antiraid", "Join raid ke dauran group ko temporary protection mode mein rakhta hai.", "admin", "/antiraid"],
-      ["/setflood", "Ek saath bahut messages bhejne par action set karta hai.", "admin", "/setflood 5"],
-      ["/setfloodmode", "Flood detect hone par kya action lena hai, set karta hai.", "admin", "/setfloodmode mute"],
-      ["/captcha", "Naye members ke liye verification settings manage karta hai.", "admin", "/captcha"],
-      ["/aispam", "Automatic spam detection settings manage karta hai.", "admin", "/aispam"],
-      ["/lock", "Group ke selected message type ko members ke liye lock karta hai.", "admin", "/lock url"],
-      ["/unlock", "Pehle lagaya gaya selected lock hataata hai.", "admin", "/unlock url"],
-      ["/blacklists", "Blocked words aur unke automatic actions manage karta hai.", "admin", "/blacklists"],
+      ["/antiraid", "Turns on extra group protection during a join raid.", "admin", "/antiraid"],
+      ["/setflood", "Sets what happens when someone sends too many messages.", "admin", "/setflood 5"],
+      ["/setfloodmode", "Sets what happens when spam messages are detected.", "admin", "/setfloodmode mute"],
+      ["/captcha", "Sets up checks for new members.", "admin", "/captcha"],
+      ["/aispam", "Controls automatic spam checks.", "admin", "/aispam"],
+      ["/lock", "Stops members from sending a selected type of message.", "admin", "/lock url"],
+      ["/unlock", "Allows members to send that type of message again.", "admin", "/unlock url"],
+      ["/blacklists", "Manages blocked words and what happens when they are sent.", "admin", "/blacklists"],
     ],
   },
   {
     title: "Group tools",
     commands: [
-      ["/setrules", "Group ke rules set ya update karta hai.", "admin", "/setrules Be respectful"],
-      ["/rules", "Group ke rules members ko dikhata hai.", "member", "/rules"],
-      ["/setwelcome", "Naye members ke liye welcome message set karta hai.", "admin", "/setwelcome Welcome {first}"],
-      ["/welcome", "Welcome message settings dekhta ya update karta hai.", "admin", "/welcome"],
-      ["/filters", "Keyword-based automatic replies manage karta hai.", "admin", "/filters"],
-      ["/notes", "Saved notes ki list dikhata hai.", "member", "/notes"],
-      ["/setlog", "Group activity log ke liye channel connect karta hai.", "admin", "/setlog"],
-      ["/adminlist", "Group ke admins ki list dikhata hai.", "member", "/adminlist"],
-      ["/invitelink", "Group ka invite link dikhata hai.", "member", "/invitelink"],
-      ["/connect", "Private chat ko group se connect karne ka setup shuru karta hai.", "member", "/connect"],
+      ["/setrules", "Sets or updates the group rules.", "admin", "/setrules Be respectful"],
+      ["/rules", "Shows the group rules.", "member", "/rules"],
+      ["/setwelcome", "Sets the message new members receive.", "admin", "/setwelcome Welcome {first}"],
+      ["/welcome", "Views or changes the welcome message.", "admin", "/welcome"],
+      ["/filters", "Manages automatic replies to words or phrases.", "admin", "/filters"],
+      ["/notes", "Shows saved notes.", "member", "/notes"],
+      ["/setlog", "Connects a channel to receive group activity updates.", "admin", "/setlog"],
+      ["/adminlist", "Shows the group admin list.", "member", "/adminlist"],
+      ["/invitelink", "Shows the group invite link.", "member", "/invitelink"],
+      ["/connect", "Starts setup to connect your private chat to a group.", "member", "/connect"],
     ],
   },
 ];
@@ -70,7 +70,7 @@ function commandCard(command, chatID) {
   card.className = "callout command-card";
   const head = document.createElement("div");
   head.className = "command-card-head";
-  head.append(textElement("strong", name), textElement("span", access === "admin" ? "Admin" : "Sabhi members", "pill accent"));
+  head.append(textElement("strong", name), textElement("span", access === "admin" ? "Admin" : "All members", "pill accent"));
   card.append(head, textElement("p", description, "command-description"));
   const exampleRow = document.createElement("div");
   exampleRow.className = "command-example";
@@ -80,16 +80,16 @@ function commandCard(command, chatID) {
   copy.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(example);
-      toast("Command copy ho gaya. Group mein paste karke send karein.");
+      toast("Command copied. Paste it into your group and send it.");
     } catch {
-      toast("Clipboard access nahi mila. Command ko manually copy karein.", "error");
+      toast("Could not copy. Please copy the command manually.", "error");
     }
   });
   exampleRow.append(copy);
   card.append(exampleRow);
   const route = manageRoutes[name];
   if (route) {
-    const manage = textElement("a", "Mini App mein manage karein  ›", "command-manage");
+    const manage = textElement("a", "Manage in the Mini App  ›", "command-manage");
     manage.href = `#/chats/${encodeURIComponent(chatID)}/${route}`;
     card.append(manage);
   }
@@ -101,7 +101,7 @@ export function renderCommands(root, chatID, chat) {
     const actionBox = document.createElement("section");
     actionBox.className = "callout direct-action";
     actionBox.append(textElement("h2", "Direct moderation actions", "section-header"));
-    actionBox.append(textElement("p", "Member ID enter karein, action choose karein, phir confirmation ke baad group mein apply hoga. Telegram permissions har request par dobara verify hongi.", "command-description"));
+    actionBox.append(textElement("p", "Enter a member's user ID and choose an action. Check the details before you confirm. Telegram checks your permissions each time.", "command-description"));
 
     const action = document.createElement("select");
     action.setAttribute("aria-label", "Moderation action");
@@ -115,7 +115,7 @@ export function renderCommands(root, chatID, chat) {
     memberPicker.setAttribute("aria-label", "Choose a recently active member");
     const initialOption = document.createElement("option");
     initialOption.value = "";
-    initialOption.textContent = "Recent active members load ho rahe hain…";
+    initialOption.textContent = "Loading active members…";
     memberPicker.append(initialOption);
 
     const target = document.createElement("input");
@@ -131,7 +131,7 @@ export function renderCommands(root, chatID, chat) {
       memberPicker.replaceChildren();
       const placeholder = document.createElement("option");
       placeholder.value = "";
-      placeholder.textContent = "Select a tracked member (optional)";
+      placeholder.textContent = "Choose a member (optional)";
       memberPicker.append(placeholder);
       const members = Array.isArray(data?.members) ? data.members : [];
       for (const member of members) {
@@ -141,13 +141,13 @@ export function renderCommands(root, chatID, chat) {
         memberPicker.append(option);
       }
       if (members.length === 0) {
-        placeholder.textContent = "No tracked members yet — enter an ID below";
+        placeholder.textContent = "No members found yet. Enter a user ID below.";
       }
     }).catch(() => {
       memberPicker.replaceChildren();
       const fallback = document.createElement("option");
       fallback.value = "";
-      fallback.textContent = "Member list unavailable — enter an ID below";
+      fallback.textContent = "Member list is not available. Enter a user ID below.";
       memberPicker.append(fallback);
     });
     const duration = document.createElement("input");
@@ -156,7 +156,7 @@ export function renderCommands(root, chatID, chat) {
     duration.max = String(366 * 24 * 60 * 60);
     duration.step = "1";
     duration.value = "3600";
-    duration.placeholder = "Duration in seconds (e.g. 3600 = 1 hour)";
+    duration.placeholder = "Time in seconds (3600 = 1 hour)";
     duration.setAttribute("aria-label", "Timed moderation duration in seconds");
     duration.hidden = true;
     action.addEventListener("change", () => {
@@ -166,19 +166,19 @@ export function renderCommands(root, chatID, chat) {
     reason.maxLength = 3000;
     reason.placeholder = "Reason (optional)";
     reason.setAttribute("aria-label", "Reason");
-    const execute = textElement("button", "Review and execute");
+    const execute = textElement("button", "Review action");
     execute.type = "button";
     execute.addEventListener("click", async () => {
       const targetID = Number(target.value);
       if (!Number.isSafeInteger(targetID) || targetID <= 0) {
-        toast("Valid Telegram user ID enter karein.", "error");
+        toast("Enter a valid Telegram user ID.", "error");
         return;
       }
       const chosen = action.value;
       const timed = chosen === "tban" || chosen === "tmute";
       const durationSeconds = timed ? Number(duration.value) : 0;
       if (timed && (!Number.isSafeInteger(durationSeconds) || durationSeconds < 1 || durationSeconds > 366 * 24 * 60 * 60)) {
-        toast("Timed action ke liye 1 se 31622400 seconds ki valid duration dein.", "error");
+        toast("Enter a time from 1 to 31622400 seconds.", "error");
         return;
       }
       const approved = await confirmDestructive({
@@ -204,12 +204,12 @@ export function renderCommands(root, chatID, chat) {
     root.append(actionBox);
   }
   root.append(
-    textElement("p", "Har command ka kaam Hinglish mein samjhein. Example copy karke group mein bhejein; supported settings ko yahin Mini App mein manage karein.", "callout"),
+    textElement("p", "See what each command does. Copy an example and send it in your group. You can also change supported settings here.", "callout"),
   );
 
   const search = document.createElement("input");
   search.type = "search";
-  search.placeholder = "Command ya feature search karein…";
+  search.placeholder = "Search commands or features…";
   search.setAttribute("aria-label", "Search commands");
   root.append(search);
 
@@ -234,7 +234,7 @@ export function renderCommands(root, chatID, chat) {
       }
     }
     if (count === 0) {
-      results.append(textElement("p", "Is search se koi command nahi mili.", "empty"));
+      results.append(textElement("p", "No commands found. Try another search.", "empty"));
     }
   }
 
