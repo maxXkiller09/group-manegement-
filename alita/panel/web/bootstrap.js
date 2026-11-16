@@ -185,7 +185,7 @@ function renderNavigation() {
   const section = route?.[2] ?? "";
   const groupTarget = /^#\/groups\/([a-z-]+)$/.exec(hash)?.[1] ?? "";
   const moreDestinations = [
-    "activity", "filters", "blacklists", "notes", "commands",
+    "overview", "activity", "filters", "blacklists", "notes", "commands",
     "timeline", "members", "referrals",
   ];
   const isMoreDestination = hash === "#/account" || hash === "#/activity" ||
