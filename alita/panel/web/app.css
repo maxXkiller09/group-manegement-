@@ -2193,3 +2193,22 @@ body {
   .ng-tool-card:active, .ng-feature-card:active, .ng-commands-card:active,
   .ng-group-row:active, .ng-sheet-action:active { transform: none; }
 }
+
+
+/* Shared row treatment for the Groups list and More sheet. */
+.ng-group-row,
+.ng-sheet-action {
+  border: 1px solid var(--ng-border);
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(23,43,72,.86), rgba(11,27,49,.78));
+  color: var(--ng-text);
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+
+.ng-sheet-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+}
