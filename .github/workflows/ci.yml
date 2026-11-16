@@ -82,6 +82,20 @@ jobs:
         with:
           node-version: 22
 
+      - name: Prove parser rejects the PR #38 regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          old_file="$(mktemp)"
+          trap 'rm -f "$old_file"' EXIT
+          git show bf7c7813adde24cd18f85580849d4a24548d144a:alita/panel/web/screens/commands.js > "$old_file"
+          if node --check --input-type=module < "$old_file" > /tmp/nexguard-old-parse.log 2>&1; then
+            echo "ERROR: parser unexpectedly accepted the broken PR #38 commands.js"
+            exit 1
+          fi
+          cat /tmp/nexguard-old-parse.log
+          echo "PASS: parser correctly rejected the known-broken PR #38 commands.js."
+
       - name: Parse every Mini App JavaScript module
         shell: bash
         run: |
