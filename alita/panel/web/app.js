@@ -20,7 +20,7 @@ const routePattern = /^#\/chats\/(-?\d+)(?:\/([a-z-]+))?$/;
 function parentRoute(hash) {
   const match = routePattern.exec(hash);
   if (!match) return null;
-  return match[2] ? \`#/chats/\${match[1]}\` : "#/groups";
+  return match[2] ? `#/chats/${match[1]}` : "#/groups";
 }
 
 function syncBackButton() {
@@ -61,8 +61,8 @@ function selectedChatID() {
 function destination(section) {
   const chatID = selectedChatID();
   return chatID
-    ? \`#/chats/\${encodeURIComponent(chatID)}/\${section}\`
-    : \`#/groups/\${section}\`;
+    ? `#/chats/${encodeURIComponent(chatID)}/${section}`
+    : `#/groups/${section}`;
 }
 
 function openActionSheet(titleText, actions) {
@@ -119,9 +119,9 @@ function openQuickActions() {
   if (chatID) {
     const chat = encodeURIComponent(chatID);
     actions.push(
-      [\`#/chats/\${chat}/overview\`, "◫", "Group Overview"],
-      [\`#/chats/\${chat}/settings\`, "◈", "Security Center"],
-      [\`#/chats/\${chat}/warnings\`, "⚑", "Moderation"],
+      [`#/chats/${chat}/overview`, "◫", "Group Overview"],
+      [`#/chats/${chat}/settings`, "◈", "Security Center"],
+      [`#/chats/${chat}/warnings`, "⚑", "Moderation"],
     );
   } else {
     actions.push(
@@ -234,7 +234,7 @@ async function navigate() {
 if (root) {
   if (!location.hash) {
     const id = launchChatID();
-    if (id) history.replaceState(null, "", \`#/chats/\${id}\`);
+    if (id) history.replaceState(null, "", `#/chats/${id}`);
   }
   if (supports("6.1")) {
     telegram.BackButton.onClick(() => {
