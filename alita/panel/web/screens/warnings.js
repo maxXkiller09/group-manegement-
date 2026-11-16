@@ -1,8 +1,8 @@
 // Warnings: admin-only pages of warned users with all their entries, expired
 // ones labelled, and a remove button that runs the same repository call as
 // /unwarn. Server data reaches the DOM only through textContent.
-import { api } from "../api.js";
-import { confirmDestructive, errorMessage, haptic, relativeTime, textElement, userLabel } from "../ui.js";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { confirmDestructive, errorMessage, haptic, relativeTime, textElement, userLabel } from "../ui.js?v=2026.11.16-bootfix1";
 
 const PAGE_SIZE = 50;
 
