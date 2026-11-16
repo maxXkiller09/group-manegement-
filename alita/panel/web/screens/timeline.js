@@ -1,8 +1,8 @@
 // Moderation timeline: newest first, keyset cursor pages appended on scroll or
 // with "Load more" so the reading position never moves, and filters by action
 // and actor. It carries actions only, never message text.
-import { api } from "../api.js";
-import { relativeTime, textElement, userLabel } from "../ui.js";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { relativeTime, textElement, userLabel } from "../ui.js?v=2026.11.16-bootfix1";
 
 const PAGE_SIZE = 50;
 const ACTIONS = ["ban", "kick", "mute", "unban"];
