@@ -23,8 +23,9 @@ export async function api(path, { method = "GET", body } = {}) {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), 15000);
 	let response;
+	let payload = null;
 	try {
-		response = await fetch(`/panel/api/v1/${path.replace(/^\/+/, "")}`, {
+		response = await fetch(`/panel/api/v1/${path.replace(/^\\/+/, "")}`, {
 			method,
 			headers,
 			body: body === undefined ? undefined : JSON.stringify(body),
@@ -32,6 +33,12 @@ export async function api(path, { method = "GET", body } = {}) {
 			cache: "no-store",
 			signal: controller.signal,
 		});
+		try {
+			payload = await response.json();
+		} catch (error) {
+			if (controller.signal.aborted) throw error;
+			payload = null;
+		}
 	} catch (error) {
 		if (controller.signal.aborted) {
 			throw new ApiError("timeout", "The request took too long. Please try again.", 0);
@@ -39,13 +46,6 @@ export async function api(path, { method = "GET", body } = {}) {
 		throw error;
 	} finally {
 		clearTimeout(timeout);
-	}
-
-	let payload = null;
-	try {
-		payload = await response.json();
-	} catch {
-		payload = null;
 	}
 
 	if (!response.ok) {
