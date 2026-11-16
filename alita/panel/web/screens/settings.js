@@ -1,5 +1,5 @@
-import { api, telegram } from "../api.js";
-import { clear, errorMessage, haptic, leaveScreen, loading, onLeave, setLeaveGuard, showError, supports, textElement, toast } from "../ui.js";
+import { api, telegram } from "../api.js?v=2026.11.16-bootfix1";
+import { clear, errorMessage, haptic, leaveScreen, loading, onLeave, setLeaveGuard, showError, supports, textElement, toast } from "../ui.js?v=2026.11.16-bootfix1";
 
 const readOnlyMessages = {
 	not_admin: "You are not an admin in this chat, so settings are read-only.",
