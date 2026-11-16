@@ -59,7 +59,18 @@ function quickAction(href, icon, label) {
   return link;
 }
 
-function openQuickActions() {
+function selectedChatID() {
+  return routePattern.exec(location.hash)?.[1] ?? null;
+}
+
+function destination(section) {
+  const chatID = selectedChatID();
+  return chatID
+    ? \`#/chats/\${encodeURIComponent(chatID)}/\${section}\`
+    : \`#/groups/\${section}\`;
+}
+
+function openActionSheet(titleText, actions) {
   closeQuickActions();
   const backdrop = document.createElement("div");
   backdrop.id = "ng-quick-backdrop";
@@ -83,39 +94,57 @@ function openQuickActions() {
   const title = document.createElement("h2");
   title.id = "ng-sheet-title";
   title.className = "ng-sheet-title";
-  title.textContent = "Quick actions";
+  title.textContent = titleText;
   const close = document.createElement("button");
   close.type = "button";
   close.className = "ng-sheet-close";
-  close.setAttribute("aria-label", "Close quick actions");
+  close.setAttribute("aria-label", "Close menu");
   close.textContent = "×";
   close.addEventListener("click", closeQuickActions);
   head.append(title, close);
 
   const grid = document.createElement("div");
   grid.className = "ng-sheet-grid";
-  grid.append(
-    quickAction("https://t.me/NexGuardd_Bot?startgroup=true", "+", "Add NexGuard to a group"),
-    quickAction("#/groups", "▦", "My Groups"),
-  );
-
-  const match = routePattern.exec(location.hash);
-  if (match) {
-    const chat = encodeURIComponent(match[1]);
-    grid.append(
-      quickAction(\`#/chats/\${chat}/overview\`, "◫", "Group Overview"),
-      quickAction(\`#/chats/\${chat}/settings\`, "◈", "Security Center"),
-      quickAction(\`#/chats/\${chat}/warnings\`, "⚑", "Moderation"),
-      quickAction(\`#/chats/\${chat}/activity\`, "⌁", "Activity & Analytics"),
-      quickAction(\`#/chats/\${chat}/commands\`, "⌘", "All Commands"),
-    );
+  for (const [href, icon, label] of actions) {
+    grid.append(quickAction(href, icon, label));
   }
-
   sheet.append(grabber, head, grid);
   backdrop.append(sheet);
   document.body.append(backdrop);
   document.addEventListener("keydown", onQuickKeydown);
   close.focus();
+}
+
+function openQuickActions() {
+  const chatID = selectedChatID();
+  const actions = [
+    ["https://t.me/NexGuardd_Bot?startgroup=true", "+", "Add NexGuard to a group"],
+    ["#/groups", "▦", "My Groups"],
+  ];
+  if (chatID) {
+    const chat = encodeURIComponent(chatID);
+    actions.push(
+      [\`#/chats/\${chat}/overview\`, "◫", "Group Overview"],
+      [\`#/chats/\${chat}/settings\`, "◈", "Security Center"],
+      [\`#/chats/\${chat}/warnings\`, "⚑", "Moderation"],
+    );
+  } else {
+    actions.push(
+      ["#/groups/overview", "◫", "Group Overview"],
+      ["#/groups/settings", "◈", "Security Center"],
+      ["#/groups/warnings", "⚑", "Moderation"],
+    );
+  }
+  openActionSheet("Quick actions", actions);
+}
+
+function openMoreMenu() {
+  openActionSheet("More", [
+    ["#/activity", "⌁", "Activity & Analytics"],
+    [destination("filters"), "◈", "Content Tools"],
+    [destination("commands"), "⌘", "All Commands"],
+    ["#/account", "◉", "Account"],
+  ]);
 }
 
 function renderNavigation() {
@@ -126,37 +155,46 @@ function renderNavigation() {
   nav.setAttribute("aria-label", "Main navigation");
 
   const hash = location.hash;
-  const active = hash.startsWith("#/chats/") || hash === "#/groups" ? "groups"
-    : hash === "#/account" ? "account"
-      : hash === "#/activity" ? "inbox" : "home";
+  const route = routePattern.exec(hash);
+  const section = route?.[2] ?? "";
+  const active = hash === "#/" || hash === "" ? "home"
+    : section === "settings" ? "security"
+      : section === "warnings" ? "moderation"
+        : hash === "#/account" || hash === "#/activity" || section === "activity" ||
+          ["filters", "blacklists", "notes", "commands"].includes(section) ? "more"
+          : "home";
 
-  for (const [key, glyph, label, href] of [
-    ["home", "⌂", "Home", "#/"],
-    ["groups", "▦", "Groups", "#/groups"],
-    ["add", "+", "Add", ""],
-    ["inbox", "▤", "Inbox", "#/activity"],
-    ["account", "◉", "Account", "#/account"],
-  ]) {
-    const item = document.createElement(key === "add" ? "button" : "a");
-    item.className = "bottom-nav-item" + (key === active ? " active" : "") + (key === "add" ? " add-tab" : "");
-    if (key === "add") {
+  const chatID = selectedChatID();
+  const entries = [
+    { key: "home", glyph: "⌂", label: "Home", href: "#/" },
+    { key: "security", glyph: "◈", label: "Security", href: destination("settings") },
+    { key: "add", glyph: "+", label: "Quick actions" },
+    { key: "moderation", glyph: "⚑", label: "Moderation", href: destination("warnings") },
+    { key: "more", glyph: "•••", label: "More" },
+  ];
+
+  for (const entry of entries) {
+    const item = document.createElement(entry.key === "add" || entry.key === "more" ? "button" : "a");
+    item.className = "bottom-nav-item" +
+      (entry.key === active ? " active" : "") +
+      (entry.key === "add" ? " add-tab" : "");
+    if (entry.key === "add" || entry.key === "more") {
       item.type = "button";
-      item.setAttribute("aria-label", "Open quick actions");
+      item.setAttribute("aria-label", entry.label);
       item.setAttribute("aria-haspopup", "dialog");
-      item.addEventListener("click", openQuickActions);
+      item.addEventListener("click", entry.key === "add" ? openQuickActions : openMoreMenu);
     } else {
-      item.href = href;
-      item.setAttribute("aria-label", label);
+      item.href = entry.href;
+      item.setAttribute("aria-label", entry.label);
     }
-    item.append(document.createTextNode(glyph));
+    item.append(document.createTextNode(entry.glyph));
     const caption = document.createElement("span");
-    caption.textContent = label;
+    caption.textContent = entry.key === "add" ? "" : entry.label;
     item.append(caption);
     nav.append(item);
   }
   document.body.append(nav);
 }
-
 function render() {
   leaveScreen();
   closeQuickActions();
