@@ -6,11 +6,6 @@ import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, su
 
 telegram?.ready();
 telegram?.expand();
-if (supports("6.1")) {
-  telegram.setHeaderColor("#0b1b34");
-  telegram.setBackgroundColor("#071326");
-}
-
 const root = document.getElementById("app");
 
 function launchChatID() {
@@ -140,7 +135,7 @@ function openQuickActions() {
 
 function openMoreMenu() {
   openActionSheet("More", [
-    ["#/activity", "⌁", "Activity & Analytics"],
+    [selectedChatID() ? destination("activity") : "#/activity", "⌁", "Activity & Analytics"],
     [destination("filters"), "◈", "Content Tools"],
     [destination("commands"), "⌘", "All Commands"],
     ["#/account", "◉", "Account"],
