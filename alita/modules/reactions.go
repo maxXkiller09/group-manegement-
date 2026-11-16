@@ -1,0 +1,356 @@
+package modules
+
+import (
+	"fmt"
+	"html"
+	"slices"
+	"strings"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/callbackquery"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/message"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/divkix/Alita_Robot/alita/db/lang"
+	"github.com/divkix/Alita_Robot/alita/db/reactions"
+	"github.com/divkix/Alita_Robot/alita/i18n"
+	"github.com/divkix/Alita_Robot/alita/utils/error_handling"
+	"github.com/divkix/Alita_Robot/alita/utils/formatting"
+	"github.com/divkix/Alita_Robot/alita/utils/helpers"
+	"github.com/divkix/Alita_Robot/alita/utils/tracing"
+)
+
+var reactionsModule = moduleStruct{
+	moduleName:   "Reactions",
+	handlerGroup: 8,
+}
+
+var supportedReactionEmoji = []string{
+	"❤", "👍", "👎", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢",
+	"🎉", "🤩", "🤮", "💩", "🙏", "👌", "🕊", "🤡", "🥱", "🥴", "😍", "🐳",
+	"❤‍🔥", "🌚", "🌭", "💯", "🤣", "⚡", "🍌", "🏆", "💔", "🤨", "😐", "🍓",
+	"🍾", "💋", "🖕", "😈", "😴", "😭", "🤓", "👻", "👨‍💻", "👀", "🎃", "🙈",
+	"😇", "😨", "🤝", "✍", "🤗", "🫡", "🎅", "🎄", "☃", "💅", "🤪", "🗿",
+	"🆒", "💘", "🙉", "🦄", "😘", "💊", "🙊", "😎", "👾", "🤷‍♂", "🤷",
+	"🤷‍♀", "😡",
+}
+
+func LoadReactions(dispatcher *ext.Dispatcher) {
+	changeInfoChecks := []helpers.CheckFunc{helpers.RequireConnectedAdmin(helpers.BotAdminNotRequired), helpers.CanUserChangeInfo()}
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name:           "addreaction",
+		PMGroupArg:     helpers.PMGroupArgOwn,
+		RequiredChecks: changeInfoChecks,
+	}, pipelineHandler(reactionsModule.addReaction))
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name:           "removereaction",
+		PMGroupArg:     helpers.PMGroupArgOwn,
+		RequiredChecks: changeInfoChecks,
+	}, pipelineHandler(reactionsModule.removeReaction))
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name:           "reactions",
+		PMGroupArg:     helpers.PMGroupArgNone,
+		RequiredChecks: []helpers.CheckFunc{helpers.RequireConnectedMember(helpers.BotAdminNotRequired)},
+	}, pipelineHandler(reactionsModule.listReactions))
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name:           "resetreactions",
+		PMGroupArg:     helpers.PMGroupArgNone,
+		RequiredChecks: changeInfoChecks,
+	}, pipelineHandler(reactionsModule.resetReactions))
+	dispatcher.AddHandler(handlers.NewCallback(callbackquery.Prefix("reactions_help"), reactionsModule.reactionsHelpHandler))
+
+	dispatcher.AddHandlerToGroup(handlers.NewMessage(message.All, reactionsModule.checkReactions), reactionsModule.handlerGroup)
+
+	SetModuleEnabled(reactionsModule.moduleName, true)
+
+	DefaultHelpRegistry().AltHelpOptions["Reactions"] = []string{"reaction"}
+	SetModuleHelpBuilder(reactionsModule.moduleName, func(l string) [][]gotgbot.InlineKeyboardButton {
+		tr := i18n.MustNewTranslator(l)
+		return [][]gotgbot.InlineKeyboardButton{
+			{
+				{
+					Text:         trS(tr, "reactions_button_add"),
+					CallbackData: encodeCallbackData("reactions_help", map[string]string{"action": "add"}),
+				},
+				{
+					Text:         trS(tr, "reactions_button_remove"),
+					CallbackData: encodeCallbackData("reactions_help", map[string]string{"action": "remove"}),
+				},
+			},
+		}
+	})
+
+	log.Info("[Modules] Reactions module loaded")
+}
+
+func (m moduleStruct) reactionsHelpHandler(b *gotgbot.Bot, ctx *ext.Context) error {
+	query, ok := callbackQueryFromContext(ctx)
+	if !ok {
+		return ext.EndGroups
+	}
+	if query == nil {
+		return ext.EndGroups
+	}
+
+	action := ""
+	if decoded, ok := decodeCallbackData(query.Data, "reactions_help"); ok {
+		action, _ = decoded.Field("action")
+	}
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+	if action == "" {
+		return answerInvalidCallback(b, ctx, query)
+	}
+
+	var helpText string
+	switch action {
+	case "add":
+		helpText, _ = tr.GetString("reactions_add_usage")
+	case "remove":
+		helpText, _ = tr.GetString("reactions_remove_usage")
+	default:
+		return answerInvalidCallback(b, ctx, query)
+	}
+
+	if query.Message == nil {
+		_, _ = query.Answer(b, &gotgbot.AnswerCallbackQueryOpts{Text: html.UnescapeString(helpText)})
+		return ext.EndGroups
+	}
+
+	backText, _ := tr.GetString("common_back")
+	_, _, err := query.Message.EditText(b, &gotgbot.EditMessageTextOpts{
+		Text: helpText, ParseMode: formatting.HTML,
+		ReplyMarkup: gotgbot.InlineKeyboardMarkup{
+			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{
+				{
+					{
+						Text:         backText,
+						CallbackData: encodeCallbackData("helpq", map[string]string{"m": "Reactions"}),
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	_, err = query.Answer(b, nil)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func (m moduleStruct) addReaction(b *gotgbot.Bot, ctx *ext.Context) error {
+	defer error_handling.RecoverFromPanic("addReaction", "Reactions")
+
+	msg := ctx.EffectiveMessage
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+	chat := ctx.EffectiveChat
+
+	args := ctx.Args()
+	if len(args) < 3 {
+		text, _ := tr.GetString("reactions_add_usage")
+		_, err := msg.Reply(b, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	}
+
+	keyword := strings.ToLower(strings.TrimSpace(args[1]))
+	emoji := strings.ReplaceAll(strings.TrimSpace(args[2]), "\ufe0f", "")
+
+	// ReactionTypeEmoji accepts only Telegram's documented reaction set.
+	if !slices.Contains(supportedReactionEmoji, emoji) {
+		text, _ := tr.GetString("reactions_invalid_emoji")
+		_, err := msg.Reply(b, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	}
+
+	if err := reactions.AddReaction(chat.Id, keyword, emoji); err != nil {
+		log.Errorf("[Reactions] Failed to save reaction: %v", err)
+		text, _ := tr.GetString("reactions_add_error")
+		_, _ = msg.Reply(b, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+
+	text, _ := tr.GetString("reactions_add_success", i18n.TranslationParams{
+		"keyword": html.EscapeString(keyword),
+		"emoji":   html.EscapeString(emoji),
+	})
+	_, err := msg.Reply(b, text, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func (m moduleStruct) removeReaction(b *gotgbot.Bot, ctx *ext.Context) error {
+	defer error_handling.RecoverFromPanic("removeReaction", "Reactions")
+
+	msg := ctx.EffectiveMessage
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+	chat := ctx.EffectiveChat
+
+	args := ctx.Args()
+	if len(args) < 2 {
+		text, _ := tr.GetString("reactions_remove_usage")
+		_, err := msg.Reply(b, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	}
+
+	keyword := strings.ToLower(strings.TrimSpace(args[1]))
+
+	reactionsMap := reactions.GetReactionsContext(tracing.UpdateContext(ctx), chat.Id)
+
+	if _, exists := reactionsMap[keyword]; !exists {
+		text, _ := tr.GetString("reactions_keyword_not_found", i18n.TranslationParams{
+			"keyword": html.EscapeString(keyword),
+		})
+		_, _ = msg.Reply(b, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+
+	if err := reactions.RemoveReaction(chat.Id, keyword); err != nil {
+		log.Errorf("[Reactions] Failed to update reactions: %v", err)
+		text, _ := tr.GetString("reactions_remove_error")
+		_, _ = msg.Reply(b, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+
+	text, _ := tr.GetString("reactions_remove_success", i18n.TranslationParams{
+		"keyword": html.EscapeString(keyword),
+	})
+	_, err := msg.Reply(b, text, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func (m moduleStruct) listReactions(b *gotgbot.Bot, ctx *ext.Context) error {
+	defer error_handling.RecoverFromPanic("listReactions", "Reactions")
+
+	msg := ctx.EffectiveMessage
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+	chat := ctx.EffectiveChat
+
+	reactionsMap := reactions.GetReactionsContext(tracing.UpdateContext(ctx), chat.Id)
+	if len(reactionsMap) == 0 {
+		text, _ := tr.GetString("reactions_none")
+		_, _ = msg.Reply(b, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+
+	var sb strings.Builder
+	for keyword, emoji := range reactionsMap {
+		fmt.Fprintf(&sb, "• %s → %s\n", html.EscapeString(keyword), html.EscapeString(emoji))
+	}
+
+	text, _ := tr.GetString("reactions_list_header", i18n.TranslationParams{
+		"list": sb.String(),
+	})
+	_, err := msg.Reply(b, text, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func (m moduleStruct) resetReactions(b *gotgbot.Bot, ctx *ext.Context) error {
+	defer error_handling.RecoverFromPanic("resetReactions", "Reactions")
+
+	msg := ctx.EffectiveMessage
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+	chat := ctx.EffectiveChat
+
+	if err := reactions.ResetReactions(chat.Id); err != nil {
+		log.Errorf("[Reactions] Failed to reset reactions: %v", err)
+		text, _ := tr.GetString("reactions_remove_error")
+		_, _ = msg.Reply(b, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+
+	text, _ := tr.GetString("reactions_reset_success")
+	_, err := msg.Reply(b, text, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func (m moduleStruct) checkReactions(b *gotgbot.Bot, ctx *ext.Context) error {
+	defer error_handling.RecoverFromPanic("checkReactions", "Reactions")
+
+	msg := ctx.EffectiveMessage
+	if msg == nil || msg.Text == "" {
+		return ext.ContinueGroups
+	}
+
+	chat := ctx.EffectiveChat
+	if chat == nil {
+		return ext.ContinueGroups
+	}
+
+	reactionsMap := reactions.GetReactionsContext(tracing.UpdateContext(ctx), chat.Id)
+	if len(reactionsMap) == 0 {
+		return ext.ContinueGroups
+	}
+
+	lowerText := strings.ToLower(msg.Text)
+	var matchedKeywords []string
+	for keyword := range reactionsMap {
+		if strings.Contains(lowerText, keyword) {
+			matchedKeywords = append(matchedKeywords, keyword)
+		}
+	}
+	if len(matchedKeywords) == 0 {
+		return ext.ContinueGroups
+	}
+	slices.Sort(matchedKeywords)
+	emoji := reactionsMap[matchedKeywords[0]]
+
+	_, err := b.SetMessageReaction(
+		chat.Id,
+		msg.MessageId,
+		&gotgbot.SetMessageReactionOpts{
+			Reaction: []gotgbot.ReactionType{
+				gotgbot.ReactionTypeEmoji{
+					Emoji: emoji,
+				},
+			},
+		},
+	)
+	if err != nil {
+		log.Debugf("[Reactions] Failed to set reaction: %v", err)
+	}
+
+	return ext.ContinueGroups
+}
+
+func init() {
+	RegisterLegacyModule("Reactions", 250, LoadReactions)
+}

@@ -1,0 +1,420 @@
+---
+title: Contributing
+description: How to contribute to Alita Robot development.
+---
+
+Thank you for your interest in contributing to Alita Robot! This guide will help you get started with development.
+
+## Development Setup
+
+### Prerequisites
+
+- **Go** 1.26+
+- **PostgreSQL** 16+
+- **Redis** 7+
+- **Make** (for running commands)
+
+### Clone and Setup
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/divkix/Alita_Robot.git
+    cd Alita_Robot
+    ```
+  </Step>
+
+  <Step title="Configure environment">
+    ```bash
+    cp sample.env .env
+    # Edit .env with your configuration
+    ```
+  </Step>
+
+  <Step title="Verify the build">
+    ```bash
+    make lint
+    make test
+    make run
+    ```
+  </Step>
+</Steps>
+
+### Essential Commands
+
+```bash
+make run          # Run the bot locally
+make build        # Build release artifacts using goreleaser
+make lint         # Run golangci-lint for code quality checks
+make test         # Run test suite
+make tidy         # Clean up and download go.mod dependencies
+```
+
+### Database Commands
+
+```bash
+make psql-migrate  # Apply all pending PostgreSQL migrations
+make psql-status   # Check current migration status
+make psql-reset    # Reset database (DANGEROUS: drops all tables)
+```
+
+### Useful Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `DEBUG=true` | Enable verbose logging and stack traces |
+| `AUTO_MIGRATE=true` | Apply database migrations on startup |
+| `ENABLE_DB_MONITORING=true` | Log database pool stats every minute (Debug level; visible with `DEBUG=true`) |
+| `ENABLE_PPROF=true` | Expose pprof profiling endpoints (dev only) |
+
+## Project Structure
+
+```
+Alita_Robot/
+├── alita/
+│   ├── config/       # Configuration and environment parsing
+│   ├── db/           # Database operations and repositories
+│   ├── i18n/         # Internationalization
+│   ├── modules/      # Command handlers (one file per module)
+│   └── utils/        # Utility packages (helpers holds the command pipeline)
+├── locales/          # Translation files (YAML)
+├── migrations/       # SQL migration files
+└── main.go           # Entry point
+```
+
+## Adding a New Module
+
+<Steps>
+  <Step title="Add a migration">
+    Create `migrations/<YYYYMMDDHHMMSS>_<name>.sql` with a timestamp greater than every existing file; files apply in plain filename order. Each file runs in one transaction: no top-level `BEGIN`/`COMMIT`/`ROLLBACK` and no `CREATE INDEX CONCURRENTLY`. Never edit an applied file: its checksum is verified at startup.
+  </Step>
+
+  <Step title="Add the model">
+    Put the GORM struct in `alita/db/models/` with a `TableName()` method that returns the migration's table name.
+  </Step>
+
+  <Step title="Add the repository">
+    Add `alita/db/<domain>/repository.go`. Read through `cache.GetFromCacheOrLoad` with `cache.CacheKey` keys, and call `cache.DeleteCache` on every key a write affects.
+  </Step>
+
+  <Step title="Register the model in tests">
+    Add the model to the `AutoMigrate` list in the affected `testmain_test.go` or `internal/testdb.Run` call.
+  </Step>
+
+  <Step title="Implement command handlers">
+    Put them in `alita/modules/<name>.go`, with a `LoadXxx(dispatcher)` function that registers them.
+  </Step>
+
+  <Step title="Register commands">
+    Use `helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{...}, handler)`. Set `Disableable: true` for commands chats may disable. The pipeline derives alias-wide disable checks and anonymous-admin replay from that descriptor; put required rights in `RequiredChecks`.
+  </Step>
+
+  <Step title="Self-register in init()">
+    Use `RegisterLegacyModule("MyModule", priority, LoadMyModule)` with a unique name (duplicates are dropped silently). Modules auto-load via `LoadAllModules()` (`alita/modules/registry.go`), called from `LoadModules` in `alita/main.go`.
+  </Step>
+
+  <Step title="Add translations">
+    Add every new key to all 7 locale files in `locales/` (en, es, fr, hi, id, pt, ru).
+  </Step>
+
+  <Step title="Validate">
+    Run `make generate-docs`, `make check-translations`, `make check-docs`, `make test` and `make lint`.
+  </Step>
+</Steps>
+
+### Module Template
+
+```go
+package modules
+
+import (
+    "github.com/PaulSonOfLars/gotgbot/v2"
+    "github.com/PaulSonOfLars/gotgbot/v2/ext"
+
+    "github.com/divkix/Alita_Robot/alita/utils/helpers"
+)
+
+var myModule = moduleStruct{moduleName: "MyModule"}
+
+var myCommandDesc = helpers.CommandDescriptor{
+    Name:        "mycommand",
+    Disableable: true,
+    RequiredChecks: []helpers.CheckFunc{
+        helpers.RequireGroup(),
+    },
+}
+
+func (m moduleStruct) myCommand(b *gotgbot.Bot, ctx *ext.Context) error {
+    // Implementation (RequiredChecks already ran; failures were handled there)
+    return ext.EndGroups
+}
+
+func LoadMyModule(d *ext.Dispatcher) {
+    SetModuleEnabled(myModule.moduleName, true)
+    helpers.WrapCommand(d, myCommandDesc, pipelineHandler(myModule.myCommand))
+}
+
+func init() {
+    RegisterLegacyModule("MyModule", 100, LoadMyModule)
+}
+```
+
+## Code Style
+
+:::caution[Mandatory Before Committing]
+Always run `make lint` and `make test` before committing. CI will reject pull requests that fail lint or tests.
+:::
+
+The repository uses **pre-commit** hooks that run automatically on `git commit`:
+- **golangci-lint** — Code quality and lint checks
+- **gofmt** — Code formatting enforcement
+- **go mod tidy** — Dependency cleanup
+
+Install hooks:
+
+```bash
+pip install pre-commit && pre-commit install
+```
+
+- Run `make lint` before committing
+- Run `make test` before committing
+- Follow Go conventions and idioms
+- Add proper error handling with panic recovery
+- Register commands with `helpers.WrapCommand` and put permission checks in `CommandDescriptor.RequiredChecks`; the pipeline sends failure replies and recovers panics
+
+## Security Best Practices
+
+### HTML Escaping
+
+Always escape user-controlled input before rendering in HTML-formatted messages:
+
+```go
+import "github.com/divkix/Alita_Robot/alita/utils/formatting"
+
+// Wrong - vulnerable to HTML injection
+text := fmt.Sprintf("Welcome to %s!", chat.Title)
+
+// Correct - escaped
+text := fmt.Sprintf("Welcome to %s!", formatting.HtmlEscape(chat.Title))
+```
+
+**When to escape:**
+- Chat titles and descriptions
+- Usernames (when displaying as text, not as @mentions)
+- Any user-supplied text in HTML-formatted messages
+
+**Safe alternatives:**
+- `formatting.MentionHtml(userId, name)` - Already escapes the name
+- `formatting.MentionUrl(url, name)` - Already escapes the name
+
+### Goroutine Error Handling
+
+When running database operations in goroutines, always:
+
+1. Capture variables for closure safety
+2. Add panic recovery
+3. Handle and log errors
+
+```go
+// Correct pattern
+chatId := chat.Id  // Capture variable
+go func() {
+    defer error_handling.RecoverFromPanic("SetAnonAdminMode", "admin")
+    if err := admin.SetAnonAdminMode(chatId, true); err != nil {  // package alita/db/admin
+        log.Errorf("[Admin] Failed to set anon admin mode: %v", err)
+    }
+}()
+```
+
+### User Input Validation
+
+- Never trust usernames from user input for security-critical operations
+- Validate user IDs against Telegram API when necessary
+- Use `extraction.ExtractUserAndText()` for consistent user resolution
+
+## Translation Guidelines
+
+:::caution
+Translation keys must exist in ALL 7 locale files (`locales/en.yml`, `es.yml`, `fr.yml`, `hi.yml`, `id.yml`, `pt.yml`, `ru.yml`); `make check-translations` checks this. It also fails when a non-English file holds the English text of a key: translate it, or, when the word is the same in that language, add `locale:key` with a reason to `scripts/check_translations/identical_allowlist.txt`. A key missing from a non-English file falls back to the English text. A key missing from `locales/en.yml` (or misspelled in Go) sends an empty message.
+:::
+
+Add help messages to every locale file (`locales/en.yml` shown):
+
+```yaml
+mymodule_help_msg: |
+  Help text for my module.
+
+  *Commands:*
+  × /mycommand: Description of command.
+```
+
+Every module whose help lists commands also needs a one-line-per-command summary, `<module>_extend_msg` (used by `/extend`), with each line in the form `/command — description` and covering every command its help names. `TestExtendLocalesCoverEveryDocumentedCommand` enforces it in en and ru:
+
+```yaml
+mymodule_extend_msg: |
+  /mycommand — Description of command.
+```
+
+Each of those commands also needs an entry in `menuCommands` (`alita/modules/command_help.go`) with its module and whether only admins can use it (`AdminOnly`, set only when no form of the command works for a member); `/commands` uses it to hide admin commands from members, and `TestMenuCommandsMatchExtendLists` keeps it in step with the extend lists. The module also needs a one-line `<module>_section_desc` in every locale.
+
+:::tip
+Use double quotes for strings containing escape sequences like `\n`. Single quotes in YAML preserve backslashes literally.
+:::
+
+## Testing
+
+Automated regression tests are required for all contributions:
+
+1. Run `make test` and make sure all tests pass. It is the only valid full run: it adds `-tags testtools`, `-race` and the skipped-test gate, while a plain `go test ./...` silently drops the tagged test files. To run one test: `CGO_ENABLED=1 go test -tags testtools -race -count=1 -run '^TestName$' ./alita/<pkg>`.
+2. Run `make lint` and fix any lint findings
+3. Manually verify behavior with a test bot/group for user-facing changes
+
+## Submitting Changes
+
+<Steps>
+  <Step title="Fork the repository" />
+
+  <Step title="Create a feature branch">
+    ```bash
+    git checkout -b feature/my-feature
+    ```
+  </Step>
+
+  <Step title="Make your changes" />
+
+  <Step title="Run quality checks">
+    ```bash
+    make test && make lint
+    ```
+  </Step>
+
+  <Step title="Commit with a descriptive message" />
+
+  <Step title="Push to your fork" />
+
+  <Step title="Open a Pull Request" />
+</Steps>
+
+## Common Pitfalls
+
+These are common bugs to avoid when developing modules:
+
+### Nil Pointer on User Extraction
+
+**Problem:** `ctx.EffectiveSender.User` can be nil for channel posts.
+
+```go
+// Wrong - will panic on channel posts
+user := ctx.EffectiveSender.User
+userId := user.Id
+
+// Correct - use the safe helper
+user := chat_status.RequireUser(b, ctx)
+if user == nil {
+    return ext.EndGroups
+}
+```
+
+### Shadow Variables in Conditionals
+
+**Problem:** Using `:=` inside conditionals creates a new variable that shadows the outer one.
+
+```go
+// Wrong - shadows outer userId
+if condition {
+    userId := someValue  // New variable!
+}
+// userId here is still the original value
+
+// Correct - reassigns the outer variable
+if condition {
+    userId = someValue  // Reassigns existing variable
+}
+```
+
+### Empty Slice Access
+
+**Problem:** Accessing slice elements without bounds checking.
+
+```go
+// Wrong - panics if args is empty
+args := strings.Fields(input)
+firstArg := args[0]
+
+// Correct - check length first
+args := strings.Fields(input)
+if len(args) == 0 {
+    // Handle empty case
+    return
+}
+firstArg := args[0]
+```
+
+### Callback Data Validation
+
+**Problem:** Parsing callback data by hand instead of through the callback codec.
+
+```go
+// Wrong - hand-split parsing; panics on malformed data and never matches
+// the bot's versioned "<ns>|v1|<url-encoded>" callback format
+args := strings.Split(query.Data, ".")
+action := args[1]
+
+// Correct - decode through the codec wrapper and check the namespace
+decoded, ok := decodeCallbackData(query.Data, "mymodule")
+if !ok {
+    return answerInvalidCallback(b, ctx, query)
+}
+action, _ := decoded.Field("a")
+rawID, _ := decoded.Field("u")
+userID, err := strconv.ParseInt(rawID, 10, 64)
+if err != nil {
+    return answerInvalidCallback(b, ctx, query)
+}
+```
+
+Build button data with `encodeCallbackData(namespace, fields)`. Callback data is capped at 64 bytes, and on overflow `encodeCallbackData` returns "", which ships a dead button. Keep long user text in Redis behind a short token.
+
+### Goroutine Variable Capture
+
+**Problem:** Goroutines capturing loop variables or mutable state.
+
+```go
+// Risky - captures variables by reference
+go func() {
+    doSomething(userId)  // userId might change
+}()
+
+// Safer - pass as parameters
+go func(uid int64) {
+    doSomething(uid)
+}(userId)
+```
+
+### Markdown/HTML Parse Mode Mismatch
+
+**Problem:** Locale strings use Markdown formatting (`*bold*`, `` `code` ``) but the bot sends messages with HTML parse mode, causing raw asterisks to appear instead of formatted text.
+
+```go
+// Wrong - locale uses Markdown, but sending with HTML parse mode
+helpMsg, _ := tr.GetString("module_help_msg")  // Contains *bold*
+b.SendMessage(chatId, helpMsg, &gotgbot.SendMessageOpts{
+    ParseMode: formatting.HTML,  // Markdown won't render!
+})
+
+// Correct - convert Markdown to HTML before sending
+helpMsg, _ := tr.GetString("module_help_msg")
+htmlMsg := tgmd2html.MD2HTMLV2(helpMsg)  // Converts *bold* to <b>bold</b>
+b.SendMessage(chatId, htmlMsg, &gotgbot.SendMessageOpts{
+    ParseMode: formatting.HTML,
+})
+```
+
+The `tgmd2html` library provides conversion functions:
+- `tgmd2html.MD2HTMLV2(text)` - Converts Markdown formatting to HTML
+- `tgmd2html.MD2HTMLButtonsV2(text)` - Converts and extracts inline buttons
+
+## Getting Help
+
+- **Support Group**: [t.me/DivideSupport](https://t.me/DivideSupport)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/divkix/Alita_Robot/issues)

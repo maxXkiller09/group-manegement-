@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">NexGuard shield logo</title><desc id="desc">Silver shield with cyan N checkmark on a deep navy background.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#071329"/><stop offset="1" stop-color="#020817"/></linearGradient><linearGradient id="edge" x2="1" y2="1"><stop stop-color="#eaf6ff"/><stop offset=".48" stop-color="#8ca8c8"/><stop offset="1" stop-color="#08c9ff"/></linearGradient><linearGradient id="cyan" x2="1" y2="1"><stop stop-color="#00eaff"/><stop offset="1" stop-color="#087bff"/></linearGradient></defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<path d="M256 48 420 112v132c0 112-68 184-164 224C160 428 92 356 92 244V112Z" fill="#071a36" stroke="url(#edge)" stroke-width="18"/>
+<path d="M256 82 389 134v108c0 91-53 151-133 188-80-37-133-97-133-188V134Z" fill="none" stroke="#1262b8" stroke-width="5" opacity=".7"/>
+<path d="M166 315V187h42l92 82v-82h46v144h-39l-95-85v69Z" fill="url(#edge)"/>
+<path d="m215 300 48 42 100-112" fill="none" stroke="url(#cyan)" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M256 48v-16m-16 16h32" stroke="#00dfff" stroke-width="8" stroke-linecap="round"/>
+</svg>

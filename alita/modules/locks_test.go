@@ -1,0 +1,76 @@
+package modules
+
+import (
+	"slices"
+	"testing"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+)
+
+func TestGetLockMapAsArray(t *testing.T) {
+	t.Parallel()
+
+	var m moduleStruct
+	got := m.getLockMapAsArray()
+
+	expected := make(map[string]struct{}, len(lockMap)+len(restrMap))
+	for k := range lockMap {
+		expected[k] = struct{}{}
+	}
+	for k := range restrMap {
+		expected[k] = struct{}{}
+	}
+
+	if len(got) != len(expected) {
+		t.Fatalf("expected %d lock types, got %d", len(expected), len(got))
+	}
+
+	if !slices.IsSorted(got) {
+		t.Fatalf("expected sorted slice, got %v", got)
+	}
+
+	for k := range expected {
+		if !slices.Contains(got, k) {
+			t.Fatalf("expected lock type %q missing from %v", k, got)
+		}
+	}
+}
+
+func TestGetLockMapAsArrayCachesResult(t *testing.T) {
+	// Since sync.Once caches the result, both calls should return identical slices.
+	var m moduleStruct
+	first := m.getLockMapAsArray()
+	second := m.getLockMapAsArray()
+
+	if len(first) == 0 {
+		t.Fatal("expected non-empty lock types")
+	}
+
+	if !slices.Equal(first, second) {
+		t.Fatalf("cached result should be identical: first=%v second=%v", first, second)
+	}
+}
+
+// The rtl lock blocks RTL text wherever a message carries it, captions included.
+func TestRTLLockMatchesTextAndCaptions(t *testing.T) {
+	t.Parallel()
+
+	photo := []gotgbot.PhotoSize{{FileId: "photo-1"}}
+	for _, tt := range []struct {
+		name string
+		msg  gotgbot.Message
+		want bool
+	}{
+		{name: "rtl text", msg: gotgbot.Message{Text: "مرحبا"}, want: true},
+		{name: "photo with rtl caption", msg: gotgbot.Message{Photo: photo, Caption: "مرحبا"}, want: true},
+		{name: "photo with latin caption", msg: gotgbot.Message{Photo: photo, Caption: "hello"}, want: false},
+		{name: "latin text", msg: gotgbot.Message{Text: "hello"}, want: false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := lockMap["rtl"](&tt.msg); got != tt.want {
+				t.Fatalf("rtl lock match = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

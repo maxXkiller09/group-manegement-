@@ -1,0 +1,861 @@
+package modules
+
+import (
+	"bytes"
+	"fmt"
+	"strings"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/divkix/Alita_Robot/alita/db/devs"
+	chatsettings "github.com/divkix/Alita_Robot/alita/settings"
+	"github.com/divkix/Alita_Robot/alita/utils/cache"
+	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
+	"github.com/divkix/Alita_Robot/alita/utils/error_handling"
+	"github.com/divkix/Alita_Robot/alita/utils/extraction"
+	"github.com/divkix/Alita_Robot/alita/utils/formatting"
+	"github.com/divkix/Alita_Robot/alita/utils/helpers"
+	"github.com/divkix/Alita_Robot/alita/utils/tracing"
+)
+
+var adminModule = moduleStruct{moduleName: "Admin"}
+
+// loadAdminCache returns the chat's admin list, loading it from Telegram on a
+// cache miss. cached reports whether the list came from the cache.
+func loadAdminCache(b *gotgbot.Bot, chatID int64) (admins cache.AdminCache, cached bool) {
+	cached, admins = cache.GetAdminCacheList(chatID)
+	if !cached {
+		admins = cache.LoadAdminCache(b, chatID)
+	}
+	return admins, cached
+}
+
+func (m moduleStruct) adminlist(c *helpers.CommandContext) error {
+	chat := c.Chat
+	msg := c.Msg
+
+	tr := c.Tr
+
+	temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_adminlist")
+	text := fmt.Sprintf(temp, formatting.HtmlEscape(chat.Title))
+
+	admins, cached := loadAdminCache(c.Bot, chat.Id)
+
+	var sb strings.Builder
+	for i := range admins.UserInfo {
+		admin := &admins.UserInfo[i]
+		user := admin.User
+		if user.IsBot || admin.IsAnonymous {
+			continue
+		}
+		if user.Username != "" {
+			fmt.Fprintf(&sb, "\n- @%s", formatting.HtmlEscape(user.Username))
+		} else {
+			fmt.Fprintf(&sb, "\n- %s", formatting.MentionHtml(user.Id, user.FirstName))
+		}
+	}
+	if sb.Len() == 0 {
+		noVisibleText, _ := tr.GetString("admin_no_visible_admins")
+		text += noVisibleText
+	} else {
+		text += sb.String()
+	}
+	if !cached {
+		noteText, _ := tr.GetString("admin_adminlist_note_fresh")
+		text += noteText
+	} else {
+		noteText, _ := tr.GetString("admin_adminlist_note_cached")
+		text += noteText
+	}
+	_, err := msg.Reply(c.Bot, text, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func (m moduleStruct) loadAdminCacheOrFail(c *helpers.CommandContext) *cache.AdminCache {
+	admins, _ := loadAdminCache(c.Bot, c.Chat.Id)
+	if len(admins.UserInfo) == 0 {
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_errors_admin_cache_failed")
+		_, err := c.Msg.Reply(c.Bot, text, nil)
+		if err != nil {
+			log.Error(err)
+		}
+		return nil
+	}
+	return &admins
+}
+
+func (m moduleStruct) validateDemotionTarget(c *helpers.CommandContext) (int64, error) {
+	userId := extraction.ExtractUser(c.Bot, c.Ctx)
+	if userId == -1 {
+		return 0, ext.EndGroups
+	} else if userId < 0 || chat_status.IsSystemUser(userId) {
+		text, _ := c.Tr.GetString("common_anonymous_user_error")
+		_, err := c.Msg.Reply(c.Bot, text, nil)
+		if err != nil {
+			log.Error(err)
+			return 0, err
+		}
+		return 0, ext.EndGroups
+	} else if userId == 0 {
+		text, _ := c.Tr.GetString("common_no_user_specified")
+		_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return 0, err
+		}
+		return 0, ext.EndGroups
+	}
+
+	if chat_status.RequireUserOwner(c.Bot, c.Ctx, nil, userId) {
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_demote_is_owner")
+		_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return 0, err
+		}
+		return 0, ext.EndGroups
+	}
+	if userId == c.Bot.Id {
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_demote_is_bot_itself")
+		_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return 0, err
+		}
+		return 0, ext.EndGroups
+	}
+	if !chat_status.IsUserAdmin(c.Bot, c.Chat.Id, userId) {
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_demote_not_admin")
+		_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return 0, err
+		}
+		return 0, ext.EndGroups
+	}
+
+	return userId, nil
+}
+
+func (m moduleStruct) performDemotion(c *helpers.CommandContext, userId int64) error {
+	userMember, err := c.Bot.GetChatMemberWithContext(tracing.UpdateContext(c.Ctx), c.Chat.Id, userId, nil)
+	if error_handling.IsMissingChatMemberError(err) {
+		replyHTML(c.Bot, c.Msg, trS(c.Tr, "common_user_not_in_chat"))
+		return ext.EndGroups
+	}
+	if err != nil {
+		return err
+	}
+	if userMember == nil {
+		err := fmt.Errorf("GetMember returned nil for userId %d", userId)
+		return err
+	}
+
+	bb, err := c.Chat.PromoteMember(c.Bot,
+		userId,
+		&gotgbot.PromoteChatMemberOpts{
+			CanPostMessages:     false,
+			CanDeleteMessages:   false,
+			CanRestrictMembers:  helpers.Ptr(false),
+			CanChangeInfo:       false,
+			CanInviteUsers:      false,
+			CanPinMessages:      false,
+			CanManageVideoChats: false,
+			CanManageTopics:     false,
+		},
+	)
+	if err != nil || !bb {
+		log.Error(err)
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_errors_err_cannot_demote")
+		_, err = c.Msg.Reply(c.Bot, text, nil)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	}
+
+	cache.InvalidateAdminCache(c.Chat.Id)
+
+	mem := userMember.MergeChatMember().User
+	_, err = c.Msg.Reply(c.Bot,
+		trSprintf(c.Tr, strings.ToLower(m.moduleName)+"_demote_success_demote", formatting.MentionHtml(mem.Id, mem.FirstName)),
+		formatting.Shtml(),
+	)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	return ext.EndGroups
+}
+
+func (m moduleStruct) demote(c *helpers.CommandContext) error {
+	admins := m.loadAdminCacheOrFail(c)
+	if admins == nil {
+		return ext.EndGroups
+	}
+
+	userId, err := m.validateDemotionTarget(c)
+	if err != nil {
+		return err
+	}
+
+	return m.performDemotion(c, userId)
+}
+
+func (m moduleStruct) validatePromotionTarget(c *helpers.CommandContext) (int64, string, error) {
+	userId, customTitle := extraction.ExtractUserAndText(c.Bot, c.Ctx)
+	if userId == -1 {
+		return 0, "", ext.EndGroups
+	} else if userId < 0 || chat_status.IsSystemUser(userId) {
+		text, _ := c.Tr.GetString("common_anonymous_user_error")
+		_, err := c.Msg.Reply(c.Bot, text, nil)
+		if err != nil {
+			log.Error(err)
+			return 0, "", err
+		}
+		return 0, "", ext.EndGroups
+	} else if userId == 0 {
+		text, _ := c.Tr.GetString("common_no_user_specified")
+		_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return 0, "", err
+		}
+		return 0, "", ext.EndGroups
+	}
+	if userId == c.Bot.Id {
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_promote_is_bot_itself")
+		_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return 0, "", err
+		}
+		return 0, "", ext.EndGroups
+	}
+	if chat_status.RequireUserOwner(c.Bot, c.Ctx, nil, userId) {
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_promote_is_owner")
+		_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return 0, "", err
+		}
+		return 0, "", ext.EndGroups
+	}
+	if chat_status.IsUserAdmin(c.Bot, c.Chat.Id, userId) {
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_promote_is_admin")
+		_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return 0, "", err
+		}
+		return 0, "", ext.EndGroups
+	}
+	return userId, customTitle, nil
+}
+
+func canGrantPerm(botHas, promoterHas, bypass bool) bool {
+	return botHas && (promoterHas || bypass)
+}
+
+func buildPromoteOpts(botMember, promoterMember gotgbot.ChatMember, user *gotgbot.User, c *helpers.CommandContext) *gotgbot.PromoteChatMemberOpts {
+	bMem := botMember.MergeChatMember()
+	pMem := promoterMember.MergeChatMember()
+
+	teamMem := devs.GetTeamMemInfo(user.Id)
+	teamMemInfo := teamMem.Sudo || teamMem.IsDev
+	isPromoterOwner := chat_status.RequireUserOwner(c.Bot, c.Ctx, nil, user.Id)
+	checkCommonPerms := isPromoterOwner || teamMemInfo
+
+	return &gotgbot.PromoteChatMemberOpts{
+		CanPostMessages:     canGrantPerm(bMem.CanPostMessages, pMem.CanPostMessages, checkCommonPerms),
+		CanDeleteMessages:   canGrantPerm(bMem.CanDeleteMessages, pMem.CanDeleteMessages, checkCommonPerms),
+		CanRestrictMembers:  helpers.Ptr(canGrantPerm(bMem.CanRestrictMembers, pMem.CanRestrictMembers, checkCommonPerms)),
+		CanChangeInfo:       canGrantPerm(bMem.CanChangeInfo, pMem.CanChangeInfo, checkCommonPerms),
+		CanInviteUsers:      canGrantPerm(bMem.CanInviteUsers, pMem.CanInviteUsers, checkCommonPerms),
+		CanPinMessages:      canGrantPerm(bMem.CanPinMessages, pMem.CanPinMessages, checkCommonPerms),
+		CanManageVideoChats: canGrantPerm(bMem.CanManageVideoChats, pMem.CanManageVideoChats, checkCommonPerms),
+		CanManageChat:       canGrantPerm(bMem.CanManageChat, pMem.CanManageChat, checkCommonPerms),
+		CanManageTopics:     canGrantPerm(bMem.CanManageTopics, pMem.CanManageTopics, checkCommonPerms),
+	}
+}
+
+func (m moduleStruct) handlePromotionSuccess(c *helpers.CommandContext, userId int64, customTitle string, userMember gotgbot.ChatMember) error {
+	tr := c.Tr
+	msg := c.Msg
+
+	cache.InvalidateAdminCache(c.Chat.Id)
+
+	extraText := ""
+	titleRunes := []rune(customTitle)
+	if len(titleRunes) > 16 {
+		temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_promote_admin_title_truncated")
+		extraText += fmt.Sprintf(temp, len(titleRunes))
+		customTitle = string(titleRunes[0:16])
+	}
+
+	if customTitle != "" {
+		_, err := c.Chat.SetAdministratorCustomTitle(c.Bot, userId, customTitle, nil)
+		if err != nil {
+			text, _ := tr.GetString(strings.ToLower(m.moduleName) + "_errors_err_set_title")
+			_, err = msg.Reply(c.Bot, text, nil)
+			if err != nil {
+				log.Error(err)
+			}
+			return ext.EndGroups
+		}
+	}
+
+	mem := userMember.MergeChatMember().User
+	_, err := msg.Reply(c.Bot,
+		trSprintf(tr, strings.ToLower(m.moduleName)+"_promote_success_promote", formatting.MentionHtml(mem.Id, mem.FirstName))+extraText,
+		formatting.Shtml(),
+	)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	return ext.EndGroups
+}
+
+func (m moduleStruct) promote(c *helpers.CommandContext) error {
+	admins := m.loadAdminCacheOrFail(c)
+	if admins == nil {
+		return ext.EndGroups
+	}
+
+	userId, customTitle, err := m.validatePromotionTarget(c)
+	if err != nil {
+		return err
+	}
+	if c.User == nil {
+		return ext.EndGroups
+	}
+	if !chat_status.IsValidUserId(c.User.Id) || chat_status.IsSystemUser(c.User.Id) {
+		replyHTML(c.Bot, c.Msg, trS(c.Tr, "common_anonymous_user_error"))
+		return ext.EndGroups
+	}
+
+	userMember, err := c.Bot.GetChatMemberWithContext(tracing.UpdateContext(c.Ctx), c.Chat.Id, userId, nil)
+	if error_handling.IsMissingChatMemberError(err) {
+		replyHTML(c.Bot, c.Msg, trS(c.Tr, "common_user_not_in_chat"))
+		return ext.EndGroups
+	}
+	if err != nil {
+		return err
+	}
+	if userMember == nil {
+		err := fmt.Errorf("GetMember returned nil for userId %d", userId)
+		return err
+	}
+
+	promoterMember, err := c.Bot.GetChatMemberWithContext(tracing.UpdateContext(c.Ctx), c.Chat.Id, c.User.Id, nil)
+	if error_handling.IsMissingChatMemberError(err) {
+		replyHTML(c.Bot, c.Msg, trS(c.Tr, "chat_status_user_admin_cmd_error"))
+		return ext.EndGroups
+	}
+	if err != nil {
+		return err
+	}
+	if promoterMember == nil {
+		err := fmt.Errorf("GetMember returned nil for promoterId %d", c.User.Id)
+		return err
+	}
+
+	botMember, err := c.Bot.GetChatMemberWithContext(tracing.UpdateContext(c.Ctx), c.Chat.Id, c.Bot.Id, nil)
+	if error_handling.IsMissingChatMemberError(err) {
+		replyHTML(c.Bot, c.Msg, trS(c.Tr, "chat_status_bot_not_admin"))
+		return ext.EndGroups
+	}
+	if err != nil {
+		return err
+	}
+	if botMember == nil {
+		err := fmt.Errorf("GetMember returned nil for botId %d", c.Bot.Id)
+		return err
+	}
+
+	opts := buildPromoteOpts(botMember, promoterMember, c.User, c)
+
+	status, err := c.Chat.PromoteMember(c.Bot, userId, opts)
+	if err != nil || !status {
+		text, _ := c.Tr.GetString(strings.ToLower(m.moduleName) + "_errors_err_cannot_promote")
+		_, _ = c.Msg.Reply(c.Bot, text, formatting.Shtml())
+		if err == nil {
+			err = fmt.Errorf("promote member returned false status")
+		}
+		return err
+	}
+
+	return m.handlePromotionSuccess(c, userId, customTitle, userMember)
+}
+
+func (moduleStruct) getinvitelink(c *helpers.CommandContext) error {
+	chat := c.Chat
+	msg := c.Msg
+	tr := c.Tr
+
+	if chat.Username != "" {
+		linkText, _ := tr.GetString("admin_invitelink_public")
+		_, _ = msg.Reply(c.Bot, fmt.Sprintf(linkText, "https://t.me/"+chat.Username), nil)
+	} else {
+		nchat, err := c.Bot.GetChat(chat.Id, nil)
+		if err != nil {
+			_, _ = msg.Reply(c.Bot, err.Error(), nil)
+			return ext.EndGroups
+		}
+		linkText, _ := tr.GetString("admin_invitelink_private")
+		_, _ = msg.Reply(c.Bot, fmt.Sprintf(linkText, nchat.InviteLink), nil)
+	}
+	return ext.EndGroups
+}
+
+func (moduleStruct) setGTitle(c *helpers.CommandContext) error {
+	msg := c.Msg
+	tr := c.Tr
+	title := strings.TrimSpace(strings.Join(c.Ctx.Args()[1:], " "))
+	if title == "" {
+		text, _ := tr.GetString("admin_setgtitle_need_title")
+		_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+	if _, err := c.Bot.SetChatTitle(c.Chat.Id, title, nil); err != nil {
+		log.Error(err)
+		text, _ := tr.GetString("admin_setgtitle_failed")
+		_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+	text, _ := tr.GetString("admin_setgtitle_ok")
+	_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+	return ext.EndGroups
+}
+
+func (moduleStruct) setGPic(c *helpers.CommandContext) error {
+	msg := c.Msg
+	tr := c.Tr
+	if msg.ReplyToMessage == nil || len(msg.ReplyToMessage.Photo) == 0 {
+		text, _ := tr.GetString("admin_setgpic_need_photo")
+		_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+	photo := msg.ReplyToMessage.Photo
+	fileID := photo[len(photo)-1].FileId
+	data, err := downloadTelegramFile(c.Bot, fileID)
+	if err != nil || len(data) == 0 {
+		log.Error(err)
+		text, _ := tr.GetString("admin_setgpic_failed")
+		_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+	if _, err := c.Bot.SetChatPhoto(c.Chat.Id, gotgbot.InputFileByReader("photo.jpg", bytes.NewReader(data)), nil); err != nil {
+		log.Error(err)
+		text, _ := tr.GetString("admin_setgpic_failed")
+		_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+	text, _ := tr.GetString("admin_setgpic_ok")
+	_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+	return ext.EndGroups
+}
+
+func (moduleStruct) setGDesc(c *helpers.CommandContext) error {
+	msg := c.Msg
+	tr := c.Tr
+	desc := strings.TrimSpace(strings.Join(c.Ctx.Args()[1:], " "))
+	if _, err := c.Bot.SetChatDescription(c.Chat.Id, &gotgbot.SetChatDescriptionOpts{Description: desc}); err != nil {
+		log.Error(err)
+		text, _ := tr.GetString("admin_setgdesc_failed")
+		_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+		return ext.EndGroups
+	}
+	text, _ := tr.GetString("admin_setgdesc_ok")
+	_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+	return ext.EndGroups
+}
+
+func (m moduleStruct) setTitle(c *helpers.CommandContext) error {
+	chat := c.Chat
+	msg := c.Msg
+	tr := c.Tr
+
+	userId, customTitle := extraction.ExtractUserAndText(c.Bot, c.Ctx)
+	if userId == -1 {
+		return ext.EndGroups
+	} else if userId < 0 || chat_status.IsSystemUser(userId) {
+		text, _ := tr.GetString("common_anonymous_user_error")
+		_, err := msg.Reply(c.Bot, text, nil)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	} else if userId == 0 {
+		text, _ := tr.GetString("common_no_user_specified")
+		_, err := msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	}
+
+	if chat_status.RequireUserOwner(c.Bot, c.Ctx, nil, userId) {
+		text, _ := tr.GetString(strings.ToLower(m.moduleName) + "_title_is_owner")
+		_, err := msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	}
+	if !chat_status.IsUserAdmin(c.Bot, chat.Id, userId) {
+		text, _ := tr.GetString(strings.ToLower(m.moduleName) + "_title_is_admin")
+		_, err := msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	}
+
+	if userId == c.Bot.Id {
+		text, _ := tr.GetString(strings.ToLower(m.moduleName) + "_title_is_bot_itself")
+		_, err := msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+
+		return ext.EndGroups
+	}
+
+	var extraText string
+	if customTitle == "" {
+		text, _ := tr.GetString(strings.ToLower(m.moduleName) + "_errors_title_empty")
+		_, err := msg.Reply(c.Bot, text, formatting.Shtml())
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		return ext.EndGroups
+	} else if len([]rune(customTitle)) > 16 {
+		runes := []rune(customTitle)
+		temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_title_truncated")
+		extraText = fmt.Sprintf(temp, len(runes))
+		customTitle = string(runes[:16])
+	}
+
+	userMember, err := c.Bot.GetChatMemberWithContext(tracing.UpdateContext(c.Ctx), chat.Id, userId, nil)
+	if error_handling.IsMissingChatMemberError(err) {
+		replyHTML(c.Bot, c.Msg, trS(c.Tr, "common_user_not_in_chat"))
+		return ext.EndGroups
+	}
+	if err != nil {
+		return err
+	}
+	if userMember == nil {
+		err := fmt.Errorf("GetMember returned nil for userId %d", userId)
+		return err
+	}
+
+	_, err = chat.SetAdministratorCustomTitle(c.Bot,
+		userId,
+		customTitle,
+		nil,
+	)
+	if err != nil {
+		log.Error(err)
+		text, _ := tr.GetString(strings.ToLower(m.moduleName) + "_errors_err_set_title")
+		_, _ = msg.Reply(c.Bot, text, formatting.Shtml())
+		return err
+	}
+
+	mem := userMember.MergeChatMember()
+
+	_, err = msg.Reply(c.Bot,
+		trSprintf(tr, strings.ToLower(m.moduleName)+"_title_success_set", formatting.HtmlEscape(mem.User.FirstName), formatting.HtmlEscape(customTitle))+extraText,
+		formatting.Shtml(),
+	)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func (m moduleStruct) anonAdmin(c *helpers.CommandContext) error {
+	chat := c.Chat
+	msg := c.Msg
+	args := c.Ctx.Args()
+
+	tr := c.Tr
+	var text string
+
+	anonAdmin := chatsettings.AnonAdmin.ReadContext(tracing.UpdateContext(c.Ctx), chat.Id).Value.(bool)
+
+	if len(args) == 1 {
+		if anonAdmin {
+			temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_enabled")
+			text = fmt.Sprintf(temp, formatting.HtmlEscape(chat.Title))
+		} else {
+			temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_disabled")
+			text = fmt.Sprintf(temp, formatting.HtmlEscape(chat.Title))
+		}
+	} else {
+		switch args[1] {
+		case "on", "true", "yes":
+			if anonAdmin {
+				temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_already_enabled")
+				text = fmt.Sprintf(temp, formatting.HtmlEscape(chat.Title))
+			} else {
+				if err := chatsettings.AnonAdmin.Write(chatsettings.WriteContext{Context: tracing.UpdateContext(c.Ctx), ChatID: chat.Id}, true); err != nil {
+					log.Errorf("[Admin] Failed to set anon admin mode for chat %d: %v", chat.Id, err)
+					errorText, _ := tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_db_error")
+					_, _ = msg.Reply(c.Bot, errorText, formatting.Shtml())
+					return ext.EndGroups
+				}
+				temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_enabled_now")
+				text = fmt.Sprintf(temp, formatting.HtmlEscape(chat.Title))
+			}
+		case "off", "no", "false":
+			if !anonAdmin {
+				temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_already_disabled")
+				text = fmt.Sprintf(temp, formatting.HtmlEscape(chat.Title))
+			} else {
+				if err := chatsettings.AnonAdmin.Write(chatsettings.WriteContext{Context: tracing.UpdateContext(c.Ctx), ChatID: chat.Id}, false); err != nil {
+					log.Errorf("[Admin] Failed to set anon admin mode for chat %d: %v", chat.Id, err)
+					errorText, _ := tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_db_error")
+					_, _ = msg.Reply(c.Bot, errorText, formatting.Shtml())
+					return ext.EndGroups
+				}
+				temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_disabled_now")
+				text = fmt.Sprintf(temp, formatting.HtmlEscape(chat.Title))
+			}
+		default:
+			text, _ = tr.GetString(strings.ToLower(m.moduleName) + "_anon_admin_invalid_arg")
+		}
+	}
+
+	_, err := msg.Reply(c.Bot, text, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+// adminCacheActorCheck must bypass the cache this command is about to reload.
+func adminCacheActorCheck(c *helpers.CommandContext) bool {
+	b, msg, user, chat := c.Bot, c.Msg, c.User, c.Chat
+
+	// Preserve the two existing trusted synthetic admins without querying
+	// Telegram for their non-member sender identities.
+	isAdmin := user.Id == chat_status.GroupAnonymousBotID || user.Id == chat_status.TelegramUserID
+	if !isAdmin && chat_status.IsValidUserId(user.Id) && !chat_status.IsSystemUser(user.Id) {
+		userMember, lookupErr := b.GetChatMemberWithContext(tracing.UpdateContext(c.Ctx), chat.Id, user.Id, nil)
+		if lookupErr != nil && !error_handling.IsMissingChatMemberError(lookupErr) {
+			log.WithContext(tracing.UpdateContext(c.Ctx)).Errorf("[Admin] Failed to get member %d: %v", user.Id, lookupErr)
+			errorText, _ := c.Tr.GetString("admin_check_status_failed")
+			_, _ = msg.Reply(b, errorText, formatting.Shtml())
+			return false
+		}
+		if userMember != nil {
+			status := userMember.GetStatus()
+			isAdmin = status == "administrator" || status == "creator"
+		}
+	}
+	if !isAdmin {
+		errorText, _ := c.Tr.GetString("admin_need_admin")
+		_, err := msg.Reply(b, errorText, nil)
+		if err != nil {
+			log.Error(err)
+		}
+		return false
+	}
+	return true
+}
+
+func (moduleStruct) adminCache(c *helpers.CommandContext) error {
+	b, msg, chat := c.Bot, c.Msg, c.Chat
+
+	cache.LoadAdminCache(b, chat.Id)
+
+	k, _ := c.Tr.GetString("commonstrings_admin_cache_cache_reloaded")
+	_, err := msg.Reply(b, k, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+var (
+	// From PM, the group-only commands below take their group as the first
+	// argument (or from the connection), and their checks see that group.
+	adminlistDesc = helpers.CommandDescriptor{
+		Name:        "adminlist",
+		Disableable: true,
+		PMGroupArg:  helpers.PMGroupArgNone,
+		RequiredChecks: []helpers.CheckFunc{groupOnlyChatCheck,
+			helpers.RequireBotAdmin(),
+			helpers.RequireGroup()},
+	}
+	promoteDesc = helpers.CommandDescriptor{
+		Name: "promote",
+		RequiredChecks: []helpers.CheckFunc{
+			helpers.RequireGroup(),
+			helpers.RequireBotAdmin(),
+			helpers.RequireUserAdmin(),
+			helpers.CanUserPromote(),
+			helpers.CanBotPromote(),
+		},
+	}
+	demoteDesc = helpers.CommandDescriptor{
+		Name: "demote",
+		RequiredChecks: []helpers.CheckFunc{
+			helpers.RequireGroup(),
+			helpers.RequireBotAdmin(),
+			helpers.RequireUserAdmin(),
+			helpers.CanUserPromote(),
+			helpers.CanBotPromote(),
+		},
+	}
+	setTitleDesc = helpers.CommandDescriptor{
+		Name: "title",
+		RequiredChecks: []helpers.CheckFunc{
+			helpers.RequireGroup(),
+			helpers.RequireUserAdmin(),
+			helpers.RequireBotAdmin(),
+			helpers.CanUserPromote(),
+			helpers.CanBotPromote(),
+		},
+	}
+	getinvitelinkDesc = helpers.CommandDescriptor{
+		Name:       "invitelink",
+		PMGroupArg: helpers.PMGroupArgNone,
+		RequiredChecks: []helpers.CheckFunc{
+			groupOnlyChatCheck,
+			helpers.RequireGroup(),
+			helpers.RequireBotAdmin(),
+			helpers.CanInvite(),
+		},
+	}
+	clearAdminCacheDesc = helpers.CommandDescriptor{
+		Name:       "clearadmincache",
+		PMGroupArg: helpers.PMGroupArgNone,
+		RequiredChecks: []helpers.CheckFunc{
+			groupOnlyChatCheck,
+			helpers.RequireGroup(),
+			helpers.RequireBotAdmin(),
+			helpers.RequireUserAdmin(),
+		},
+	}
+	anonAdminDesc = helpers.CommandDescriptor{
+		Name:           "anonadmin",
+		PMGroupArg:     helpers.PMGroupArgOwn,
+		RequiredChecks: declaredSettingChecks(chatsettings.AnonAdmin),
+	}
+	setGTitleDesc = helpers.CommandDescriptor{
+		Name:       "setgtitle",
+		Aliases:    []string{"setgrouptitle"},
+		PMGroupArg: helpers.PMGroupArgOwn,
+		RequiredChecks: []helpers.CheckFunc{
+			groupOnlyChatCheck,
+			helpers.RequireGroup(),
+			helpers.RequireBotAdmin(),
+			helpers.RequireUserAdmin(),
+			helpers.CanUserChangeInfo(),
+			helpers.CanBotChangeInfo(),
+		},
+	}
+	setGPicDesc = helpers.CommandDescriptor{
+		Name:    "setgpic",
+		Aliases: []string{"setgrouppic"},
+		RequiredChecks: []helpers.CheckFunc{
+			helpers.RequireGroup(),
+			helpers.RequireBotAdmin(),
+			helpers.RequireUserAdmin(),
+			helpers.CanUserChangeInfo(),
+			helpers.CanBotChangeInfo(),
+		},
+	}
+	setGDescDesc = helpers.CommandDescriptor{
+		Name:       "setgdesc",
+		Aliases:    []string{"setgroupdesc", "setdescription"},
+		PMGroupArg: helpers.PMGroupArgOwn,
+		RequiredChecks: []helpers.CheckFunc{
+			groupOnlyChatCheck,
+			helpers.RequireGroup(),
+			helpers.RequireBotAdmin(),
+			helpers.RequireUserAdmin(),
+			helpers.CanUserChangeInfo(),
+			helpers.CanBotChangeInfo(),
+		},
+	}
+)
+
+func LoadAdmin(dispatcher *ext.Dispatcher) {
+	SetModuleEnabled("Admin", true)
+
+	helpers.WrapCommand(dispatcher, adminlistDesc, adminModule.adminlist)
+	helpers.WrapCommand(dispatcher, promoteDesc, adminModule.promote)
+	helpers.WrapCommand(dispatcher, demoteDesc, adminModule.demote)
+	helpers.WrapCommand(dispatcher, setTitleDesc, adminModule.setTitle)
+	helpers.WrapCommand(dispatcher, getinvitelinkDesc, adminModule.getinvitelink)
+	helpers.WrapCommand(dispatcher, clearAdminCacheDesc, adminModule.clearAdminCache)
+	helpers.WrapCommand(dispatcher, anonAdminDesc, adminModule.anonAdmin)
+	helpers.WrapCommand(dispatcher, setGTitleDesc, adminModule.setGTitle)
+	helpers.WrapCommand(dispatcher, setGPicDesc, adminModule.setGPic)
+	helpers.WrapCommand(dispatcher, setGDescDesc, adminModule.setGDesc)
+	loadTimezone(dispatcher)
+	loadEphemeral(dispatcher)
+
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name: "admincache", PMGroupArg: helpers.PMGroupArgNone,
+		RequiredChecks: []helpers.CheckFunc{
+			helpers.RequireConnectedMember(helpers.BotAdminNotRequired),
+			helpers.RequireGroup(),
+			adminCacheActorCheck,
+			helpers.RequireBotAdmin(),
+		},
+	}, adminModule.adminCache)
+}
+
+func (moduleStruct) clearAdminCache(c *helpers.CommandContext) error {
+	chat := c.Chat
+	msg := c.Msg
+
+	m := cache.GetMarshal()
+	if m == nil {
+		return ext.EndGroups
+	}
+	err := cache.ClearAdminCache(chat.Id)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	log.Infof("[Admin] Cleared admin cache for %d (%s)", chat.Id, chat.Title)
+
+	text, _ := c.Tr.GetString("admin_cache_cleared")
+	_, err = msg.Reply(c.Bot, text, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func init() {
+	RegisterLegacyModule("Admin", 30, LoadAdmin)
+}

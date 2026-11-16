@@ -1,0 +1,531 @@
+package chats
+
+import (
+	"fmt"
+	"slices"
+	"testing"
+	"time"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
+	"github.com/divkix/Alita_Robot/alita/db"
+	"github.com/divkix/Alita_Robot/alita/db/models"
+	utilsCache "github.com/divkix/Alita_Robot/alita/utils/cache"
+)
+
+func skipIfNoDb(t *testing.T) {
+	t.Helper()
+	if db.DB == nil {
+		t.Fatal("test database was not initialized")
+	}
+}
+
+func withChatSQLite(t *testing.T) {
+	t.Helper()
+
+	originalDB := db.DB
+	originalMarshal := utilsCache.GetMarshal()
+	testDB, err := gorm.Open(
+		sqlite.Open(fmt.Sprintf("file:chats-%d?mode=memory&cache=shared", time.Now().UnixNano())),
+		&gorm.Config{Logger: logger.Default.LogMode(logger.Silent)},
+	)
+	if err != nil {
+		t.Fatalf("open SQLite: %v", err)
+	}
+	sqlDB, err := testDB.DB()
+	if err != nil {
+		t.Fatalf("get SQLite handle: %v", err)
+	}
+	sqlDB.SetMaxOpenConns(1)
+	db.DB = testDB
+	utilsCache.SetMarshal(nil)
+	if err := db.DB.AutoMigrate(&models.Chat{}); err != nil {
+		t.Fatalf("AutoMigrate Chat: %v", err)
+	}
+
+	t.Cleanup(func() {
+		_ = sqlDB.Close()
+		db.DB = originalDB
+		utilsCache.SetMarshal(originalMarshal)
+	})
+}
+
+func TestEnsureChatInDb(t *testing.T) {
+	skipIfNoDb(t)
+
+	chatID := time.Now().UnixNano()
+	chatName := fmt.Sprintf("test-chat-%d", chatID)
+
+	err := EnsureChatInDb(chatID, chatName)
+	if err != nil {
+		t.Fatalf("EnsureChatInDb() error = %v", err)
+	}
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chatID).Delete(&models.Chat{}) })
+
+	var chat models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).First(&chat).Error; err != nil {
+		t.Fatalf("expected chat %d to exist, got error: %v", chatID, err)
+	}
+	if chat.ChatName != chatName {
+		t.Errorf("chat name = %q, want %q", chat.ChatName, chatName)
+	}
+}
+
+func TestEnsureChatInDb_Idempotent(t *testing.T) {
+	skipIfNoDb(t)
+
+	chatID := time.Now().UnixNano()
+	chatName := fmt.Sprintf("test-chat-%d", chatID)
+
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chatID).Delete(&models.Chat{}) })
+
+	if err := EnsureChatInDb(chatID, chatName); err != nil {
+		t.Fatalf("first EnsureChatInDb() error = %v", err)
+	}
+	if err := EnsureChatInDb(chatID, chatName); err != nil {
+		t.Fatalf("second EnsureChatInDb() error = %v", err)
+	}
+
+	var count int64
+	db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatID).Count(&count)
+	if count != 1 {
+		t.Errorf("expected 1 chat record, got %d", count)
+	}
+}
+
+func TestGetChatSettings(t *testing.T) {
+	skipIfNoDb(t)
+
+	unknownChatID := time.Now().UnixNano()
+
+	settings := GetChatSettings(unknownChatID)
+	if settings == nil {
+		t.Fatal("GetChatSettings() returned nil for unknown chat, want empty struct")
+	}
+	if settings.ChatId != 0 {
+		t.Errorf("GetChatSettings() ChatId = %d, want 0 for unknown chat", settings.ChatId)
+	}
+
+	chatID := unknownChatID + 1
+	chatName := fmt.Sprintf("settings-chat-%d", chatID)
+	userID := chatID + 100
+
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chatID).Delete(&models.Chat{}) })
+
+	if err := TouchChat(chatID, chatName); err != nil {
+		t.Fatalf("TouchChat() error = %v", err)
+	}
+
+	settings = GetChatSettings(chatID)
+	if settings == nil {
+		t.Fatal("GetChatSettings() returned nil for known chat")
+	}
+	if settings.ChatId != chatID {
+		t.Errorf("GetChatSettings() ChatId = %d, want %d", settings.ChatId, chatID)
+	}
+	if settings.ChatName != chatName {
+		t.Errorf("GetChatSettings() ChatName = %q, want %q", settings.ChatName, chatName)
+	}
+	if db.DB.Name() != "postgres" {
+		return
+	}
+	if err := AddChatMember(chatID, userID); err != nil {
+		t.Fatalf("AddChatMember() error = %v", err)
+	}
+	// Users is now fetched via GetChatUsersCached to avoid hot-path egress on GetChatSettings.
+	users, err := GetChatUsersCached(chatID)
+	if err != nil {
+		t.Fatalf("GetChatUsersCached() error = %v", err)
+	}
+	if !slices.Contains(users, userID) {
+		t.Errorf("GetChatUsersCached() Users = %v, want to contain %d", users, userID)
+	}
+}
+
+func TestUpdateChat(t *testing.T) {
+	skipIfNoDb(t)
+	if db.DB.Name() != "postgres" {
+		t.Skip("PostgreSQL JSONB integration: run make test-postgres-integrity")
+	}
+
+	chatID := time.Now().UnixNano()
+	userID := chatID + 1
+	userID2 := chatID + 2
+	chatName := fmt.Sprintf("test-chat-%d", chatID)
+	updatedName := chatName + "-updated"
+
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chatID).Delete(&models.Chat{}) })
+
+	recordActivity := func(name string, userID int64) {
+		t.Helper()
+		if err := TouchChat(chatID, name); err != nil {
+			t.Fatalf("TouchChat(%q) error = %v", name, err)
+		}
+		if err := AddChatMember(chatID, userID); err != nil {
+			t.Fatalf("AddChatMember(%d) error = %v", userID, err)
+		}
+	}
+
+	recordActivity(chatName, userID)
+
+	var chat models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).First(&chat).Error; err != nil {
+		t.Fatalf("expected chat to exist after creation: %v", err)
+	}
+	if chat.ChatName != chatName {
+		t.Errorf("chat name = %q, want %q", chat.ChatName, chatName)
+	}
+	if !slices.Contains(chat.Users, userID) {
+		t.Errorf("chat users = %v, want to contain %d", chat.Users, userID)
+	}
+
+	recordActivity(updatedName, userID)
+
+	if err := db.DB.Where("chat_id = ?", chatID).First(&chat).Error; err != nil {
+		t.Fatalf("expected chat to exist after update: %v", err)
+	}
+	if chat.ChatName != updatedName {
+		t.Errorf("chat name after update = %q, want %q", chat.ChatName, updatedName)
+	}
+
+	recordActivity(updatedName, userID2)
+
+	if err := db.DB.Where("chat_id = ?", chatID).First(&chat).Error; err != nil {
+		t.Fatalf("expected chat to exist after adding user: %v", err)
+	}
+	if !slices.Contains(chat.Users, userID) {
+		t.Errorf("chat users missing original user %d: %v", userID, chat.Users)
+	}
+	if !slices.Contains(chat.Users, userID2) {
+		t.Errorf("chat users missing new user %d: %v", userID2, chat.Users)
+	}
+
+	recordActivity(updatedName, userID2)
+
+	if err := db.DB.Where("chat_id = ?", chatID).First(&chat).Error; err != nil {
+		t.Fatalf("expected chat to exist after re-adding member: %v", err)
+	}
+	if len(chat.Users) != 2 {
+		t.Errorf("chat users after re-adding an existing member = %v, want exactly [%d %d]: membership must not duplicate", chat.Users, userID, userID2)
+	}
+}
+
+func TestAddChatMemberReturnsAtomicAppendError(t *testing.T) {
+	withChatSQLite(t)
+
+	const chatID = int64(-100123)
+	if err := EnsureChatInDb(chatID, "existing"); err != nil {
+		t.Fatalf("EnsureChatInDb() error = %v", err)
+	}
+	if err := AddChatMember(chatID, 42); err == nil {
+		t.Fatal("AddChatMember() error = nil when the PostgreSQL JSONB append fails")
+	}
+}
+
+func TestTouchChatThrottlesActivityRefresh(t *testing.T) {
+	withChatSQLite(t)
+
+	const (
+		chatID  = int64(-100555)
+		name    = "throttle-chat"
+		renamed = "throttle-chat-renamed"
+	)
+
+	loadChat := func() models.Chat {
+		t.Helper()
+		var chat models.Chat
+		if err := db.DB.Where("chat_id = ?", chatID).First(&chat).Error; err != nil {
+			t.Fatalf("load chat: %v", err)
+		}
+		return chat
+	}
+	// SQLite stores these timestamps as text and compares them lexicographically,
+	// so pinned values must keep the local representation the driver writes.
+	pinActivity := func(at time.Time) {
+		t.Helper()
+		if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatID).
+			Update("last_activity", at).Error; err != nil {
+			t.Fatalf("pin last_activity: %v", err)
+		}
+	}
+
+	if err := TouchChat(chatID, name); err != nil {
+		t.Fatalf("initial TouchChat() error = %v", err)
+	}
+
+	// Inside the throttle window the row must not be rewritten.
+	fresh := time.Now().Add(-5 * time.Minute).Truncate(time.Second)
+	pinActivity(fresh)
+	if err := TouchChat(chatID, name); err != nil {
+		t.Fatalf("throttled TouchChat() error = %v", err)
+	}
+	if got := loadChat().LastActivity; !got.Equal(fresh) {
+		t.Errorf("last_activity = %v, want it left at %v inside the throttle window", got, fresh)
+	}
+
+	// A rename still has to land even while the timestamp is throttled.
+	if err := TouchChat(chatID, renamed); err != nil {
+		t.Fatalf("rename TouchChat() error = %v", err)
+	}
+	if got := loadChat().ChatName; got != renamed {
+		t.Errorf("chat name = %q, want %q", got, renamed)
+	}
+
+	// An inactive chat is reactivated on the next touch even inside the window.
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatID).
+		Update("is_inactive", true).Error; err != nil {
+		t.Fatalf("mark chat inactive: %v", err)
+	}
+	if err := TouchChat(chatID, renamed); err != nil {
+		t.Fatalf("reactivating TouchChat() error = %v", err)
+	}
+	if loadChat().IsInactive {
+		t.Error("is_inactive = true, want the touch to reactivate the chat")
+	}
+
+	// Once the stored timestamp is stale, the refresh happens again.
+	stale := time.Now().Add(-2 * chatTouchInterval).Truncate(time.Second)
+	pinActivity(stale)
+	if err := TouchChat(chatID, renamed); err != nil {
+		t.Fatalf("stale TouchChat() error = %v", err)
+	}
+	if got := loadChat().LastActivity; !got.After(stale) {
+		t.Errorf("last_activity = %v, want a refresh newer than %v", got, stale)
+	}
+}
+
+func TestGetAllChats(t *testing.T) {
+	skipIfNoDb(t)
+
+	base := time.Now().UnixNano()
+	id1 := base
+	id2 := base + 1
+
+	t.Cleanup(func() {
+		db.DB.Where("chat_id IN ?", []int64{id1, id2}).Delete(&models.Chat{})
+	})
+
+	before := GetAllChats()
+	if _, exists := before[id1]; exists {
+		t.Errorf("GetAllChats() should not contain id %d before creation", id1)
+	}
+	if _, exists := before[id2]; exists {
+		t.Errorf("GetAllChats() should not contain id %d before creation", id2)
+	}
+
+	if err := EnsureChatInDb(id1, "chat-one"); err != nil {
+		t.Fatalf("EnsureChatInDb(id1) error = %v", err)
+	}
+	if err := EnsureChatInDb(id2, "chat-two"); err != nil {
+		t.Fatalf("EnsureChatInDb(id2) error = %v", err)
+	}
+
+	allChats := GetAllChats()
+
+	c1, ok := allChats[id1]
+	if !ok {
+		t.Errorf("GetAllChats() missing chat with id %d", id1)
+	} else if c1.ChatName != "chat-one" {
+		t.Errorf("chat-one name = %q, want %q", c1.ChatName, "chat-one")
+	}
+
+	c2, ok := allChats[id2]
+	if !ok {
+		t.Errorf("GetAllChats() missing chat with id %d", id2)
+	} else if c2.ChatName != "chat-two" {
+		t.Errorf("chat-two name = %q, want %q", c2.ChatName, "chat-two")
+	}
+}
+
+func TestChatExists(t *testing.T) {
+	skipIfNoDb(t)
+
+	chatID := time.Now().UnixNano()
+
+	t.Run("returns false for non-existent chat", func(t *testing.T) {
+		if db.ChatExists(chatID) {
+			t.Errorf("ChatExists(%d) = true, want false for non-existent chat", chatID)
+		}
+	})
+
+	t.Run("returns true after creation", func(t *testing.T) {
+		existingID := chatID + 1000
+		if err := EnsureChatInDb(existingID, "existing-chat"); err != nil {
+			t.Fatalf("EnsureChatInDb() error = %v", err)
+		}
+		t.Cleanup(func() { db.DB.Where("chat_id = ?", existingID).Delete(&models.Chat{}) })
+
+		if !db.ChatExists(existingID) {
+			t.Errorf("ChatExists(%d) = false, want true after creation", existingID)
+		}
+	})
+}
+
+func TestLoadChatStats(t *testing.T) {
+	skipIfNoDb(t)
+
+	baseActive, baseInactive := LoadChatStats()
+
+	chatIDActive := time.Now().UnixNano()
+	chatIDInactive := chatIDActive + 1
+
+	t.Cleanup(func() {
+		db.DB.Where("chat_id IN ?", []int64{chatIDActive, chatIDInactive}).Delete(&models.Chat{})
+	})
+
+	if err := EnsureChatInDb(chatIDActive, "active-chat"); err != nil {
+		t.Fatalf("EnsureChatInDb(active) error = %v", err)
+	}
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatIDActive).Update("is_inactive", false).Error; err != nil {
+		t.Fatalf("failed to mark chat active: %v", err)
+	}
+
+	if err := EnsureChatInDb(chatIDInactive, "inactive-chat"); err != nil {
+		t.Fatalf("EnsureChatInDb(inactive) error = %v", err)
+	}
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatIDInactive).Update("is_inactive", true).Error; err != nil {
+		t.Fatalf("failed to mark chat inactive: %v", err)
+	}
+
+	activeChats, inactiveChats := LoadChatStats()
+
+	if activeChats != baseActive+1 {
+		t.Errorf("LoadChatStats() activeChats = %d, want %d", activeChats, baseActive+1)
+	}
+	if inactiveChats != baseInactive+1 {
+		t.Errorf("LoadChatStats() inactiveChats = %d, want %d", inactiveChats, baseInactive+1)
+	}
+}
+
+func TestLoadActivityStats(t *testing.T) {
+	skipIfNoDb(t)
+
+	baseDag, baseWag, baseMag := LoadActivityStats()
+
+	now := time.Now()
+	chatIDDaily := now.UnixNano()
+	chatIDWeekly := chatIDDaily + 1
+	chatIDMonthly := chatIDDaily + 2
+	chatIDOld := chatIDDaily + 3
+
+	t.Cleanup(func() {
+		db.DB.Where("chat_id IN ?", []int64{chatIDDaily, chatIDWeekly, chatIDMonthly, chatIDOld}).Delete(&models.Chat{})
+	})
+
+	if err := EnsureChatInDb(chatIDDaily, "daily-chat"); err != nil {
+		t.Fatalf("EnsureChatInDb(daily) error = %v", err)
+	}
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatIDDaily).Updates(map[string]any{
+		"last_activity": now.Add(-1 * time.Hour),
+		"is_inactive":   false,
+	}).Error; err != nil {
+		t.Fatalf("failed to set daily chat activity: %v", err)
+	}
+
+	if err := EnsureChatInDb(chatIDWeekly, "weekly-chat"); err != nil {
+		t.Fatalf("EnsureChatInDb(weekly) error = %v", err)
+	}
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatIDWeekly).Updates(map[string]any{
+		"last_activity": now.Add(-3 * 24 * time.Hour),
+		"is_inactive":   false,
+	}).Error; err != nil {
+		t.Fatalf("failed to set weekly chat activity: %v", err)
+	}
+
+	if err := EnsureChatInDb(chatIDMonthly, "monthly-chat"); err != nil {
+		t.Fatalf("EnsureChatInDb(monthly) error = %v", err)
+	}
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatIDMonthly).Updates(map[string]any{
+		"last_activity": now.Add(-15 * 24 * time.Hour),
+		"is_inactive":   false,
+	}).Error; err != nil {
+		t.Fatalf("failed to set monthly chat activity: %v", err)
+	}
+
+	if err := EnsureChatInDb(chatIDOld, "old-chat"); err != nil {
+		t.Fatalf("EnsureChatInDb(old) error = %v", err)
+	}
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatIDOld).Updates(map[string]any{
+		"last_activity": now.Add(-40 * 24 * time.Hour),
+		"is_inactive":   false,
+	}).Error; err != nil {
+		t.Fatalf("failed to set old chat activity: %v", err)
+	}
+
+	dag, wag, mag := LoadActivityStats()
+
+	// DAG counts only daily
+	if dag != baseDag+1 {
+		t.Errorf("LoadActivityStats() dag = %d, want %d", dag, baseDag+1)
+	}
+	// WAG counts daily + weekly
+	if wag != baseWag+2 {
+		t.Errorf("LoadActivityStats() wag = %d, want %d", wag, baseWag+2)
+	}
+	// MAG counts daily + weekly + monthly
+	if mag != baseMag+3 {
+		t.Errorf("LoadActivityStats() mag = %d, want %d", mag, baseMag+3)
+	}
+}
+
+func TestListChatsWithUser(t *testing.T) {
+	skipIfNoDb(t)
+	if db.DB.Name() != "postgres" {
+		t.Skip("PostgreSQL JSONB integration: run make test-postgres-integrity")
+	}
+
+	base := time.Now().UnixNano()
+	userID := base + 10
+	// tied shares older's last_activity and has the larger chat_id, but is
+	// inserted and updated after older, so on a fresh table heap order would
+	// put it last: the chat_id DESC tie-breaker is what puts it first.
+	older, newer, inactive, other, tied := -base-5, -base-2, -base-3, -base-4, -base-1
+	t.Cleanup(func() {
+		if err := db.DB.Where("chat_id IN ?", []int64{older, newer, inactive, other, tied}).Delete(&models.Chat{}).Error; err != nil {
+			t.Errorf("cleanup Delete error = %v", err)
+		}
+	})
+	for _, id := range []int64{older, newer, inactive, tied} {
+		if err := TouchChat(id, fmt.Sprintf("chat-%d", id)); err != nil {
+			t.Fatalf("TouchChat(%d) error = %v", id, err)
+		}
+		if err := AddChatMember(id, userID); err != nil {
+			t.Fatalf("AddChatMember(%d) error = %v", id, err)
+		}
+	}
+	if err := TouchChat(other, "other"); err != nil {
+		t.Fatalf("TouchChat(other) error = %v", err)
+	}
+	if err := AddChatMember(other, userID+1); err != nil {
+		t.Fatalf("AddChatMember(other) error = %v", err)
+	}
+	now := time.Now()
+	for _, set := range []struct {
+		chatID int64
+		column string
+		value  any
+	}{
+		{older, "last_activity", now.Add(-time.Hour)},
+		{tied, "last_activity", now.Add(-time.Hour)},
+		{newer, "last_activity", now},
+		{inactive, "is_inactive", true},
+	} {
+		if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", set.chatID).Update(set.column, set.value).Error; err != nil {
+			t.Fatalf("Update(%d, %s) error = %v", set.chatID, set.column, err)
+		}
+	}
+
+	got, err := ListChatsWithUser(t.Context(), userID, 10)
+	if err != nil {
+		t.Fatalf("ListChatsWithUser() error = %v", err)
+	}
+	var ids []int64
+	for _, chat := range got {
+		ids = append(ids, chat.ChatId)
+	}
+	if want := []int64{newer, tied, older}; !slices.Equal(ids, want) {
+		t.Fatalf("ListChatsWithUser() = %v, want %v", ids, want)
+	}
+}

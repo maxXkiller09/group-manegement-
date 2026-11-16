@@ -1,0 +1,895 @@
+package modules
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"slices"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/stretchr/testify/require"
+
+	"github.com/divkix/Alita_Robot/alita/db"
+	"github.com/divkix/Alita_Robot/alita/db/chats"
+	"github.com/divkix/Alita_Robot/alita/db/federations"
+	"github.com/divkix/Alita_Robot/alita/db/models"
+	"github.com/divkix/Alita_Robot/alita/i18n"
+	"github.com/divkix/Alita_Robot/alita/utils/cache"
+	"github.com/divkix/Alita_Robot/alita/utils/formatting"
+)
+
+func uniquePositiveUserID() int64 {
+	return -uniqueModuleChatID()
+}
+
+func TestParseFedBanFileCSV(t *testing.T) {
+	csv := "id,reason\n111,spam\n222,flood\n"
+	bans, err := parseFedBanFile("bans.csv", []byte(csv))
+	require.NoError(t, err)
+	require.Len(t, bans, 2)
+	require.Equal(t, int64(111), bans[0].UserID)
+	require.Equal(t, "spam", bans[0].Reason)
+	require.Equal(t, int64(222), bans[1].UserID)
+}
+
+func TestParseFedBanFileJSON(t *testing.T) {
+	raw := `[{"id":333,"reason":"raid"},{"user_id":444,"reason":"scam"}]`
+	bans, err := parseFedBanFile("bans.json", []byte(raw))
+	require.NoError(t, err)
+	require.Len(t, bans, 2)
+	require.Equal(t, int64(333), bans[0].UserID)
+	require.Equal(t, int64(444), bans[1].UserID)
+}
+
+func TestParseFedBanFileJSONL(t *testing.T) {
+	raw := `{"id":555,"reason":"one"}` + "\n" + `{"id":666,"reason":"two"}` + "\n"
+	bans, err := parseFedBanFile("bans.jsonl", []byte(raw))
+	require.NoError(t, err)
+	require.Len(t, bans, 2)
+	require.Equal(t, int64(555), bans[0].UserID)
+	require.Equal(t, int64(666), bans[1].UserID)
+}
+
+func TestParseFedBanFileRejectsEmpty(t *testing.T) {
+	_, err := parseFedBanFile("bans.txt", []byte(""))
+	require.Error(t, err)
+}
+
+func TestFormatFedBanJSONLRoundtrip(t *testing.T) {
+	bans := []models.FederationBan{{UserID: 1, Reason: "a"}, {UserID: 2, Reason: "b"}}
+	raw, err := formatFedBanJSONL(bans)
+	require.NoError(t, err)
+	parsed, err := parseFedBanFile("export.jsonl", raw)
+	require.NoError(t, err)
+	require.Len(t, parsed, 2)
+}
+
+func TestFormatFedBanCSVRoundtrip(t *testing.T) {
+	bans := []models.FederationBan{{UserID: 9, Reason: "csv reason"}}
+	raw, err := formatFedBanCSV(bans, true)
+	require.NoError(t, err)
+	require.True(t, strings.Contains(string(raw), "9"))
+	parsed, err := parseFedBanFile("export.csv", raw)
+	require.NoError(t, err)
+	require.Equal(t, int64(9), parsed[0].UserID)
+	require.Equal(t, "csv reason", parsed[0].Reason)
+}
+
+func TestNewFedCreatesFederation(t *testing.T) {
+	bot := newModuleTestBot(newModuleBotClient())
+	ownerID := uniquePositiveUserID()
+	user := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	chat := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+	ctx := newModuleMessageContext(bot, chat, user, "/newfed Rose Parity Fed")
+
+	require.NoError(t, dispatchFederationCommand(t, bot, ctx))
+	fed := federations.GetFedByOwner(ownerID)
+	if fed == nil {
+		t.Fatal("expected federation to be created")
+	}
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	if fed.Name != "Rose Parity Fed" {
+		t.Fatalf("name = %q", fed.Name)
+	}
+}
+
+func TestJoinFedAndFban(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	bot := f.bot
+	owner := f.admin
+	fed, err := federations.CreateFederation(owner.Id, "Join Test Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	group := f.chat
+	chatID := group.Id
+	joinCtx := newModuleMessageContext(bot, group, owner, "/joinfed "+fed.FedID)
+	require.NoError(t, dispatchFederationCommand(t, bot, joinCtx))
+	membership := federations.GetChatFed(chatID)
+	if membership == nil || membership.FedID != fed.FedID {
+		t.Fatalf("membership = %+v", membership)
+	}
+
+	fbanCtx := newModuleMessageContext(bot, group, owner, "/fban 12345 spam")
+	require.NoError(t, dispatchFederationCommand(t, bot, fbanCtx))
+	if federations.GetFedBan(fed.FedID, 12345) == nil {
+		t.Fatal("expected fban to persist")
+	}
+}
+
+func TestImportFBansNeedsFileAndOwnedFedLookup(t *testing.T) {
+	useRealLocales(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "IO Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/importfbans")))
+	require.Equal(t, "Reply to a CSV or JSON fban list.", sentTexts(client)[0])
+	if _, err := downloadTelegramFile(nil, ""); err == nil {
+		t.Fatal("downloadTelegramFile should reject missing file")
+	}
+
+	stranger := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Other"}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, stranger, "/fedreason on")))
+	require.Equal(t, "You don't own a federation. Create one with /newfed.", sentTexts(client)[1])
+
+	notifyFedAction(bot, federations.GetFed(fed.FedID), &stranger, "notify")
+	applyActiveFban(bot, fed.FedID, 42, 1)
+}
+
+func TestJoinFedRejectsNonOwner(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	fed, err := federations.CreateFederation(uniquePositiveUserID(), "Owner Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Fed Chat"}
+	member := gotgbot.User{Id: 42, FirstName: "Member"}
+	ctx := newModuleMessageContext(bot, chat, member, "/joinfed "+fed.FedID)
+	require.NoError(t, dispatchFederationCommand(t, bot, ctx))
+	if federations.GetChatFed(chat.Id) != nil {
+		t.Fatal("non-owner must not join a federation")
+	}
+}
+
+func TestParseToggleAndFedIDHelpers(t *testing.T) {
+	on, ok := parseToggleArg("YES")
+	if !ok || !on {
+		t.Fatal("parseToggleArg yes")
+	}
+	off, ok := parseToggleArg("disable")
+	if !ok || off {
+		t.Fatal("parseToggleArg disable")
+	}
+	if _, ok := parseToggleArg("maybe"); ok {
+		t.Fatal("parseToggleArg maybe")
+	}
+	if _, ok := parseFedID("not-a-uuid"); ok {
+		t.Fatal("parseFedID should reject junk")
+	}
+	id, ok := parseFedID("550e8400-e29b-41d4-a716-446655440000")
+	if !ok || id == "" {
+		t.Fatal("parseFedID uuid")
+	}
+}
+
+func TestFedLifecycleCommands(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	bot := f.bot
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Lifecycle Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+	group, creator := f.chat, f.admin
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, owner, "/newfed x")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/renamefed Renamed Fed")))
+	if got := federations.GetFed(fed.FedID); got == nil || got.Name != "Renamed Fed" {
+		t.Fatalf("rename did not persist: %+v", got)
+	}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, creator, "/joinfed "+fed.FedID)))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/joinfed not-an-id")))
+	joinCtx := newModuleMessageContext(bot, group, creator, "/joinfed "+fed.FedID)
+	require.NoError(t, dispatchFederationCommand(t, bot, joinCtx))
+	if federations.GetChatFed(group.Id) == nil {
+		t.Fatal("expected join")
+	}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/chatfed")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/fedinfo")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/fedadmins")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/myfeds")))
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/leavefed")))
+	if federations.GetChatFed(group.Id) != nil {
+		t.Fatal("leavefed did not remove membership")
+	}
+}
+
+func TestFedAdminPromoteDemoteAndToggles(t *testing.T) {
+	bot := newModuleTestBot(newModuleBotClient())
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Admin Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fedpromote 42")))
+	if !federations.IsFedAdmin(fed.FedID, 42) {
+		t.Fatal("expected promoted admin")
+	}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/feddemote 42")))
+	if federations.IsFedAdmin(fed.FedID, 42) {
+		t.Fatal("demote did not persist")
+	}
+
+	require.NoError(t, federations.PromoteFedAdmin(fed.FedID, 42))
+	admin := gotgbot.User{Id: 42, FirstName: "Member"}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, admin, "/feddemoteme "+fed.FedID)))
+	if federations.IsFedAdmin(fed.FedID, 42) {
+		t.Fatal("feddemoteme did not persist")
+	}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fedreason on")))
+	if !federations.GetFed(fed.FedID).RequireReason {
+		t.Fatal("fedreason on did not persist")
+	}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fednotif off")))
+	if federations.GetFed(fed.FedID).NotifyOwner {
+		t.Fatal("fednotif off did not persist")
+	}
+}
+
+// The owner cannot step down; /feddemoteme tells them so and keeps the fed.
+func TestFedDemoteMeFromOwnerRepliesOwnerCannotStepDown(t *testing.T) {
+	useRealLocales(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Demoteme Owner Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/feddemoteme "+fed.FedID)))
+	want, err := i18n.MustNewTranslator("en").GetString("feds_demoteme_owner")
+	require.NoError(t, err)
+	require.NotEmpty(t, want)
+	calls := client.callsFor("sendMessage")
+	require.Len(t, calls, 1)
+	require.Equal(t, want, calls[0].Params["text"])
+	require.True(t, federations.IsFedOwner(fed.FedID, ownerID), "owner must keep the federation")
+}
+
+// The fed log notice for /fban and /unfban comes from the locale.
+func TestFbanAndUnfbanLogNoticesAreTranslated(t *testing.T) {
+	useRealLocales(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Log Notice Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	logChatID := uniqueModuleChatID()
+	require.NoError(t, federations.SetFedLogChat(fed.FedID, logChatID))
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fban 5150 spam")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/unfban 5150")))
+
+	tr := i18n.MustNewTranslator("en")
+	actor := formatting.MentionHtml(ownerID, "Owner")
+	wantFban, err := tr.GetString("feds_log_fban", i18n.TranslationParams{"user_id": int64(5150), "actor": actor, "reason": "spam"})
+	require.NoError(t, err)
+	wantUnfban, err := tr.GetString("feds_log_unfban", i18n.TranslationParams{"user_id": int64(5150), "actor": actor})
+	require.NoError(t, err)
+	var logged []any
+	for _, call := range client.callsFor("sendMessage") {
+		if fmt.Sprint(call.Params["chat_id"]) == strconv.FormatInt(logChatID, 10) {
+			logged = append(logged, call.Params["text"])
+		}
+	}
+	require.Equal(t, []any{wantFban, wantUnfban}, logged)
+}
+
+func TestUnfbanAndFedStat(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	bot := f.bot
+	owner := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Owner"}
+	fed, err := federations.CreateFederation(owner.Id, "Ban Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	group, creator := f.chat, f.admin
+	require.NoError(t, federations.JoinFed(group.Id, group.Title, fed.FedID))
+	require.NoError(t, federations.PromoteFedAdmin(fed.FedID, creator.Id))
+
+	fbanCtx := newModuleMessageContext(bot, group, creator, "/fban 12345 spam")
+	require.NoError(t, dispatchFederationCommand(t, bot, fbanCtx))
+	if federations.GetFedBan(fed.FedID, 12345) == nil {
+		t.Fatal("expected fban")
+	}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/unfban 12345")))
+	if federations.GetFedBan(fed.FedID, 12345) != nil {
+		t.Fatal("unfban did not persist")
+	}
+
+	_, _, err = federations.Fban(fed.FedID, 12345, owner.Id, "again")
+	require.NoError(t, err)
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/fedstat 12345")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/fedstat 12345 "+fed.FedID)))
+}
+
+// seedFedChat registers a chat in the federation and records the given users as
+// its known members, the way the users tracker does in production.
+func seedFedChat(t *testing.T, fedID string, members ...int64) gotgbot.Chat {
+	t.Helper()
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Fed Member Chat"}
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+	t.Cleanup(func() { _ = db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}).Error })
+	require.NoError(t, db.DB.Model(&models.Chat{}).Where("chat_id = ?", chat.Id).
+		Update("users", models.Int64Array(members)).Error)
+	require.NoError(t, federations.JoinFed(chat.Id, chat.Title, fedID))
+	return chat
+}
+
+func unbanTargets(client *moduleBotClient, userID int64) []int64 {
+	var chatIDs []int64
+	for _, call := range client.callsFor("unbanChatMember") {
+		if uid, _ := call.Params["user_id"].(int64); uid != userID {
+			continue
+		}
+		if cid, ok := call.Params["chat_id"].(int64); ok {
+			chatIDs = append(chatIDs, cid)
+		}
+	}
+	return chatIDs
+}
+
+func TestUnfbanLiftsBanInFederationChats(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	owner := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Owner"}
+	fed, err := federations.CreateFederation(owner.Id, "Unfban Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	target := uniquePositiveUserID()
+	chatA := seedFedChat(t, fed.FedID, target)
+	chatB := seedFedChat(t, fed.FedID, target)
+	chatOther := seedFedChat(t, fed.FedID, uniquePositiveUserID())
+	_, _, err = federations.Fban(fed.FedID, target, owner.Id, "spam")
+	require.NoError(t, err)
+
+	ctx := newModuleMessageContext(bot, chatA, owner, "/unfban "+strconv.FormatInt(target, 10))
+	require.NoError(t, dispatchFederationCommand(t, bot, ctx))
+
+	require.Eventually(t, func() bool { return len(unbanTargets(client, target)) == 2 },
+		2*time.Second, 10*time.Millisecond, "unfban must unban the user in every federation chat that knows them")
+	require.ElementsMatch(t, []int64{chatA.Id, chatB.Id}, unbanTargets(client, target))
+	require.NotContains(t, unbanTargets(client, target), chatOther.Id)
+}
+
+// withUnfbanLocale loads the /unfban replies so tests can tell them apart.
+func withUnfbanLocale(t *testing.T) {
+	t.Helper()
+	restore, err := i18n.OverrideManagerForTest(`
+feds_unfban_not_banned: "Not fbanned."
+feds_unfban_ok: "Unfbanned {user} from <b>{name}</b>."
+`)
+	require.NoError(t, err)
+	t.Cleanup(restore)
+}
+
+// This pins a known gap, not the behaviour we want: an unfban in a source
+// federation walks only its own chats, so a subscriber federation whose own
+// unfban walk was skipped keeps the user banned in its chats.
+func TestSourceFedUnfbanLeavesSubscriberChatsBannedAfterSkippedWalk(t *testing.T) {
+	withUnfbanLocale(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	ownerA := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Owner A"}
+	ownerB := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Owner B"}
+	fedA, err := federations.CreateFederation(ownerA.Id, "Subscriber Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fedA.FedID) })
+	fedB, err := federations.CreateFederation(ownerB.Id, "Source Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fedB.FedID) })
+	require.NoError(t, federations.SubscribeFed(fedA.FedID, fedB.FedID))
+
+	target := uniquePositiveUserID()
+	chatA := seedFedChat(t, fedA.FedID, target)
+	chatB := seedFedChat(t, fedB.FedID, target)
+	_, _, err = federations.Fban(fedA.FedID, target, ownerA.Id, "local")
+	require.NoError(t, err)
+	_, _, err = federations.Fban(fedB.FedID, target, ownerB.Id, "upstream")
+	require.NoError(t, err)
+	unfbanText := "/unfban " + strconv.FormatInt(target, 10)
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, chatA, ownerA, unfbanText)))
+	require.Never(t, func() bool { return len(unbanTargets(client, target)) > 0 },
+		200*time.Millisecond, 10*time.Millisecond, "A's walk must skip while the source federation still bans the user")
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, chatB, ownerB, unfbanText)))
+	require.Eventually(t, func() bool { return slices.Contains(unbanTargets(client, target), chatB.Id) },
+		2*time.Second, 10*time.Millisecond, "B's walk must unban the user in B's chats")
+	require.Never(t, func() bool { return slices.Contains(unbanTargets(client, target), chatA.Id) },
+		200*time.Millisecond, 10*time.Millisecond, "known gap: B's walk does not reach A's chats")
+	require.Equal(t, []int64{chatB.Id}, unbanTargets(client, target))
+
+	ban, _ := federations.FindBanInFedTree(fedA.FedID, target)
+	require.Nil(t, ban, "no federation in A's tree bans the user any more")
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, chatA, ownerA, unfbanText)))
+	notBanned, _ := i18n.MustNewTranslator("en").GetString("feds_unfban_not_banned")
+	texts := sentTexts(client)
+	require.NotEmpty(t, texts, "the second unfban in A must reply")
+	require.Equal(t, notBanned, texts[len(texts)-1], "a repeated unfban in A cannot recover the chat ban")
+}
+
+func TestUnfbanOfUserWithoutFbanRepliesNotBannedAndUnbansNowhere(t *testing.T) {
+	withUnfbanLocale(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	owner := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Owner"}
+	fed, err := federations.CreateFederation(owner.Id, "Clean Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	target := uniquePositiveUserID()
+	chat := seedFedChat(t, fed.FedID, target)
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, chat, owner, "/unfban "+strconv.FormatInt(target, 10))))
+	notBanned, _ := i18n.MustNewTranslator("en").GetString("feds_unfban_not_banned")
+	require.Equal(t, []string{notBanned}, sentTexts(client))
+	require.Never(t, func() bool { return len(unbanTargets(client, target)) > 0 },
+		200*time.Millisecond, 10*time.Millisecond, "unfban of a user who is not fbanned must not unban them anywhere")
+}
+
+// Telegram keeps one ban per chat and does not record who set it, so the walk
+// cannot spare a ban a chat admin set by hand. The fake client keeps no ban
+// state: this pins the policy (the walk sends the unban in a chat whose admin
+// banned the user), not that the bot tells the two bans apart.
+func TestUnfbanSendsUnbanEvenWhereAChatAdminBannedTheUser(t *testing.T) {
+	f := newAdminChatFixture(t)
+	client, bot := f.client, f.bot
+	owner := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Owner"}
+	fed, err := federations.CreateFederation(owner.Id, "Local Ban Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	target := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Member"}
+	chat, admin := f.chat, f.admin
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+	t.Cleanup(func() { _ = db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}).Error })
+	require.NoError(t, db.DB.Model(&models.Chat{}).Where("chat_id = ?", chat.Id).
+		Update("users", models.Int64Array{target.Id}).Error)
+	require.NoError(t, federations.JoinFed(chat.Id, chat.Title, fed.FedID))
+	if err := bansModule.ban(bot, newBanReplyContext(bot, chat, admin, target, "/ban spam")); err != ext.EndGroups {
+		t.Fatalf("ban: %v", err)
+	}
+	require.Len(t, client.callsFor("banChatMember"), 1)
+	_, _, err = federations.Fban(fed.FedID, target.Id, owner.Id, "spam")
+	require.NoError(t, err)
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, chat, owner, "/unfban "+strconv.FormatInt(target.Id, 10))))
+	require.Eventually(t, func() bool { return slices.Contains(unbanTargets(client, target.Id), chat.Id) },
+		2*time.Second, 10*time.Millisecond, "the unfban walk must send the unban whoever set the chat ban")
+}
+
+func TestUnfbanChatFailureDoesNotStopOtherChats(t *testing.T) {
+	client := newModuleBotClient()
+	client.errors["unbanChatMember"] = errors.New("bot was kicked from the chat")
+	bot := newModuleTestBot(client)
+	owner := uniquePositiveUserID()
+	fed, err := federations.CreateFederation(owner, "Failing Unfban Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	target := uniquePositiveUserID()
+	chatA := seedFedChat(t, fed.FedID, target)
+	chatB := seedFedChat(t, fed.FedID, target)
+
+	applyActiveUnfban(bot, fed.FedID, target, 1)
+	require.ElementsMatch(t, []int64{chatA.Id, chatB.Id}, unbanTargets(client, target),
+		"an error in one chat must not skip the remaining chats")
+}
+
+func TestFedSubscribeLogExportAndDelete(t *testing.T) {
+	bot := newModuleTestBot(newModuleBotClient())
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Export Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	other, err := federations.CreateFederation(uniquePositiveUserID(), "Target Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(other.FedID) })
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/subfed "+other.FedID)))
+	if len(federations.ListSubscribedFedIDs(fed.FedID)) != 1 {
+		t.Fatal("expected subscription")
+	}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fedsubs")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/unsubfed "+other.FedID)))
+
+	group := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Log Group"}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, owner, "/setfedlog")))
+	if federations.GetFed(fed.FedID).LogChatID != group.Id {
+		t.Fatal("setfedlog did not persist")
+	}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/unsetfedlog")))
+	if federations.GetFed(fed.FedID).LogChatID != 0 {
+		t.Fatal("unsetfedlog did not clear")
+	}
+
+	_, _, err = federations.Fban(fed.FedID, 99, ownerID, "export")
+	require.NoError(t, err)
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fbanlist json")))
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/delfed")))
+	data := encodeCallbackData(fedCallbackNamespace, map[string]string{"a": "del"})
+	cb := newModuleCallbackContext(bot, pm, owner, data)
+	if err := federationsModule.fedCallback(bot, cb); err != ext.EndGroups {
+		t.Fatalf("fedCallback del: %v", err)
+	}
+	if federations.GetFed(fed.FedID) != nil {
+		t.Fatal("expected federation to be deleted")
+	}
+}
+
+// The watcher bans a fbanned member on an ordinary message; a join's service
+// message it leaves to membership intake.
+func TestEnforceFedBanOnMessageLeavesJoinsToIntake(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	ownerID := uniquePositiveUserID()
+	fed, err := federations.CreateFederation(ownerID, "Enforce Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+
+	group := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Enforce Chat"}
+	require.NoError(t, federations.JoinFed(group.Id, group.Title, fed.FedID))
+	_, _, err = federations.Fban(fed.FedID, 42, ownerID, "raid")
+	require.NoError(t, err)
+	member := gotgbot.User{Id: 42, FirstName: "Member"}
+	t.Cleanup(func() { clearJoinClaim(group.Id, member.Id) })
+
+	joinCtx := newModuleMessageContext(bot, group, member, "")
+	joinCtx.EffectiveMessage.NewChatMembers = []gotgbot.User{member}
+	if err := federationsModule.enforceFedBan(bot, joinCtx); err != ext.ContinueGroups {
+		t.Fatalf("enforceFedBan join: %v", err)
+	}
+	require.Empty(t, client.callsFor("banChatMember"), "the watcher left the join to intake")
+
+	msgCtx := newModuleMessageContext(bot, group, member, "still here")
+	if err := federationsModule.enforceFedBan(bot, msgCtx); err != ext.ContinueGroups {
+		t.Fatalf("enforceFedBan message: %v", err)
+	}
+	require.Len(t, client.callsFor("banChatMember"), 1)
+}
+
+func TestParseFedBanCSVWithoutHeader(t *testing.T) {
+	bans, err := parseFedBanFile("bans.csv", []byte("888,no header\n"))
+	require.NoError(t, err)
+	require.Equal(t, int64(888), bans[0].UserID)
+}
+
+func TestAnyToInt64ViaJSON(t *testing.T) {
+	raw := `{"id":"777","reason":"str"}` + "\n" + `{"user_id":12,"reason":"n"}` + "\n"
+	bans, err := parseFedBanFile("bans.jsonl", []byte(raw))
+	require.NoError(t, err)
+	require.Equal(t, int64(777), bans[0].UserID)
+	require.Equal(t, int64(12), bans[1].UserID)
+}
+
+func TestImportFBansFromCSVDocument(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("id,reason\n4242,imported\n"))
+	}))
+	t.Cleanup(server.Close)
+	oldBaseURL := backupDownloadBaseURL
+	oldHTTPClient := backupDownloadHTTPClient
+	backupDownloadBaseURL = server.URL + "/file/bot"
+	backupDownloadHTTPClient = server.Client()
+	t.Cleanup(func() {
+		backupDownloadBaseURL = oldBaseURL
+		backupDownloadHTTPClient = oldHTTPClient
+	})
+
+	client := newModuleBotClient()
+	client.responses["getFile"] = json.RawMessage(
+		`{"file_id":"fed-bans","file_path":"fbans/bans.csv"}`,
+	)
+	bot := newModuleTestBot(client)
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Import CSV Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+	ctx := newModuleMessageContext(bot, pm, owner, "/importfbans")
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 77,
+		Date:      1,
+		Chat:      pm,
+		Document:  &gotgbot.Document{FileId: "fed-bans", FileName: "bans.csv", FileSize: 24},
+	}
+	require.NoError(t, dispatchFederationCommand(t, bot, ctx))
+	if federations.GetFedBan(fed.FedID, 4242) == nil {
+		t.Fatal("imported ban missing")
+	}
+
+	tr := i18n.MustNewTranslator("en")
+	tooBig, _ := downloadFedBanDocument(bot, &gotgbot.Document{
+		FileId: "x", FileName: "bans.csv", FileSize: maxBackupFileSize + 1,
+	}, tr)
+	if tooBig != nil {
+		t.Fatal("oversized import should be rejected")
+	}
+}
+
+// An imported list cannot ban the owner, a fed admin or the bot: /fban
+// refuses them and /unfban could not lift such a ban.
+func TestImportFBansSkipsOwnerAdminsAndBot(t *testing.T) {
+	ownerID := uniquePositiveUserID()
+	adminID := uniquePositiveUserID()
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	csvBody := "id,reason\n" +
+		strconv.FormatInt(ownerID, 10) + ",x\n" +
+		strconv.FormatInt(adminID, 10) + ",x\n" +
+		strconv.FormatInt(bot.Id, 10) + ",x\n" +
+		"4343,ok\n"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(csvBody))
+	}))
+	t.Cleanup(server.Close)
+	oldBaseURL := backupDownloadBaseURL
+	oldHTTPClient := backupDownloadHTTPClient
+	backupDownloadBaseURL = server.URL + "/file/bot"
+	backupDownloadHTTPClient = server.Client()
+	t.Cleanup(func() {
+		backupDownloadBaseURL = oldBaseURL
+		backupDownloadHTTPClient = oldHTTPClient
+	})
+
+	client.responses["getFile"] = json.RawMessage(
+		`{"file_id":"fed-bans","file_path":"fbans/bans.csv"}`,
+	)
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Import Guard Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	require.NoError(t, federations.PromoteFedAdmin(fed.FedID, adminID))
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+	ctx := newModuleMessageContext(bot, pm, owner, "/importfbans")
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 77,
+		Date:      1,
+		Chat:      pm,
+		Document:  &gotgbot.Document{FileId: "fed-bans", FileName: "bans.csv", FileSize: int64(len(csvBody))},
+	}
+	require.NoError(t, dispatchFederationCommand(t, bot, ctx))
+	for _, id := range []int64{ownerID, adminID, bot.Id} {
+		require.Nil(t, federations.GetFedBan(fed.FedID, id), "user %d must not be fbanned by an import", id)
+	}
+	require.NotNil(t, federations.GetFedBan(fed.FedID, 4343), "ordinary user must be imported")
+}
+
+func TestFedBanExportImportKeepsBannedBy(t *testing.T) {
+	bans := []models.FederationBan{{UserID: 5001, Reason: "r", BannedBy: 77}}
+
+	rawCSV, err := formatFedBanCSV(bans, false)
+	require.NoError(t, err)
+	parsed, err := parseFedBanCSV(rawCSV)
+	require.NoError(t, err)
+	require.Len(t, parsed, 1)
+	require.Equal(t, int64(77), parsed[0].BannedBy)
+
+	rawJSONL, err := formatFedBanJSONL(bans)
+	require.NoError(t, err)
+	parsed, err = parseFedBanJSON(rawJSONL)
+	require.NoError(t, err)
+	require.Len(t, parsed, 1)
+	require.Equal(t, int64(77), parsed[0].BannedBy)
+
+	rawMini, err := formatFedBanCSV(bans, true)
+	require.NoError(t, err)
+	parsed, err = parseFedBanCSV(rawMini)
+	require.NoError(t, err)
+	require.Len(t, parsed, 1)
+	require.Zero(t, parsed[0].BannedBy, "minicsv has no banned_by column")
+}
+
+func TestFbanInPrivateAndEmptyExport(t *testing.T) {
+	bot := newModuleTestBot(newModuleBotClient())
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Private Fban Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fbanlist")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fban 888 spam")))
+	if federations.GetFedBan(fed.FedID, 888) == nil {
+		t.Fatal("private fban did not persist")
+	}
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fbanlist csv")))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fbanlist minicsv")))
+
+	require.NoError(t, federations.SetRequireReason(fed.FedID, true))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fban 889")))
+	if federations.GetFedBan(fed.FedID, 889) != nil {
+		t.Fatal("reason-required fban should not persist")
+	}
+}
+
+// The export cooldown only holds once a file was delivered.
+func TestFbanlistCooldownStartsOnlyAfterADeliveredExport(t *testing.T) {
+	withMiniredis(t)
+
+	t.Run("empty export does not hold the cooldown", func(t *testing.T) {
+		client := newModuleBotClient()
+		bot := newModuleTestBot(client)
+		ownerID := uniquePositiveUserID()
+		owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+		fed, err := federations.CreateFederation(ownerID, "Cooldown Fed")
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+		pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+		run := func(text string) {
+			t.Helper()
+			ctx := newModuleMessageContext(bot, pm, owner, text)
+			require.NoError(t, dispatchFederationCommand(t, bot, ctx))
+		}
+
+		run("/fbanlist")
+		require.Empty(t, client.callsFor("sendDocument"), "empty fed has nothing to export")
+		run("/fban 888 spam")
+		run("/fbanlist")
+		require.Len(t, client.callsFor("sendDocument"), 1, "export after the empty one must not be on cooldown")
+		run("/fbanlist")
+		require.Len(t, client.callsFor("sendDocument"), 1, "a delivered export holds the cooldown")
+	})
+
+	t.Run("failed upload does not hold the cooldown", func(t *testing.T) {
+		client := newModuleBotClient()
+		bot := newModuleTestBot(client)
+		ownerID := uniquePositiveUserID()
+		owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+		fed, err := federations.CreateFederation(ownerID, "Cooldown Upload Fed")
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+		_, _, err = federations.Fban(fed.FedID, 889, ownerID, "spam")
+		require.NoError(t, err)
+		pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+
+		client.errors["sendDocument"] = errors.New("upload failed")
+		require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fbanlist")))
+		require.Len(t, client.callsFor("sendDocument"), 1)
+		delete(client.errors, "sendDocument")
+		require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, pm, owner, "/fbanlist")))
+		require.Len(t, client.callsFor("sendDocument"), 2, "a failed export must not hold the cooldown")
+	})
+}
+
+func TestJoinFedAlreadyJoinedOtherFederation(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	bot := f.bot
+	first, err := federations.CreateFederation(uniquePositiveUserID(), "First")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(first.FedID) })
+	second, err := federations.CreateFederation(uniquePositiveUserID(), "Second")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(second.FedID) })
+
+	group, creator := f.chat, f.admin
+	require.NoError(t, federations.JoinFed(group.Id, group.Title, first.FedID))
+	require.NoError(t, dispatchFederationCommand(t, bot, newModuleMessageContext(bot, group, creator, "/joinfed "+second.FedID)))
+	if got := federations.GetChatFed(group.Id); got == nil || got.FedID != first.FedID {
+		t.Fatalf("should stay in first fed, got %+v", got)
+	}
+}
+
+func TestFedCommandErrorPaths(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	bot := f.bot
+	ownerID := uniquePositiveUserID()
+	owner := gotgbot.User{Id: ownerID, FirstName: "Owner"}
+	fed, err := federations.CreateFederation(ownerID, "Errors Fed")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	pm := gotgbot.Chat{Id: ownerID, Type: "private", FirstName: "Owner"}
+	group, creator := f.chat, f.admin
+	quietGroup := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Quiet Group"}
+	f.client.adminsByChat[strconv.FormatInt(quietGroup.Id, 10)] = f.client.adminsByChat[strconv.FormatInt(group.Id, 10)]
+	t.Cleanup(func() { cache.InvalidateAdminCache(quietGroup.Id) })
+	require.NoError(t, federations.JoinFed(quietGroup.Id, quietGroup.Title, fed.FedID))
+	member := gotgbot.User{Id: 42, FirstName: "Member"}
+
+	cases := []struct {
+		name string
+		chat gotgbot.Chat
+		from gotgbot.User
+		text string
+	}{
+		{"newfed empty", pm, owner, "/newfed"},
+		{"newfed already owns", pm, owner, "/newfed Another"},
+		{"rename empty", pm, owner, "/renamefed"},
+		{"rename missing", pm, member, "/renamefed X"},
+		{"delfed group", group, owner, "/delfed"},
+		{"delfed none", pm, member, "/delfed"},
+		{"join missing fed", group, creator, "/joinfed 550e8400-e29b-41d4-a716-446655440000"},
+		{"leave private", pm, creator, "/leavefed"},
+		{"leave member", group, member, "/leavefed"},
+		{"leave none", group, creator, "/leavefed"},
+		{"quiet private", pm, creator, "/quietfed on"},
+		{"quiet member", group, member, "/quietfed on"},
+		{"quiet none", group, creator, "/quietfed on"},
+		{"quiet junk", quietGroup, creator, "/quietfed maybe"},
+		{"info invalid", pm, owner, "/fedinfo nope"},
+		{"info missing", pm, member, "/fedinfo"},
+		{"admins invalid", pm, owner, "/fedadmins nope"},
+		{"admins none", pm, member, "/fedadmins"},
+		{"chatfed private", pm, owner, "/chatfed"},
+		{"chatfed none", group, creator, "/chatfed"},
+		{"myfeds none", pm, member, "/myfeds"},
+		{"promote none", pm, owner, "/fedpromote"},
+		{"promote self", pm, owner, "/fedpromote " + strconv.FormatInt(ownerID, 10)},
+		{"demoteme invalid", pm, member, "/feddemoteme nope"},
+		{"reason missing", pm, owner, "/fedreason"},
+		{"reason junk", pm, owner, "/fedreason maybe"},
+		{"fban missing user", pm, owner, "/fban"},
+		{"fban self", pm, owner, "/fban " + strconv.FormatInt(ownerID, 10)},
+		{"unfban missing", pm, owner, "/unfban 1"},
+		{"sub self", pm, owner, "/subfed " + fed.FedID},
+		{"sub invalid", pm, owner, "/subfed nope"},
+		{"unsub missing", pm, owner, "/unsubfed 550e8400-e29b-41d4-a716-446655440000"},
+		{"setfedlog private", pm, owner, "/setfedlog"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := newModuleMessageContext(bot, tc.chat, tc.from, tc.text)
+			require.NoError(t, dispatchFederationCommand(t, bot, ctx))
+		})
+	}
+
+	noop := encodeCallbackData(fedCallbackNamespace, map[string]string{"a": "noop"})
+	if err := federationsModule.fedCallback(bot, newModuleCallbackContext(bot, pm, owner, noop)); err != ext.EndGroups {
+		t.Fatalf("callback noop: %v", err)
+	}
+	stale := encodeCallbackData(fedCallbackNamespace, map[string]string{"a": "nope"})
+	if err := federationsModule.fedCallback(bot, newModuleCallbackContext(bot, pm, owner, stale)); err != ext.EndGroups {
+		t.Fatalf("callback stale: %v", err)
+	}
+}

@@ -1,0 +1,205 @@
+//go:build testtools
+
+package modules
+
+import (
+	"testing"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+
+	"github.com/divkix/Alita_Robot/alita/db/lang"
+	"github.com/divkix/Alita_Robot/alita/i18n"
+	"github.com/divkix/Alita_Robot/alita/utils/extraction"
+)
+
+func TestBuildModerationCtxRequiresEffectiveUser(t *testing.T) {
+	t.Parallel()
+
+	got, err := buildModerationCtx(&moduleStruct{}, nil, nil)
+	if err != ext.EndGroups {
+		t.Fatalf("buildModerationCtx() err = %v, want %v", err, ext.EndGroups)
+	}
+	if got != nil {
+		t.Fatalf("buildModerationCtx() ctx = %#v, want nil", got)
+	}
+}
+
+func TestExtractFromArgsWithNumericUserAndReason(t *testing.T) {
+	t.Parallel()
+
+	msg := &gotgbot.Message{
+		Text: "/ban 12345 repeated spam",
+		Chat: gotgbot.Chat{Id: -100123, Type: "supergroup"},
+		From: &gotgbot.User{Id: 7, FirstName: "Admin"},
+		Entities: []gotgbot.MessageEntity{
+			{Type: "bot_command", Offset: 0, Length: 4},
+		},
+	}
+	ctx := ext.NewContext(
+		&gotgbot.Bot{User: gotgbot.User{Id: 99, IsBot: true}},
+		&gotgbot.Update{Message: msg},
+		nil,
+	)
+
+	got, err := extractFromArgs(&moderationCtx{Ctx: ctx, Msg: msg})
+	if err != nil {
+		t.Fatalf("extractFromArgs() unexpected error: %v", err)
+	}
+	if got.userID != 12345 {
+		t.Fatalf("extractFromArgs() userID = %d, want 12345", got.userID)
+	}
+	if got.reason != "repeated spam" {
+		t.Fatalf("extractFromArgs() reason = %q, want repeated spam", got.reason)
+	}
+}
+
+func TestExtractFromArgsRejectsMissingAndChannelTargets(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Moderation Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+
+	for _, tt := range []struct {
+		name string
+		text string
+	}{
+		{name: "missing target", text: "/ban"},
+		{name: "channel id", text: "/ban -1001234567890"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := newModuleMessageContext(bot, chat, admin, tt.text)
+			mc := newModerationCtxForTest(bot, ctx, &moduleStruct{moduleName: "Bans"})
+
+			if _, err := extractFromArgs(mc); err == nil {
+				t.Fatalf("extractFromArgs(%s) error = nil, want rejection", tt.name)
+			}
+		})
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 2 {
+		t.Fatalf("sendMessage calls = %d, want one reply per rejected arg target", len(calls))
+	}
+}
+
+func TestExtractFromReplyUsesReplySender(t *testing.T) {
+	t.Parallel()
+
+	replyUser := &gotgbot.User{Id: 555, FirstName: "Target"}
+	msg := &gotgbot.Message{ReplyToMessage: &gotgbot.Message{From: replyUser}}
+	got, err := extractFromReply(&moderationCtx{Msg: msg, Reply: extraction.UserReply(msg)})
+	if err != nil {
+		t.Fatalf("extractFromReply() unexpected error: %v", err)
+	}
+	if got.userID != replyUser.Id {
+		t.Fatalf("extractFromReply() userID = %d, want %d", got.userID, replyUser.Id)
+	}
+	if got.reason != "" {
+		t.Fatalf("extractFromReply() reason = %q, want empty", got.reason)
+	}
+}
+
+func TestExtractFromReplyRejectsMissingReplyAndNilSender(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Moderation Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+
+	noReplyCtx := newModuleMessageContext(bot, chat, admin, "/dkick")
+	noReplyMC := newModerationCtxForTest(bot, noReplyCtx, &moduleStruct{moduleName: "Bans"})
+	if _, err := extractFromReply(noReplyMC); err == nil {
+		t.Fatal("extractFromReply(no reply) error = nil, want rejection")
+	}
+
+	nilSenderCtx := newModuleMessageContext(bot, chat, admin, "/dkick")
+	nilSenderCtx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 33,
+		Date:      1,
+		Chat:      chat,
+		Text:      "channel-style message",
+	}
+	nilSenderMC := newModerationCtxForTest(bot, nilSenderCtx, &moduleStruct{moduleName: "Bans"})
+	if _, err := extractFromReply(nilSenderMC); err == nil {
+		t.Fatal("extractFromReply(nil sender) error = nil, want rejection")
+	}
+
+	if calls := client.callsFor("sendMessage"); len(calls) != 2 {
+		t.Fatalf("sendMessage calls = %d, want one reply per rejected reply target", len(calls))
+	}
+}
+
+func TestModerationCommandRunExecutesPipelineInOrder(t *testing.T) {
+	t.Parallel()
+
+	ctx := moderationTestContext()
+	var calls []string
+
+	cmd := &moderationCommand{
+		module: &moduleStruct{moduleName: "Bans"},
+		extract: func(*moderationCtx) (target, error) {
+			calls = append(calls, "extract")
+			return target{userID: 123}, nil
+		},
+		validate: func(_ *moderationCtx, got *target) error {
+			calls = append(calls, "validate")
+			if got.userID != 123 {
+				t.Fatalf("validate target userID = %d, want 123", got.userID)
+			}
+			return nil
+		},
+		execute: func(_ *moderationCtx, got *target) error {
+			calls = append(calls, "execute")
+			if got.userID != 123 {
+				t.Fatalf("execute target userID = %d, want 123", got.userID)
+			}
+			return nil
+		},
+		reply: func(_ *moderationCtx, got *target) error {
+			calls = append(calls, "reply")
+			if got.userID != 123 {
+				t.Fatalf("reply target userID = %d, want 123", got.userID)
+			}
+			return nil
+		},
+	}
+
+	if err := cmd.run(nil, ctx); err != ext.EndGroups {
+		t.Fatalf("run() err = %v, want %v", err, ext.EndGroups)
+	}
+
+	want := []string{"extract", "validate", "execute", "reply"}
+	if len(calls) != len(want) {
+		t.Fatalf("calls = %v, want %v", calls, want)
+	}
+	for i := range want {
+		if calls[i] != want[i] {
+			t.Fatalf("calls = %v, want %v", calls, want)
+		}
+	}
+}
+
+func moderationTestContext() *ext.Context {
+	msg := &gotgbot.Message{
+		MessageId: 10,
+		Text:      "/ban 123",
+		Chat:      gotgbot.Chat{Id: 99, Type: "private"},
+		From:      &gotgbot.User{Id: 7, FirstName: "Admin"},
+	}
+	return ext.NewContext(
+		&gotgbot.Bot{User: gotgbot.User{Id: 99, IsBot: true}},
+		&gotgbot.Update{Message: msg},
+		nil,
+	)
+}
+
+func newModerationCtxForTest(bot *gotgbot.Bot, ctx *ext.Context, module *moduleStruct) *moderationCtx {
+	return &moderationCtx{
+		Bot:    bot,
+		Chat:   ctx.EffectiveChat,
+		Msg:    ctx.EffectiveMessage,
+		Reply:  extraction.UserReply(ctx.EffectiveMessage),
+		User:   ctx.EffectiveUser,
+		Ctx:    ctx,
+		Tr:     i18n.MustNewTranslator(lang.GetLanguage(ctx)),
+		Module: module,
+	}
+}

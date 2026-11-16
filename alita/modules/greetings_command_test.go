@@ -1,0 +1,1290 @@
+package modules
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	log "github.com/sirupsen/logrus"
+	logrustest "github.com/sirupsen/logrus/hooks/test"
+
+	"github.com/divkix/Alita_Robot/alita/db"
+	"github.com/divkix/Alita_Robot/alita/db/approvals"
+	"github.com/divkix/Alita_Robot/alita/db/captcha"
+	"github.com/divkix/Alita_Robot/alita/db/greetings"
+	"github.com/divkix/Alita_Robot/alita/i18n"
+	"github.com/divkix/Alita_Robot/alita/utils/formatting"
+	"github.com/divkix/Alita_Robot/alita/utils/helpers"
+	"github.com/divkix/Alita_Robot/alita/utils/tracing"
+)
+
+func newGreetingMessageContext(bot *gotgbot.Bot, chat gotgbot.Chat, from gotgbot.User, text string) *ext.Context {
+	return newModuleMessageContext(bot, chat, from, text)
+}
+
+// The raw view of a greeting shows it as an admin types it: no parse mode,
+// formatting codes, button codes and fillings as typed.
+func TestGreetingNoformatShowsTheGreetingAsTyped(t *testing.T) {
+	buttons := []db.Button{{Name: "Site", Url: "https://example.com"}}
+	const want = "*Bye* raw {first}\n[Site](buttonurl://https://example.com)"
+	tests := []struct {
+		command string
+		handler func(*helpers.CommandContext) error
+		set     func(chatID int64) error
+	}{
+		{"/welcome noformat", greetingsModule.welcome, func(chatID int64) error {
+			return greetings.SetWelcomeText(chatID, "<b>Bye</b> raw {first}", "", buttons, db.TEXT)
+		}},
+		{"/goodbye noformat", greetingsModule.goodbye, func(chatID int64) error {
+			return greetings.SetGoodbyeText(chatID, "<b>Bye</b> raw {first}", "", buttons, db.TEXT)
+		}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.command, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			if err := tc.set(f.chat.Id); err != nil {
+				t.Fatal(err)
+			}
+			if err := commandResponse(tc.handler)(f.bot, newGreetingMessageContext(f.bot, f.chat, f.admin, tc.command)); err != ext.EndGroups {
+				t.Fatalf("%s error = %v, want EndGroups", tc.command, err)
+			}
+			call := lastCall(t, f.client, "sendMessage")
+			assertParams(t, call, map[string]any{"text": want})
+			if mode, ok := call.Params["parse_mode"]; ok {
+				t.Errorf("parse_mode = %v, want none", mode)
+			}
+		})
+	}
+}
+
+func TestGreetingDisplayPropagatesMediaSendErrors(t *testing.T) {
+	client := newModuleBotClient()
+	client.errors["sendPhoto"] = errors.New("photo send failed")
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	if err := greetings.SetWelcomeText(chat.Id, "Welcome with photo", "photo-file", nil, db.PHOTO); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+
+	ctx := newGreetingMessageContext(bot, chat, admin, "/welcome noformat")
+	if err := commandResponse(greetingsModule.welcome)(bot, ctx); err == nil {
+		t.Fatal("welcome noformat media error = nil, want sendPhoto error")
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+		t.Fatalf("sendMessage calls = %d, want status reply before media send", len(calls))
+	}
+	if calls := client.callsFor("sendPhoto"); len(calls) != 1 {
+		t.Fatalf("sendPhoto calls = %d, want greeting media send", len(calls))
+	}
+}
+
+func TestSetAndResetGreetingTextCommands(t *testing.T) {
+	f := newAdminChatFixture(t)
+	bot, chat, admin := f.bot, f.chat, f.admin
+
+	setWelcomeCtx := newGreetingMessageContext(bot, chat, admin, "/setwelcome Hello {first}")
+	if err := greetingsModule.setWelcome(bot, setWelcomeCtx); err != ext.EndGroups {
+		t.Fatalf("setWelcome error = %v, want EndGroups", err)
+	}
+	if got := greetings.GetGreetingSettings(chat.Id).WelcomeSettings.WelcomeText; got != "Hello {first}" {
+		t.Fatalf("welcome text = %q, want command text", got)
+	}
+
+	setGoodbyeCtx := newGreetingMessageContext(bot, chat, admin, "/setgoodbye Bye {first}")
+	if err := greetingsModule.setGoodbye(bot, setGoodbyeCtx); err != ext.EndGroups {
+		t.Fatalf("setGoodbye error = %v, want EndGroups", err)
+	}
+	if got := greetings.GetGreetingSettings(chat.Id).GoodbyeSettings.GoodbyeText; got != "Bye {first}" {
+		t.Fatalf("goodbye text = %q, want command text", got)
+	}
+
+	resetWelcomeCtx := newGreetingMessageContext(bot, chat, admin, "/resetwelcome")
+	if err := greetingsModule.resetWelcome(bot, resetWelcomeCtx); err != ext.EndGroups {
+		t.Fatalf("resetWelcome error = %v, want EndGroups", err)
+	}
+	if got := greetings.GetGreetingSettings(chat.Id).WelcomeSettings.WelcomeText; got != db.DefaultWelcome {
+		t.Fatalf("welcome text after reset = %q, want default", got)
+	}
+
+	resetGoodbyeCtx := newGreetingMessageContext(bot, chat, admin, "/resetgoodbye")
+	if err := greetingsModule.resetGoodbye(bot, resetGoodbyeCtx); err != ext.EndGroups {
+		t.Fatalf("resetGoodbye error = %v, want EndGroups", err)
+	}
+	if got := greetings.GetGreetingSettings(chat.Id).GoodbyeSettings.GoodbyeText; got != db.DefaultGoodbye {
+		t.Fatalf("goodbye text after reset = %q, want default", got)
+	}
+}
+
+func TestSetGreetingCommandsRejectMissingContent(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+
+	setWelcomeCtx := newGreetingMessageContext(bot, chat, admin, "/setwelcome")
+	if err := greetingsModule.setWelcome(bot, setWelcomeCtx); err != ext.EndGroups {
+		t.Fatalf("setWelcome missing error = %v, want EndGroups", err)
+	}
+	setGoodbyeCtx := newGreetingMessageContext(bot, chat, admin, "/setgoodbye")
+	if err := greetingsModule.setGoodbye(bot, setGoodbyeCtx); err != ext.EndGroups {
+		t.Fatalf("setGoodbye missing error = %v, want EndGroups", err)
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 2 {
+		t.Fatalf("sendMessage calls = %d, want validation replies", len(calls))
+	}
+}
+
+func TestGreetingToggleAliasesMatchOnAndOff(t *testing.T) {
+	useRealLocales(t)
+	for _, command := range []string{"/welcome", "/goodbye", "/cleanwelcome", "/cleangoodbye", "/cleanservice", "/autoapprove"} {
+		t.Run(command, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			for _, pair := range [][2]string{{"on", "yes"}, {"off", "no"}} {
+				contractDispatch(t, f, f.admin, command+" "+pair[0])
+				want := fmt.Sprint(lastCall(t, f.client, "sendMessage").Params["text"])
+				contractDispatch(t, f, f.admin, command+" "+pair[1])
+				if got := fmt.Sprint(lastCall(t, f.client, "sendMessage").Params["text"]); got != want {
+					t.Fatalf("%s %s = %q, want %s reply %q", command, pair[1], got, pair[0], want)
+				}
+			}
+		})
+	}
+}
+
+// /cleanwelcome and /cleangoodbye with no argument report the stored setting;
+// they once answered "should be deleting" while off and "not deleting" while on.
+func TestGreetingCleanupStatusMatchesStoredSetting(t *testing.T) {
+	useRealLocales(t)
+	tr := i18n.MustNewTranslator("en")
+	for _, tt := range []struct {
+		command string
+		run     func(*gotgbot.Bot, *ext.Context) error
+		onKey   string
+		offKey  string
+	}{
+		{command: "/cleanwelcome", run: greetingsModule.cleanWelcome, onKey: "greetings_clean_welcome_should", offKey: "greetings_clean_welcome_not"},
+		{command: "/cleangoodbye", run: greetingsModule.cleanGoodbye, onKey: "greetings_clean_goodbye_should", offKey: "greetings_clean_goodbye_not"},
+	} {
+		t.Run(tt.command, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			for _, step := range []struct {
+				setting string
+				wantKey string
+			}{
+				{setting: "on", wantKey: tt.onKey},
+				{setting: "off", wantKey: tt.offKey},
+			} {
+				if err := tt.run(f.bot, newGreetingMessageContext(f.bot, f.chat, f.admin, tt.command+" "+step.setting)); err != ext.EndGroups {
+					t.Fatalf("%s %s error = %v, want EndGroups", tt.command, step.setting, err)
+				}
+				before := len(f.client.callsFor("sendMessage"))
+				if err := tt.run(f.bot, newGreetingMessageContext(f.bot, f.chat, f.admin, tt.command)); err != ext.EndGroups {
+					t.Fatalf("%s status error = %v, want EndGroups", tt.command, err)
+				}
+				sent := f.client.callsFor("sendMessage")
+				if len(sent) != before+1 {
+					t.Fatalf("%s status sent %d messages, want 1", tt.command, len(sent)-before)
+				}
+				want, _ := tr.GetString(step.wantKey)
+				if want == "" {
+					t.Fatalf("en locale has no %s", step.wantKey)
+				}
+				if got := fmt.Sprint(sent[len(sent)-1].Params["text"]); got != want {
+					t.Errorf("%s status after %q = %q, want %q", tt.command, step.setting, got, want)
+				}
+			}
+		})
+	}
+}
+
+func TestWelcomeDisplaySendsStatusAndGreeting(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	if err := greetings.SetWelcomeText(chat.Id, "Welcome {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+
+	ctx := newGreetingMessageContext(bot, chat, admin, "/welcome")
+	if err := commandResponse(greetingsModule.welcome)(bot, ctx); err != ext.EndGroups {
+		t.Fatalf("welcome display error = %v, want EndGroups", err)
+	}
+	calls := client.callsFor("sendMessage")
+	if len(calls) < 2 {
+		t.Fatalf("sendMessage calls = %d, want status and greeting", len(calls))
+	}
+	lastText, _ := calls[len(calls)-1].Params["text"].(string)
+	if !strings.Contains(lastText, "Welcome") {
+		t.Fatalf("welcome greeting text = %q, want configured greeting", lastText)
+	}
+}
+
+func newChatMemberContext(
+	bot *gotgbot.Bot,
+	chat gotgbot.Chat,
+	actor gotgbot.User,
+	oldMember gotgbot.ChatMember,
+	newMember gotgbot.ChatMember,
+) *ext.Context {
+	update := &gotgbot.Update{
+		UpdateId: 3,
+		ChatMember: &gotgbot.ChatMemberUpdated{
+			Chat:          chat,
+			From:          actor,
+			Date:          1,
+			OldChatMember: oldMember,
+			NewChatMember: newMember,
+		},
+	}
+	return ext.NewContext(bot, update, nil)
+}
+
+func newServiceJoinContext(
+	bot *gotgbot.Bot,
+	chat gotgbot.Chat,
+	from gotgbot.User,
+	newMembers []gotgbot.User,
+) *ext.Context {
+	msg := &gotgbot.Message{
+		MessageId:       301,
+		Date:            1,
+		Chat:            chat,
+		From:            &from,
+		NewChatMembers:  newMembers,
+		MessageThreadId: 7,
+	}
+	return ext.NewContext(bot, &gotgbot.Update{UpdateId: 4, Message: msg}, nil)
+}
+
+func newJoinRequestContext(bot *gotgbot.Bot, chat gotgbot.Chat, user gotgbot.User) *ext.Context {
+	update := &gotgbot.Update{
+		UpdateId: 5,
+		ChatJoinRequest: &gotgbot.ChatJoinRequest{
+			Chat:       chat,
+			From:       user,
+			UserChatId: user.Id,
+			Date:       1,
+		},
+	}
+	return ext.NewContext(bot, update, nil)
+}
+
+func TestMemberJoinAndLeaveSendConfiguredGreetings(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	member := gotgbot.User{Id: 4242, FirstName: "Newbie"}
+	if err := greetings.SetWelcomeText(chat.Id, "Welcome {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+	if err := greetings.SetGoodbyeText(chat.Id, "Bye {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetGoodbyeText setup error = %v", err)
+	}
+	if err := greetings.SetGoodbyeToggle(chat.Id, true); err != nil {
+		t.Fatalf("SetGoodbyeToggle setup error = %v", err)
+	}
+
+	joinCtx := newChatMemberContext(
+		bot,
+		chat,
+		admin,
+		gotgbot.ChatMemberLeft{User: member},
+		gotgbot.ChatMemberMember{User: member},
+	)
+	clearJoinClaim(chat.Id, member.Id)
+	if err := greetingsModule.newMember(bot, joinCtx); err != ext.EndGroups {
+		t.Fatalf("newMember error = %v, want EndGroups", err)
+	}
+
+	leaveCtx := newChatMemberContext(
+		bot,
+		chat,
+		admin,
+		gotgbot.ChatMemberMember{User: member},
+		gotgbot.ChatMemberLeft{User: member},
+	)
+	if err := greetingsModule.leftMember(bot, leaveCtx); err != ext.EndGroups {
+		t.Fatalf("leftMember error = %v, want EndGroups", err)
+	}
+
+	calls := client.callsFor("sendMessage")
+	if len(calls) < 2 {
+		t.Fatalf("sendMessage calls = %d, want welcome and goodbye", len(calls))
+	}
+	if first := calls[len(calls)-2].Params["text"].(string); !strings.Contains(first, "Welcome") {
+		t.Fatalf("welcome text = %q, want configured welcome", first)
+	}
+	if last := calls[len(calls)-1].Params["text"].(string); !strings.Contains(last, "Bye") {
+		t.Fatalf("goodbye text = %q, want configured goodbye", last)
+	}
+}
+
+func TestCleanServiceProcessesJoinAndDeletesServiceMessage(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	member := gotgbot.User{Id: 4343, FirstName: "ServiceUser"}
+	if err := greetings.SetWelcomeText(chat.Id, "Service welcome {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+	if err := greetings.SetShouldCleanService(chat.Id, true); err != nil {
+		t.Fatalf("SetShouldCleanService setup error = %v", err)
+	}
+
+	clearJoinClaim(chat.Id, member.Id)
+	ctx := newServiceJoinContext(bot, chat, admin, []gotgbot.User{member})
+	if err := greetingsModule.cleanService(bot, ctx); err != ext.EndGroups {
+		t.Fatalf("cleanService error = %v, want EndGroups", err)
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+		t.Fatalf("sendMessage calls = %d, want welcome", len(calls))
+	}
+	if calls := client.callsFor("deleteMessage"); len(calls) != 1 {
+		t.Fatalf("deleteMessage calls = %d, want service cleanup", len(calls))
+	}
+}
+
+func TestCleanServiceProcessesMultipleNewMembersWithoutCaptcha(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	members := []gotgbot.User{
+		{Id: 4441, FirstName: "One"},
+		{Id: 4442, FirstName: "Two"},
+	}
+	if err := greetings.SetWelcomeText(chat.Id, "Hello {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+	if err := greetings.SetShouldCleanService(chat.Id, true); err != nil {
+		t.Fatalf("SetShouldCleanService setup error = %v", err)
+	}
+	for _, member := range members {
+		clearJoinClaim(chat.Id, member.Id)
+	}
+
+	ctx := newServiceJoinContext(bot, chat, admin, members)
+	if err := greetingsModule.cleanService(bot, ctx); err != ext.EndGroups {
+		t.Fatalf("cleanService multiple members error = %v, want EndGroups", err)
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != len(members) {
+		t.Fatalf("sendMessage calls = %d, want one welcome per new member", len(calls))
+	}
+	if calls := client.callsFor("deleteMessage"); len(calls) != 1 {
+		t.Fatalf("deleteMessage calls = %d, want service cleanup", len(calls))
+	}
+}
+
+func TestProcessSingleNewMemberSkipsDuplicatesAndFallsBackWhenCaptchaMuteFails(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	member := gotgbot.User{Id: 4545, FirstName: "CaptchaUser"}
+	if err := greetings.SetWelcomeText(chat.Id, "Welcome {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+
+	ctx := newServiceJoinContext(bot, chat, admin, []gotgbot.User{member})
+	if err := processSingleNewMember(bot, ctx, gotgbot.User{Id: bot.Id, FirstName: "Alita", IsBot: true}, false); err != nil {
+		t.Fatalf("processSingleNewMember() error = %v", err)
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 0 {
+		t.Fatalf("sendMessage calls = %d, want none for bot join", len(calls))
+	}
+
+	clearJoinClaim(chat.Id, member.Id)
+	markJoinHandled(chat.Id, member.Id)
+	if err := processSingleNewMember(bot, ctx, member, false); err != nil {
+		t.Fatalf("processSingleNewMember() error = %v", err)
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 0 {
+		t.Fatalf("sendMessage calls = %d, want none for duplicate join", len(calls))
+	}
+
+	clearJoinClaim(chat.Id, member.Id)
+	if err := captcha.SetCaptchaEnabled(chat.Id, chat.Title, true); err != nil {
+		t.Fatalf("SetCaptchaEnabled setup error = %v", err)
+	}
+	client.errors["restrictChatMember"] = errors.New("telegram: bot lacks restrict permission")
+	if err := processSingleNewMember(bot, ctx, member, true); err == nil {
+		t.Fatal("processSingleNewMember should return error when mute fails")
+	}
+	if calls := client.callsFor("restrictChatMember"); len(calls) != 1 {
+		t.Fatalf("restrictChatMember calls = %d, want mute attempt", len(calls))
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 0 {
+		t.Fatalf("sendMessage calls = %d, want no welcome when captcha fails", len(calls))
+	}
+}
+
+func TestProcessSingleNewMemberCaptchaSuccessSkipsWelcome(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	member := gotgbot.User{Id: 4646, FirstName: "CaptchaPass"}
+	if err := captcha.SetCaptchaEnabled(chat.Id, chat.Title, true); err != nil {
+		t.Fatalf("SetCaptchaEnabled setup error = %v", err)
+	}
+	if err := greetings.SetWelcomeText(chat.Id, "Welcome {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+
+	ctx := newServiceJoinContext(bot, chat, admin, []gotgbot.User{member})
+	clearJoinClaim(chat.Id, member.Id)
+	if err := processSingleNewMember(bot, ctx, member, true); err != nil {
+		t.Fatalf("processSingleNewMember() error = %v", err)
+	}
+
+	if calls := client.callsFor("restrictChatMember"); len(calls) != 1 {
+		t.Fatalf("restrictChatMember calls = %d, want initial mute", len(calls))
+	}
+	if calls := client.callsFor("sendPhoto"); len(calls) != 1 {
+		t.Fatalf("sendPhoto calls = %d, want captcha image", len(calls))
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 0 {
+		t.Fatalf("sendMessage calls = %d, want no welcome before verification", len(calls))
+	}
+	attempt, err := captcha.GetCaptchaAttempt(member.Id, chat.Id)
+	if err != nil {
+		t.Fatalf("GetCaptchaAttempt error = %v", err)
+	}
+	if attempt == nil {
+		t.Fatal("captcha attempt was not created")
+	}
+	if attempt.MessageID == 0 {
+		t.Fatal("captcha attempt message ID was not stored")
+	}
+}
+
+func TestProcessSingleNewMemberSkipsCaptchaForApprovedUser(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	member := gotgbot.User{Id: 4696, FirstName: "Approved"}
+	if err := captcha.SetCaptchaEnabled(chat.Id, chat.Title, true); err != nil {
+		t.Fatalf("SetCaptchaEnabled setup error = %v", err)
+	}
+	if err := approvals.AddApprovedUser(chat.Id, member.Id, 777000, "trusted"); err != nil {
+		t.Fatalf("AddApprovedUser setup error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = approvals.RemoveApprovedUser(chat.Id, member.Id)
+	})
+	if err := greetings.SetWelcomeText(chat.Id, "Welcome {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+
+	ctx := newServiceJoinContext(bot, chat, gotgbot.User{Id: 777000, FirstName: "Telegram"}, []gotgbot.User{member})
+	clearJoinClaim(chat.Id, member.Id)
+	if err := processSingleNewMember(bot, ctx, member, true); err != nil {
+		t.Fatalf("processSingleNewMember() error = %v", err)
+	}
+
+	if calls := client.callsFor("restrictChatMember"); len(calls) != 0 {
+		t.Fatalf("restrictChatMember calls = %d, want approved user untouched", len(calls))
+	}
+	if calls := client.callsFor("sendPhoto"); len(calls) != 0 {
+		t.Fatalf("sendPhoto calls = %d, want no captcha", len(calls))
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+		t.Fatalf("sendMessage calls = %d, want normal welcome", len(calls))
+	}
+}
+
+func TestProcessSingleNewMemberCaptchaSendFailureUnmutesAndWelcomes(t *testing.T) {
+	useRealLocales(t)
+	client := newModuleBotClient()
+	client.errors["sendPhoto"] = errors.New("http2: timeout awaiting response headers")
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	member := gotgbot.User{Id: 4747, FirstName: "CaptchaFallback"}
+	if err := captcha.SetCaptchaEnabled(chat.Id, chat.Title, true); err != nil {
+		t.Fatalf("SetCaptchaEnabled setup error = %v", err)
+	}
+	if err := greetings.SetWelcomeText(chat.Id, "Welcome {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetWelcomeText setup error = %v", err)
+	}
+
+	ctx := newServiceJoinContext(bot, chat, admin, []gotgbot.User{member})
+	updateCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctx.Data = map[string]any{tracing.ContextDataKey: updateCtx}
+	previousHooks := log.StandardLogger().ReplaceHooks(make(log.LevelHooks))
+	t.Cleanup(func() { log.StandardLogger().ReplaceHooks(previousHooks) })
+	hook := logrustest.NewGlobal()
+	clearJoinClaim(chat.Id, member.Id)
+	if err := greetingsModule.cleanService(bot, ctx); err != ext.EndGroups {
+		t.Fatalf("cleanService() error = %v, want EndGroups after rollback", err)
+	}
+	entries := hook.AllEntries()
+	if len(entries) != 1 || entries[0].Level != log.WarnLevel || entries[0].Context != updateCtx {
+		t.Fatalf("logs = %+v, want one warning with update context", entries)
+	}
+	if entries[0].Data["chat_id"] != chat.Id || entries[0].Data["user_id"] != member.Id || entries[0].Data["update_id"] != ctx.UpdateId {
+		t.Fatalf("warning fields = %+v, want join update identifiers", entries[0].Data)
+	}
+
+	if calls := client.callsFor("restrictChatMember"); len(calls) != 2 {
+		t.Fatalf("restrictChatMember calls = %d, want mute then unmute", len(calls))
+	}
+	if calls := client.callsFor("sendPhoto"); len(calls) != 1 {
+		t.Fatalf("sendPhoto calls = %d, want captcha send attempt", len(calls))
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+		t.Fatalf("sendMessage calls = %d, want welcome after successful rollback", len(calls))
+	}
+	attempt, err := captcha.GetCaptchaAttempt(member.Id, chat.Id)
+	if err != nil {
+		t.Fatalf("GetCaptchaAttempt error = %v", err)
+	}
+	if attempt != nil {
+		t.Fatal("captcha attempt remained after send failure")
+	}
+	users, err := captcha.GetMutedUsersForChat(chat.Id)
+	if err != nil || len(users) != 0 {
+		t.Fatalf("GetMutedUsersForChat() = (%+v, %v), want no remaining retry", users, err)
+	}
+}
+
+func TestNewMemberCaptchaSuccessAndSendFailurePaths(t *testing.T) {
+	useRealLocales(t)
+	for _, tt := range []struct {
+		name         string
+		sendPhotoErr bool
+		wantRestrict int
+		wantPhoto    int
+		wantWelcome  int
+	}{
+		{
+			name:         "captcha sent",
+			wantRestrict: 1,
+			wantPhoto:    1,
+		},
+		{
+			name:         "captcha send fails",
+			sendPhotoErr: true,
+			wantRestrict: 2,
+			wantPhoto:    1,
+			wantWelcome:  1,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			client := newModuleBotClient()
+			if tt.sendPhotoErr {
+				client.errors["sendPhoto"] = errors.New("http2: timeout awaiting response headers")
+			}
+			bot := newModuleTestBot(client)
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+			admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+			member := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "NewCaptcha"}
+			if err := captcha.SetCaptchaEnabled(chat.Id, chat.Title, true); err != nil {
+				t.Fatalf("SetCaptchaEnabled setup error = %v", err)
+			}
+			if err := greetings.SetWelcomeText(chat.Id, "Welcome {first}", "", nil, db.TEXT); err != nil {
+				t.Fatalf("SetWelcomeText setup error = %v", err)
+			}
+
+			ctx := newChatMemberContext(
+				bot,
+				chat,
+				admin,
+				gotgbot.ChatMemberLeft{User: member},
+				gotgbot.ChatMemberMember{User: member},
+			)
+			clearJoinClaim(chat.Id, member.Id)
+			errNewMember := greetingsModule.newMember(bot, ctx)
+			if errNewMember != ext.EndGroups {
+				t.Fatalf("newMember error = %v, want EndGroups", errNewMember)
+			}
+
+			if calls := client.callsFor("restrictChatMember"); len(calls) != tt.wantRestrict {
+				t.Fatalf("restrictChatMember calls = %d, want %d", len(calls), tt.wantRestrict)
+			}
+			if calls := client.callsFor("sendPhoto"); len(calls) != tt.wantPhoto {
+				t.Fatalf("sendPhoto calls = %d, want %d", len(calls), tt.wantPhoto)
+			}
+			if calls := client.callsFor("sendMessage"); len(calls) != tt.wantWelcome {
+				t.Fatalf("sendMessage calls = %d, want %d", len(calls), tt.wantWelcome)
+			}
+		})
+	}
+}
+
+func TestCaptchaDeliveryRollbackFailureReachesDispatcher(t *testing.T) {
+	useRealLocales(t)
+	for _, serviceMessage := range []bool{false, true} {
+		t.Run(fmt.Sprintf("serviceMessage=%t", serviceMessage), func(t *testing.T) {
+			client := newModuleBotClient()
+			requestErr := errors.New("http2: timeout awaiting response headers")
+			restoreErr := errors.New("temporary Telegram failure")
+			client.errors["sendPhoto"] = requestErr
+			client.errors["getChat"] = restoreErr
+			bot := newModuleTestBot(client)
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+			member := gotgbot.User{Id: 4848, FirstName: "CaptchaMember"}
+			admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+			if err := captcha.SetCaptchaEnabled(chat.Id, chat.Title, true); err != nil {
+				t.Fatalf("SetCaptchaEnabled() error = %v", err)
+			}
+			if err := greetings.SetWelcomeText(chat.Id, "Welcome {first}", "", nil, db.TEXT); err != nil {
+				t.Fatalf("SetWelcomeText() error = %v", err)
+			}
+			ctx := newChatMemberContext(bot, chat, admin, gotgbot.ChatMemberLeft{User: member}, gotgbot.ChatMemberMember{User: member})
+			run := greetingsModule.newMember
+			wantAttempts := 1
+			if serviceMessage {
+				second := gotgbot.User{Id: 4849, FirstName: "SecondMember"}
+				ctx = newServiceJoinContext(bot, chat, admin, []gotgbot.User{member, second})
+				clearJoinClaim(chat.Id, second.Id)
+				run = greetingsModule.cleanService
+				wantAttempts = 2
+			}
+			clearJoinClaim(chat.Id, member.Id)
+			previousHooks := log.StandardLogger().ReplaceHooks(make(log.LevelHooks))
+			t.Cleanup(func() { log.StandardLogger().ReplaceHooks(previousHooks) })
+			hook := logrustest.NewGlobal()
+			err := run(bot, ctx)
+			if !errors.Is(err, requestErr) || !errors.Is(err, restoreErr) {
+				t.Fatalf("join error = %v, want send and restoration errors", err)
+			}
+			if errors.Is(err, ErrChallengeDisabled) || errors.Is(err, errCaptchaDeliverySkipped) {
+				t.Fatalf("join error = %v, cleanup failure must not skip captcha", err)
+			}
+			if entries := hook.AllEntries(); len(entries) != 0 {
+				t.Fatalf("local logs = %+v, want dispatcher to own propagated errors", entries)
+			}
+			helpers.LogHandlerError(ctx, err)
+			if entries := hook.AllEntries(); len(entries) != 1 {
+				t.Fatalf("dispatcher logs = %+v, want exactly one", entries)
+			}
+			if calls := client.callsFor("sendMessage"); len(calls) != 0 {
+				t.Fatalf("sendMessage calls = %d, want no welcome before restoration", len(calls))
+			}
+			if calls := client.callsFor("sendPhoto"); len(calls) != wantAttempts {
+				t.Fatalf("sendPhoto calls = %d, want every join processed once", len(calls))
+			}
+			attempt, getErr := captcha.GetCaptchaAttempt(member.Id, chat.Id)
+			if getErr != nil || attempt != nil {
+				t.Fatalf("GetCaptchaAttempt() = (%+v, %v), want released attempt", attempt, getErr)
+			}
+			users, getErr := captcha.GetMutedUsersForChat(chat.Id)
+			if getErr != nil || len(users) != wantAttempts {
+				t.Fatalf("GetMutedUsersForChat() = (%+v, %v), want %d durable retries", users, getErr, wantAttempts)
+			}
+		})
+	}
+}
+
+func TestLeftMemberDeletesPendingCaptchaAttemptAndCleanGoodbye(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	member := gotgbot.User{Id: 4848, FirstName: "Leaving"}
+	if err := greetings.SetGoodbyeText(chat.Id, "Bye {first}", "", nil, db.TEXT); err != nil {
+		t.Fatalf("SetGoodbyeText setup error = %v", err)
+	}
+	if err := greetings.SetGoodbyeToggle(chat.Id, true); err != nil {
+		t.Fatalf("SetGoodbyeToggle setup error = %v", err)
+	}
+	if err := greetings.SetCleanGoodbyeSetting(chat.Id, true); err != nil {
+		t.Fatalf("SetCleanGoodbyeSetting setup error = %v", err)
+	}
+	if err := greetings.SetCleanGoodbyeMsgId(chat.Id, 1234); err != nil {
+		t.Fatalf("SetCleanGoodbyeMsgId setup error = %v", err)
+	}
+	attempt := &db.CaptchaAttempts{
+		UserID:    member.Id,
+		ChatID:    chat.Id,
+		Answer:    "42",
+		MessageID: 4321,
+		ExpiresAt: time.Now().Add(time.Minute),
+	}
+	if err := db.DB.Create(attempt).Error; err != nil {
+		t.Fatalf("captcha attempt setup error = %v", err)
+	}
+
+	ctx := newChatMemberContext(
+		bot,
+		chat,
+		admin,
+		gotgbot.ChatMemberMember{User: member},
+		gotgbot.ChatMemberLeft{User: member},
+	)
+	if err := greetingsModule.leftMember(bot, ctx); err != ext.EndGroups {
+		t.Fatalf("leftMember error = %v, want EndGroups", err)
+	}
+
+	if calls := client.callsFor("deleteMessage"); len(calls) != 2 {
+		t.Fatalf("deleteMessage calls = %d, want captcha cleanup and old goodbye cleanup", len(calls))
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+		t.Fatalf("sendMessage calls = %d, want goodbye message", len(calls))
+	}
+	got, err := captcha.GetCaptchaAttempt(member.Id, chat.Id)
+	if err != nil {
+		t.Fatalf("GetCaptchaAttempt error = %v", err)
+	}
+	if got != nil {
+		t.Fatal("captcha attempt was not deleted for leaving member")
+	}
+	if lastID := greetings.GetGreetingSettings(chat.Id).GoodbyeSettings.LastMsgId; lastID == 1234 {
+		t.Fatal("clean goodbye message ID was not updated")
+	}
+}
+
+func TestPendingJoinRequestAndCallbacks(t *testing.T) {
+	client := newModuleBotClient()
+	client.responses["getChat"] = []byte(`{"id":5151,"type":"private","first_name":"Applicant"}`)
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	admin := gotgbot.User{Id: 42, FirstName: "Invite Admin"}
+	applicant := gotgbot.User{Id: 5151, FirstName: "Applicant"}
+	seedCallbackAdmins(t, chat.Id,
+		gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 999, IsBot: true}, CanInviteUsers: true},
+		gotgbot.MergedChatMember{Status: "administrator", User: admin, CanInviteUsers: true},
+	)
+
+	ctx := newJoinRequestContext(bot, chat, applicant)
+	if err := greetingsModule.pendingJoins(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("pendingJoins error = %v, want ContinueGroups", err)
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+		t.Fatalf("sendMessage calls = %d, want join request notice", len(calls))
+	}
+
+	data := encodeCallbackData(
+		"join_request",
+		map[string]string{"a": "accept", "u": "5151"},
+	)
+	callbackCtx := newModuleCallbackContext(bot, chat, admin, data)
+	if err := greetingsModule.joinRequestHandler(bot, callbackCtx); err != ext.EndGroups {
+		t.Fatalf("joinRequestHandler accept error = %v, want EndGroups", err)
+	}
+	if calls := client.callsFor("approveChatJoinRequest"); len(calls) != 1 {
+		t.Fatalf("approveChatJoinRequest calls = %d, want 1", len(calls))
+	}
+	if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+		t.Fatalf("answerCallbackQuery calls = %d, want 1", len(calls))
+	}
+}
+
+func TestJoinRequestDeclineClearsPendingSuppression(t *testing.T) {
+	f := newAdminChatFixture(t)
+	client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+	client.responses["getChat"] = []byte(`{"id":5151,"type":"private","first_name":"Applicant"}`)
+
+	greetingsModule.setPendingJoins(chat.Id, 5151)
+	data := encodeCallbackData("join_request", map[string]string{"a": "decline", "u": "5151"})
+	ctx := newModuleCallbackContext(bot, chat, admin, data)
+	if err := greetingsModule.joinRequestHandler(bot, ctx); err != ext.EndGroups {
+		t.Fatalf("joinRequestHandler decline error = %v, want EndGroups", err)
+	}
+	if greetingsModule.loadPendingJoins(chat.Id, 5151) {
+		t.Fatal("declined request remained suppressed")
+	}
+}
+
+func TestJoinRequestCallbacksRequireGranularPermissions(t *testing.T) {
+	for _, tt := range []struct {
+		name         string
+		action       string
+		userRestrict bool
+		userInvite   bool
+		botRestrict  bool
+		botInvite    bool
+	}{
+		{name: "accept requires user invite", action: "accept", botInvite: true},
+		{name: "decline requires bot invite", action: "decline", userInvite: true},
+		{name: "ban requires user restrict", action: "ban", userInvite: true, botRestrict: true, botInvite: true},
+		{name: "ban requires bot restrict", action: "ban", userRestrict: true, userInvite: true, botInvite: true},
+		{name: "ban requires user invite", action: "ban", userRestrict: true, botRestrict: true, botInvite: true},
+		{name: "ban requires bot invite", action: "ban", userRestrict: true, userInvite: true, botRestrict: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			client := newModuleBotClient()
+			client.responses["getChat"] = []byte(`{"id":5151,"type":"private","first_name":"Applicant"}`)
+			bot := newModuleTestBot(client)
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+			admin := gotgbot.User{Id: 42, FirstName: "Limited Admin"}
+			seedCallbackAdmins(t, chat.Id,
+				gotgbot.MergedChatMember{
+					Status:             "administrator",
+					User:               gotgbot.User{Id: 999, IsBot: true},
+					CanRestrictMembers: tt.botRestrict,
+					CanInviteUsers:     tt.botInvite,
+				},
+				gotgbot.MergedChatMember{
+					Status:             "administrator",
+					User:               admin,
+					CanRestrictMembers: tt.userRestrict,
+					CanInviteUsers:     tt.userInvite,
+				},
+			)
+
+			data := encodeCallbackData("join_request", map[string]string{"a": tt.action, "u": "5151"})
+			ctx := newModuleCallbackContext(bot, chat, admin, data)
+			if err := greetingsModule.joinRequestHandler(bot, ctx); err != ext.EndGroups {
+				t.Fatalf("joinRequestHandler() error = %v, want EndGroups", err)
+			}
+			if calls := client.callsFor("getChat"); len(calls) != 0 {
+				t.Fatalf("getChat calls = %d, want permission denial before applicant lookup", len(calls))
+			}
+			if calls := client.callsFor("approveChatJoinRequest"); len(calls) != 0 {
+				t.Fatalf("approveChatJoinRequest calls = %d, want none", len(calls))
+			}
+			if calls := client.callsFor("declineChatJoinRequest"); len(calls) != 0 {
+				t.Fatalf("declineChatJoinRequest calls = %d, want none", len(calls))
+			}
+			if calls := client.callsFor("banChatMember"); len(calls) != 0 {
+				t.Fatalf("banChatMember calls = %d, want none", len(calls))
+			}
+			if calls := client.callsFor("editMessageText"); len(calls) != 0 {
+				t.Fatalf("editMessageText calls = %d, want pending request unchanged", len(calls))
+			}
+			if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+				t.Fatalf("answerCallbackQuery calls = %d, want one permission denial", len(calls))
+			}
+		})
+	}
+}
+
+func TestJoinRequestCallbacksHandleDeclineBanAndInvalidData(t *testing.T) {
+	tests := []struct {
+		name        string
+		data        string
+		wantApprove int
+		wantDecline int
+		wantBan     int
+	}{
+		{
+			name:        "encoded decline",
+			data:        encodeCallbackData("join_request", map[string]string{"a": "decline", "u": "7171"}),
+			wantDecline: 1,
+		},
+		{
+			name:        "encoded ban",
+			data:        encodeCallbackData("join_request", map[string]string{"a": "ban", "u": "7171"}),
+			wantDecline: 1,
+			wantBan:     1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+			client.responses["getChat"] = []byte(`{"id":7171,"type":"private","first_name":"Applicant"}`)
+
+			ctx := newModuleCallbackContext(bot, chat, admin, tt.data)
+			if err := greetingsModule.joinRequestHandler(bot, ctx); err != ext.EndGroups {
+				t.Fatalf("joinRequestHandler error = %v, want EndGroups", err)
+			}
+			if calls := client.callsFor("approveChatJoinRequest"); len(calls) != tt.wantApprove {
+				t.Fatalf("approveChatJoinRequest calls = %d, want %d", len(calls), tt.wantApprove)
+			}
+			if calls := client.callsFor("declineChatJoinRequest"); len(calls) != tt.wantDecline {
+				t.Fatalf("declineChatJoinRequest calls = %d, want %d", len(calls), tt.wantDecline)
+			}
+			if calls := client.callsFor("banChatMember"); len(calls) != tt.wantBan {
+				t.Fatalf("banChatMember calls = %d, want %d", len(calls), tt.wantBan)
+			}
+			if calls := client.callsFor("editMessageText"); len(calls) != 1 {
+				t.Fatalf("editMessageText calls = %d, want callback message update", len(calls))
+			}
+			if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+				t.Fatalf("answerCallbackQuery calls = %d, want callback acknowledgement", len(calls))
+			}
+		})
+	}
+
+	t.Run("invalid callback data is answered without lookup", func(t *testing.T) {
+		f := newAdminChatFixture(t)
+		client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+		seedCallbackAdmins(t, chat.Id,
+			gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: bot.Id, IsBot: true}, CanInviteUsers: true, CanRestrictMembers: true},
+			gotgbot.MergedChatMember{Status: "administrator", User: admin, CanInviteUsers: true, CanRestrictMembers: true},
+		)
+
+		ctx := newModuleCallbackContext(bot, chat, admin, "join_request.invalid")
+		if err := greetingsModule.joinRequestHandler(bot, ctx); err != ext.EndGroups {
+			t.Fatalf("joinRequestHandler invalid data error = %v, want EndGroups", err)
+		}
+		if calls := client.callsFor("getChat"); len(calls) != 0 {
+			t.Fatalf("getChat calls = %d, want no user lookup for invalid data", len(calls))
+		}
+		if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+			t.Fatalf("answerCallbackQuery calls = %d, want invalid request acknowledgement", len(calls))
+		}
+	})
+
+	t.Run("invalid join user id is answered without lookup", func(t *testing.T) {
+		f := newAdminChatFixture(t)
+		client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+		seedCallbackAdmins(t, chat.Id,
+			gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: bot.Id, IsBot: true}, CanInviteUsers: true, CanRestrictMembers: true},
+			gotgbot.MergedChatMember{Status: "administrator", User: admin, CanInviteUsers: true, CanRestrictMembers: true},
+		)
+
+		data := encodeCallbackData("join_request", map[string]string{"a": "accept", "u": "nan"})
+		ctx := newModuleCallbackContext(bot, chat, admin, data)
+		if err := greetingsModule.joinRequestHandler(bot, ctx); err != ext.EndGroups {
+			t.Fatalf("joinRequestHandler invalid user error = %v, want EndGroups", err)
+		}
+		if calls := client.callsFor("getChat"); len(calls) != 0 {
+			t.Fatalf("getChat calls = %d, want no user lookup for invalid user id", len(calls))
+		}
+		if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+			t.Fatalf("answerCallbackQuery calls = %d, want invalid request acknowledgement", len(calls))
+		}
+	})
+
+	t.Run("unknown action is answered without lookup", func(t *testing.T) {
+		f := newAdminChatFixture(t)
+		client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+		seedCallbackAdmins(t, chat.Id,
+			gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: bot.Id, IsBot: true}, CanInviteUsers: true, CanRestrictMembers: true},
+			gotgbot.MergedChatMember{Status: "administrator", User: admin, CanInviteUsers: true, CanRestrictMembers: true},
+		)
+
+		data := encodeCallbackData("join_request", map[string]string{"a": "crafted", "u": "5151"})
+		ctx := newModuleCallbackContext(bot, chat, admin, data)
+		if err := greetingsModule.joinRequestHandler(bot, ctx); err != ext.EndGroups {
+			t.Fatalf("joinRequestHandler unknown action error = %v, want EndGroups", err)
+		}
+		if calls := client.callsFor("getChat"); len(calls) != 0 {
+			t.Fatalf("getChat calls = %d, want no user lookup for unknown action", len(calls))
+		}
+		if calls := client.callsFor("editMessageText"); len(calls) != 0 {
+			t.Fatalf("editMessageText calls = %d, want callback message unchanged", len(calls))
+		}
+		if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+			t.Fatalf("answerCallbackQuery calls = %d, want invalid request acknowledgement", len(calls))
+		}
+	})
+}
+
+func TestAutoApproveJoinRequestSkipsAdminNotice(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+	applicant := gotgbot.User{Id: 6161, FirstName: "Applicant"}
+	if err := greetings.SetShouldAutoApprove(chat.Id, true); err != nil {
+		t.Fatalf("SetShouldAutoApprove setup error = %v", err)
+	}
+
+	ctx := newJoinRequestContext(bot, chat, applicant)
+	if err := greetingsModule.pendingJoins(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("pendingJoins auto approve error = %v, want ContinueGroups", err)
+	}
+	if calls := client.callsFor("approveChatJoinRequest"); len(calls) != 1 {
+		t.Fatalf("approveChatJoinRequest calls = %d, want auto approve", len(calls))
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 0 {
+		t.Fatalf("sendMessage calls = %d, want no admin notice", len(calls))
+	}
+}
+
+func TestGreetingCommandsPropagateGotgbotRequestErrors(t *testing.T) {
+	requestErr := errors.New("telegram request failed")
+	admin := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Admin"}
+
+	for _, tt := range []struct {
+		name string
+		text string
+		run  func(*gotgbot.Bot, *ext.Context) error
+	}{
+		{name: "welcome status", text: "/welcome", run: commandResponse(greetingsModule.welcome)},
+		{name: "welcome toggle", text: "/welcome on", run: commandResponse(greetingsModule.welcome)},
+		{name: "set welcome", text: "/setwelcome Hello", run: greetingsModule.setWelcome},
+		{name: "reset welcome", text: "/resetwelcome", run: greetingsModule.resetWelcome},
+		{name: "goodbye status", text: "/goodbye", run: commandResponse(greetingsModule.goodbye)},
+		{name: "goodbye toggle", text: "/goodbye on", run: commandResponse(greetingsModule.goodbye)},
+		{name: "set goodbye", text: "/setgoodbye Bye", run: greetingsModule.setGoodbye},
+		{name: "reset goodbye", text: "/resetgoodbye", run: greetingsModule.resetGoodbye},
+		{name: "clean welcome", text: "/cleanwelcome", run: greetingsModule.cleanWelcome},
+		{name: "clean goodbye", text: "/cleangoodbye", run: greetingsModule.cleanGoodbye},
+		{name: "clean service", text: "/cleanservice", run: greetingsModule.delJoined},
+		{name: "auto approve", text: "/autoapprove", run: greetingsModule.autoApprove},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			client := newModuleBotClient()
+			bot := newModuleTestBot(client)
+			client.errors["sendMessage"] = requestErr
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+			client.responses["getChatMember"] = []byte(fmt.Sprintf(`{"status":"creator","user":{"id":%d,"is_bot":false,"first_name":"Admin"}}`, admin.Id))
+			seedCallbackAdmins(t, chat.Id,
+				gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: bot.Id, IsBot: true}, CanChangeInfo: true, CanDeleteMessages: true, CanInviteUsers: true, CanRestrictMembers: true},
+				gotgbot.MergedChatMember{Status: "creator", User: admin},
+			)
+			ctx := newGreetingMessageContext(bot, chat, admin, tt.text)
+
+			err := tt.run(bot, ctx)
+			if !errors.Is(err, requestErr) {
+				t.Fatalf("%s returned error %v, want request error", tt.text, err)
+			}
+		})
+	}
+}
+
+func TestJoinRequestFlowPropagatesGotgbotRequestErrors(t *testing.T) {
+	requestErr := errors.New("telegram request failed")
+	admin := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Admin"}
+	applicant := gotgbot.User{Id: 5151, FirstName: "Applicant"}
+
+	for _, tt := range []struct {
+		name    string
+		method  string
+		build   func(*gotgbot.Bot, gotgbot.Chat) *ext.Context
+		run     func(*gotgbot.Bot, *ext.Context) error
+		wantErr bool
+	}{
+		{
+			name:   "pending join notice",
+			method: "sendMessage",
+			build: func(bot *gotgbot.Bot, chat gotgbot.Chat) *ext.Context {
+				return newJoinRequestContext(bot, chat, applicant)
+			},
+			run: greetingsModule.pendingJoins,
+		},
+		{
+			name:   "auto approve join request",
+			method: "approveChatJoinRequest",
+			build: func(bot *gotgbot.Bot, chat gotgbot.Chat) *ext.Context {
+				if err := greetings.SetShouldAutoApprove(chat.Id, true); err != nil {
+					t.Fatalf("SetShouldAutoApprove() error = %v", err)
+				}
+				return newJoinRequestContext(bot, chat, applicant)
+			},
+			run: greetingsModule.pendingJoins,
+		},
+		{
+			name:   "join callback lookup",
+			method: "getChat",
+			build: func(bot *gotgbot.Bot, chat gotgbot.Chat) *ext.Context {
+				data := encodeCallbackData("join_request", map[string]string{"a": "accept", "u": "5151"})
+				return newModuleCallbackContext(bot, chat, admin, data)
+			},
+			run: greetingsModule.joinRequestHandler,
+		},
+		{
+			name:   "join callback approve",
+			method: "approveChatJoinRequest",
+			build: func(bot *gotgbot.Bot, chat gotgbot.Chat) *ext.Context {
+				data := encodeCallbackData("join_request", map[string]string{"a": "accept", "u": "5151"})
+				return newModuleCallbackContext(bot, chat, admin, data)
+			},
+			run: greetingsModule.joinRequestHandler,
+		},
+		{
+			name:   "join callback decline",
+			method: "declineChatJoinRequest",
+			build: func(bot *gotgbot.Bot, chat gotgbot.Chat) *ext.Context {
+				data := encodeCallbackData("join_request", map[string]string{"a": "decline", "u": "5151"})
+				return newModuleCallbackContext(bot, chat, admin, data)
+			},
+			run: greetingsModule.joinRequestHandler,
+		},
+		{
+			name:   "join callback ban",
+			method: "banChatMember",
+			build: func(bot *gotgbot.Bot, chat gotgbot.Chat) *ext.Context {
+				data := encodeCallbackData("join_request", map[string]string{"a": "ban", "u": "5151"})
+				return newModuleCallbackContext(bot, chat, admin, data)
+			},
+			run: greetingsModule.joinRequestHandler,
+		},
+		{
+			name:   "join callback edit",
+			method: "editMessageText",
+			build: func(bot *gotgbot.Bot, chat gotgbot.Chat) *ext.Context {
+				data := encodeCallbackData("join_request", map[string]string{"a": "accept", "u": "5151"})
+				return newModuleCallbackContext(bot, chat, admin, data)
+			},
+			run: greetingsModule.joinRequestHandler,
+		},
+		{
+			name:   "join callback answer",
+			method: "answerCallbackQuery",
+			build: func(bot *gotgbot.Bot, chat gotgbot.Chat) *ext.Context {
+				data := encodeCallbackData("join_request", map[string]string{"a": "accept", "u": "5151"})
+				return newModuleCallbackContext(bot, chat, admin, data)
+			},
+			run: greetingsModule.joinRequestHandler,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			client := newModuleBotClient()
+			client.responses["getChat"] = []byte(`{"id":5151,"type":"private","first_name":"Applicant"}`)
+			bot := newModuleTestBot(client)
+			client.errors[tt.method] = requestErr
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+			client.responses["getChatMember"] = []byte(fmt.Sprintf(`{"status":"creator","user":{"id":%d,"is_bot":false,"first_name":"Admin"}}`, admin.Id))
+			seedCallbackAdmins(t, chat.Id,
+				gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: bot.Id, IsBot: true}, CanInviteUsers: true, CanRestrictMembers: true},
+				gotgbot.MergedChatMember{Status: "creator", User: admin},
+			)
+
+			err := tt.run(bot, tt.build(bot, chat))
+			if !errors.Is(err, requestErr) {
+				t.Fatalf("%s returned error %v, want request error", tt.name, err)
+			}
+			if tt.name == "pending join notice" && greetingsModule.loadPendingJoins(chat.Id, applicant.Id) {
+				t.Fatal("failed join notice suppressed a future retry")
+			}
+		})
+	}
+}
+
+func TestJoinRequestHandlerAcceptsExpectedTelegramErrors(t *testing.T) {
+	expectedErr := fmt.Errorf("Forbidden: bot is not a member of the supergroup chat")
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	applicant := gotgbot.User{Id: 5151, FirstName: "Applicant"}
+
+	for _, tt := range []struct {
+		name        string
+		method      string
+		data        string
+		autoApprove bool
+		want        error
+	}{
+		{
+			name:   "join callback approve",
+			method: "approveChatJoinRequest",
+			data: encodeCallbackData(
+				"join_request",
+				map[string]string{"a": "accept", "u": "5151"},
+			),
+			want: ext.EndGroups,
+		},
+		{
+			name:   "join callback decline",
+			method: "declineChatJoinRequest",
+			data: encodeCallbackData(
+				"join_request",
+				map[string]string{"a": "decline", "u": "5151"},
+			),
+			want: ext.EndGroups,
+		},
+		{
+			name:        "auto approve join request",
+			method:      "approveChatJoinRequest",
+			autoApprove: true,
+			want:        ext.ContinueGroups,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			client := newModuleBotClient()
+			client.responses["getChat"] = []byte(`{"id":5151,"type":"private","first_name":"Applicant"}`)
+			bot := newModuleTestBot(client)
+			client.errors[tt.method] = expectedErr
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Greeting Chat"}
+
+			var (
+				ctx *ext.Context
+				err error
+			)
+			if tt.autoApprove {
+				if err := greetings.SetShouldAutoApprove(chat.Id, true); err != nil {
+					t.Fatalf("SetShouldAutoApprove() error = %v", err)
+				}
+				ctx = newJoinRequestContext(bot, chat, applicant)
+				err = greetingsModule.pendingJoins(bot, ctx)
+			} else {
+				ctx = newModuleCallbackContext(bot, chat, admin, tt.data)
+				err = greetingsModule.joinRequestHandler(bot, ctx)
+			}
+
+			if err != tt.want {
+				t.Fatalf("%s error = %v, want %v", tt.name, err, tt.want)
+			}
+		})
+	}
+}
+
+func TestJoinRequestHandlerReportsRequestsHandledElsewhere(t *testing.T) {
+	useRealLocales(t)
+	tr := i18n.MustNewTranslator("en")
+	gone, _ := tr.GetString("greetings_join_request_already_handled")
+	banned, _ := tr.GetString("greetings_join_request_banned")
+
+	for _, tt := range []struct {
+		action, method, telegramErr, wantText string
+	}{
+		{"accept", "approveChatJoinRequest", "Bad Request: HIDE_REQUESTER_MISSING", gone},
+		{"accept", "approveChatJoinRequest", "Bad Request: USER_ALREADY_PARTICIPANT", gone},
+		{"decline", "declineChatJoinRequest", "Bad Request: HIDE_REQUESTER_MISSING", gone},
+		{"ban", "declineChatJoinRequest", "Bad Request: HIDE_REQUESTER_MISSING", banned},
+	} {
+		t.Run(tt.action+"/"+tt.telegramErr, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+			client.responses["getChat"] = []byte(`{"id":5151,"type":"private","first_name":"Applicant"}`)
+			client.errors[tt.method] = errors.New(tt.telegramErr)
+
+			greetingsModule.setPendingJoins(chat.Id, 5151)
+			data := encodeCallbackData("join_request", map[string]string{"a": tt.action, "u": "5151"})
+			if err := greetingsModule.joinRequestHandler(bot, newModuleCallbackContext(bot, chat, admin, data)); err != ext.EndGroups {
+				t.Fatalf("joinRequestHandler error = %v, want EndGroups", err)
+			}
+			if greetingsModule.loadPendingJoins(chat.Id, 5151) {
+				t.Fatal("resolved request remained pending")
+			}
+			edits := client.callsFor("editMessageText")
+			if len(edits) != 1 {
+				t.Fatalf("editMessageText calls = %d, want 1", len(edits))
+			}
+			if want := fmt.Sprintf(tt.wantText, formatting.MentionHtml(5151, "Applicant")); edits[0].Params["text"] != want {
+				t.Fatalf("edited text = %q, want %q", edits[0].Params["text"], want)
+			}
+			if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+				t.Fatalf("answerCallbackQuery calls = %d, want 1", len(calls))
+			}
+		})
+	}
+}
+
+func TestGreetingStatusShowsSettingsAsWords(t *testing.T) {
+	useRealLocales(t)
+	for _, tt := range []struct {
+		command string
+		run     func(*gotgbot.Bot, *ext.Context) error
+	}{
+		{command: "/welcome", run: commandResponse(greetingsModule.welcome)},
+		{command: "/goodbye", run: commandResponse(greetingsModule.goodbye)},
+	} {
+		t.Run(tt.command, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			if err := tt.run(f.bot, newGreetingMessageContext(f.bot, f.chat, f.admin, tt.command+" on")); err != ext.EndGroups {
+				t.Fatalf("%s on error = %v, want EndGroups", tt.command, err)
+			}
+			before := len(f.client.callsFor("sendMessage"))
+			if err := tt.run(f.bot, newGreetingMessageContext(f.bot, f.chat, f.admin, tt.command)); err != ext.EndGroups {
+				t.Fatalf("%s status error = %v, want EndGroups", tt.command, err)
+			}
+			sent := f.client.callsFor("sendMessage")
+			if len(sent) <= before {
+				t.Fatalf("%s status sent no message", tt.command)
+			}
+			status := fmt.Sprint(sent[before].Params["text"])
+			if strings.Contains(status, "%!") {
+				t.Fatalf("%s status has a bad format verb: %q", tt.command, status)
+			}
+			if !strings.Contains(status, "<code>true</code>") {
+				t.Fatalf("%s status = %q, want the enabled setting shown as true", tt.command, status)
+			}
+		})
+	}
+}

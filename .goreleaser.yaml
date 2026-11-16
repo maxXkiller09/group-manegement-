@@ -1,0 +1,118 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
+version: 2
+
+project_name: alita_robot
+
+release:
+  replace_existing_draft: true
+  header: |
+    Welcome to this new release!
+
+  footer: |
+    Docker 🐳 images are available at:
+    `docker pull ghcr.io/divkix/{{ .ProjectName }}:{{ .Tag }}`
+
+gomod:
+  env:
+    - CGO_ENABLED=1
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - binary: alita_robot
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+archives:
+  # - rlcp: true
+  - name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- if eq .Os "darwin" }}macOS
+      {{- else }}{{ .Os }}{{ end }}_
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- with .Arm }}v{{ . }}{{ end }}
+      {{- with .Mips }}_{{ . }}{{ end }}
+      {{- if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+changelog:
+  use: github
+  sort: asc
+  abbrev: -1
+  groups:
+    - title: "🚀 Features"
+      regexp: '^feat(\(.+\))?!?:'
+      order: 0
+    - title: "🐛 Bug Fixes"
+      regexp: '^fix(\(.+\))?!?:'
+      order: 1
+    - title: "⚡ Performance"
+      regexp: '^perf(\(.+\))?!?:'
+      order: 2
+    - title: "🔒 Security"
+      regexp: '^sec(urity)?(\(.+\))?!?:'
+      order: 3
+    - title: "♻️ Refactoring"
+      regexp: '^refactor(\(.+\))?!?:'
+      order: 4
+    - title: "📦 Other"
+      order: 999
+  filters:
+    exclude:
+      - '^docs(\(.+\))?:'
+      - '^test(\(.+\))?:'
+      - '^chore(\(.+\))?:'
+      - '^ci(\(.+\))?:'
+      - '^deps(\(.+\))?:'
+      - Merge pull request
+      - Merge branch
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+dockers_v2:
+  - dockerfile: docker/goreleaser
+    images:
+      - "ghcr.io/divkix/{{ .ProjectName }}"
+    tags:
+      - "{{ .Tag }}"
+      - "{{ .Version }}"
+      - "latest"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.title": "{{ .ProjectName }}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.source": "https://github.com/divkix/Alita_Robot"
+      "org.opencontainers.image.description": "Official Alita Go Robot Docker Image"
+      "org.opencontainers.image.vendor": "Divkix"
+      "org.opencontainers.image.authors": "Divanshu Chauhan <divkix@divkix.me>"
+    extra_files:
+      - migrations

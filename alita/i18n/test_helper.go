@@ -1,0 +1,59 @@
+//go:build testtools
+
+package i18n
+
+import (
+	"embed"
+)
+
+func NewTestTranslator(yamlContent string) (*Translator, error) {
+	data, err := parseYAML([]byte(yamlContent))
+	if err != nil {
+		return nil, err
+	}
+	lm := &LocaleManager{
+		defaultLang: "en",
+		localeMaps:  map[string]map[string]any{"en": data},
+	}
+	return &Translator{
+		langCode: "en",
+		manager:  lm,
+		data:     data,
+	}, nil
+}
+
+// OverrideManagerForTest replaces the global LocaleManager singleton with one backed
+// by the provided inline YAML content. It returns a restore function that reverts
+// managerInstance to its prior value; call it via t.Cleanup. This is intentionally
+// NOT goroutine-safe across parallel sub-tests that also call this function — run
+// the parent test without t.Parallel() or ensure sub-tests share the same override.
+//
+// It is guarded by the testtools build tag and is never compiled into production.
+func OverrideManagerForTest(yamlContent string) (restore func(), err error) {
+	return OverrideLocalesForTest(map[string]string{"en": yamlContent})
+}
+
+// OverrideLocalesForTest is OverrideManagerForTest with one inline YAML per
+// language code, so a test can tell which language a reply was built in.
+// Codes missing from locales fall back to "en", which must be present.
+func OverrideLocalesForTest(locales map[string]string) (restore func(), err error) {
+	maps := make(map[string]map[string]any, len(locales))
+	for code, yamlContent := range locales {
+		data, err := parseYAML([]byte(yamlContent))
+		if err != nil {
+			return nil, err
+		}
+		maps[code] = data
+	}
+	// A non-nil *embed.FS is required to pass GetTranslator's localeFS nil-guard.
+	// The value is never used for file I/O because localeMaps is already populated.
+	var dummyFS embed.FS
+	lm := &LocaleManager{
+		defaultLang: "en",
+		localeMaps:  maps,
+		localeFS:    &dummyFS,
+	}
+	prev := managerInstance
+	managerInstance = lm
+	return func() { managerInstance = prev }, nil
+}

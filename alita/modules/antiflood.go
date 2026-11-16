@@ -1,0 +1,589 @@
+package modules
+
+import (
+	"context"
+	"fmt"
+	"slices"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/message"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/divkix/Alita_Robot/alita/db"
+	"github.com/divkix/Alita_Robot/alita/db/lang"
+	"github.com/divkix/Alita_Robot/alita/db/models"
+	"github.com/divkix/Alita_Robot/alita/i18n"
+	chatsettings "github.com/divkix/Alita_Robot/alita/settings"
+	"github.com/divkix/Alita_Robot/alita/utils/actionlog"
+	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
+	"github.com/divkix/Alita_Robot/alita/utils/error_handling"
+	"github.com/divkix/Alita_Robot/alita/utils/extraction"
+	"github.com/divkix/Alita_Robot/alita/utils/formatting"
+	"github.com/divkix/Alita_Robot/alita/utils/helpers"
+	"github.com/divkix/Alita_Robot/alita/utils/jobs"
+	keyboardutils "github.com/divkix/Alita_Robot/alita/utils/keyboard"
+	"github.com/divkix/Alita_Robot/alita/utils/punishment"
+	"github.com/divkix/Alita_Robot/alita/utils/tracing"
+)
+
+const (
+	maxConcurrentAdminChecks  = 50
+	maxConcurrentMsgDeletions = 5
+)
+
+// floodModeLabel includes the effective duration for timed actions.
+func floodModeLabel(row *models.AntifloodSettings) string {
+	if chatsettings.IsTimedMode(row.Action) {
+		return row.Action + " " + formatDuration(row.FloodActionTime)
+	}
+	return row.Action
+}
+
+// floodActionLabel names the flood action for the flood notice and /flood.
+func floodActionLabel(tr *i18n.Translator, preferences *models.AntifloodSettings) string {
+	label := func(key, fallback string, params ...i18n.TranslationParams) string {
+		if text, _ := tr.GetString(key, params...); text != "" {
+			return text
+		}
+		return fallback
+	}
+	duration := formatDuration(preferences.FloodActionTime)
+	durationParams := i18n.TranslationParams{"duration": duration}
+	switch preferences.Action {
+	case "mute":
+		return label("antiflood_action_muted", "muted")
+	case "ban":
+		return label("antiflood_action_banned", "banned")
+	case "kick":
+		return label("antiflood_action_kicked", "kicked")
+	case "tban":
+		return label("antiflood_action_tbanned", "banned for "+duration, durationParams)
+	case "tmute":
+		return label("antiflood_action_tmuted", "muted for "+duration, durationParams)
+	case "":
+		return label("antiflood_action_none", "none")
+	default:
+		return preferences.Action
+	}
+}
+
+type floodKey struct {
+	chatId int64
+	userId int64
+}
+
+// antifloodStruct keeps flood counters in process; each replica counts independently.
+type antifloodStruct struct {
+	moduleStruct
+	syncHelperMap       sync.Map
+	adminCheckSemaphore chan struct{}
+}
+
+type floodControl struct {
+	userId       int64
+	messageCount int
+	messageIDs   []int64
+	lastActivity int64
+}
+
+var _normalAntifloodModule = moduleStruct{
+	moduleName:   "Antiflood",
+	handlerGroup: 4,
+}
+
+var antifloodModule = antifloodStruct{
+	moduleStruct:        _normalAntifloodModule,
+	syncHelperMap:       sync.Map{},
+	adminCheckSemaphore: make(chan struct{}, maxConcurrentAdminChecks),
+}
+
+func init() {
+	RegisterLegacyModule("Antiflood", 150, LoadAntiflood)
+	jobs.Register("antifloodCleanup", 5*time.Minute, func(context.Context) error {
+		antifloodModule.cleanupOnce(time.Now().Unix())
+		return nil
+	})
+}
+
+func (a *antifloodStruct) cleanupOnce(now int64) {
+	a.syncHelperMap.Range(func(key, value any) bool {
+		// States are *floodControl so CompareAndDelete compares pointers:
+		// values hold slices and are not comparable.
+		floodData, ok := value.(*floodControl)
+		if !ok || floodData == nil || now-floodData.lastActivity <= 600 {
+			return true
+		}
+		// Delete only if still stale: a concurrent updateFlood CAS-stores a fresh
+		// value and CompareAndDelete fails, keeping the new burst intact.
+		a.syncHelperMap.CompareAndDelete(key, value)
+		return true
+	})
+}
+
+func (a *antifloodStruct) userIsFloodExempt(b *gotgbot.Bot, chatId, userId int64) bool {
+	if isAdmin, known := chat_status.IsUserAdminCached(chatId, userId); known {
+		return isAdmin
+	}
+	return a.adminCheckWithTimeout(b, chatId, userId)
+}
+
+func (a *antifloodStruct) adminCheckWithTimeout(b *gotgbot.Bot, chatId, userId int64) bool {
+	select {
+	case a.adminCheckSemaphore <- struct{}{}:
+	default:
+		log.WithFields(log.Fields{
+			"chatId": chatId,
+			"userId": userId,
+		}).Warn("Admin check semaphore full - assuming admin to prevent false positives")
+		return true
+	}
+
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result := make(chan bool, 1)
+	go func() {
+		// Release the slot when the real work finishes, not when the caller
+		// times out: the old defer released early, unbounding live lookups.
+		defer func() { <-a.adminCheckSemaphore }()
+		defer error_handling.RecoverFromPanic("adminCheck", "antiflood")
+		isAdmin := chat_status.IsUserAdmin(b, chatId, userId)
+		select {
+		case result <- isAdmin:
+		case <-ctxTimeout.Done():
+		}
+	}()
+
+	select {
+	case isAdmin := <-result:
+		return isAdmin
+	case <-ctxTimeout.Done():
+		log.WithFields(log.Fields{
+			"chatId": chatId,
+			"userId": userId,
+		}).Warn("Admin check timed out, skipping flood check to prevent false positives")
+		return true
+	}
+}
+
+func (a *antifloodStruct) updateFlood(chatId, userId, msgId int64) (shouldPunish bool, floodCrc floodControl, floodSettings *db.AntifloodSettings) {
+	floodSettings = chatsettings.ReadFlood(chatId)
+	shouldPunish, floodCrc = a.updateFloodWithSettings(chatId, userId, msgId, floodSettings)
+	return
+}
+
+// updateFloodWithSettings is updateFlood with the settings row already in hand,
+// so callers that loaded it (checkFlood) do not read the cache a second time.
+func (a *antifloodStruct) updateFloodWithSettings(chatId, userId, msgId int64, floodSettings *db.AntifloodSettings) (shouldPunish bool, floodCrc floodControl) {
+	if floodSettings.Limit != 0 {
+		currentTime := time.Now().Unix()
+		key := floodKey{chatId: chatId, userId: userId}
+
+		// Lock-free RMW on *floodControl (pointers are comparable for CAS; the
+		// old floodMu protocol let the cleaner mint a second mutex → lost counts).
+		for {
+			var cur floodControl
+			old, loaded := a.syncHelperMap.Load(key)
+			if loaded && old != nil {
+				// Keep loaded set for an idle pointer. It stays in the map until the
+				// antifloodCleanup job, so treating it as absent makes LoadOrStore fail
+				// and this loop never returns. CompareAndSwap replaces it instead.
+				if prev, ok := old.(*floodControl); ok && prev != nil && currentTime-prev.lastActivity <= 60 {
+					cur = *prev
+				}
+			}
+			if cur.userId == 0 {
+				cur.userId = userId
+				cur.messageCount = 0
+				cur.messageIDs = make([]int64, 0, floodSettings.Limit+5)
+			} else {
+				next := make([]int64, len(cur.messageIDs), cap(cur.messageIDs))
+				copy(next, cur.messageIDs)
+				cur.messageIDs = next
+			}
+			cur.messageCount++
+			cur.lastActivity = currentTime
+			cur.messageIDs = append(cur.messageIDs, msgId)
+			if len(cur.messageIDs) > floodSettings.Limit+5 {
+				cur.messageIDs = cur.messageIDs[len(cur.messageIDs)-(floodSettings.Limit+5):]
+			}
+			next := cur
+			punish := false
+			if cur.messageCount > floodSettings.Limit {
+				// Reset the stored counter but hand the burst to the caller: it
+				// bulk-deletes the tracked IDs (the old reset returned an empty
+				// list, deleting nothing).
+				next = floodControl{lastActivity: currentTime, messageIDs: make([]int64, 0)}
+				punish = true
+			}
+			stored := &floodControl{
+				userId:       next.userId,
+				messageCount: next.messageCount,
+				messageIDs:   next.messageIDs,
+				lastActivity: next.lastActivity,
+			}
+			var swapped bool
+			if !loaded {
+				_, swapped = a.syncHelperMap.LoadOrStore(key, stored)
+				swapped = !swapped
+			} else {
+				swapped = a.syncHelperMap.CompareAndSwap(key, old, stored)
+			}
+			if swapped {
+				shouldPunish = punish
+				floodCrc = cur
+				break
+			}
+		}
+	}
+
+	return
+}
+
+func (m moduleStruct) checkFlood(b *gotgbot.Bot, ctx *ext.Context) error {
+	return m.checkFloodWithPunisher(b, ctx, punishment.Apply)
+}
+
+//nolint:gocyclo // The ordered exemptions and flood-message deletion form one watcher pass.
+func (m moduleStruct) checkFloodWithPunisher(b *gotgbot.Bot, ctx *ext.Context, apply punisher) error {
+	chat := ctx.EffectiveChat
+	user := ctx.EffectiveSender
+	if user == nil {
+		return ext.ContinueGroups
+	}
+	// Linked-channel auto-forwards are the group's own channel posts, and their
+	// sender ID is a channel, which restrictChatMember/banChatMember reject.
+	if user.IsAnonymousAdmin() || user.IsLinkedChannel() {
+		return ext.ContinueGroups
+	}
+	msg := ctx.EffectiveMessage
+	if msg.MediaGroupId != "" {
+		return ext.ContinueGroups
+	}
+
+	chatId := chat.Id
+	// Cheapest discriminator first: an unconfigured chat (Limit == 0) pays only
+	// this one cached read, not the translator/admin/approval lookups below.
+	flood := chatsettings.ReadFloodContext(tracing.UpdateContext(ctx), chatId)
+	if flood.Limit == 0 {
+		return ext.ContinueGroups
+	}
+
+	var keyboard [][]gotgbot.InlineKeyboardButton
+	userId := user.Id()
+
+	// Counting is in-memory while the exemption checks read the cache or call
+	// Telegram, so they run only once the user crosses the limit.
+	flooded, floodCrc := antifloodModule.updateFloodWithSettings(chatId, userId, msg.MessageId, flood)
+	if !flooded || antifloodModule.userIsFloodExempt(b, chatId, userId) ||
+		chat_status.IsApprovedForUpdate(b, ctx, chatId, userId) {
+		return ext.ContinueGroups
+	}
+
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+
+	if slices.Contains([]string{"mute", "kick", "ban", "tban", "tmute"}, flood.Action) {
+		if !chat_status.CanBotRestrict(b, ctx, chat) {
+			log.WithFields(log.Fields{
+				"chatId": chatId,
+			}).Debug("Antiflood action skipped: bot lacks restrict permissions")
+			return ext.ContinueGroups
+		}
+	}
+
+	if flood.DeleteAntifloodMessage {
+		var firstError error
+		var errorMu sync.Mutex
+
+		recordError := func(err error, msgId int64) {
+			if err != nil {
+				log.Errorf("Failed to delete flood message %d: %v", msgId, err)
+				errorMu.Lock()
+				if firstError == nil {
+					firstError = err
+				}
+				errorMu.Unlock()
+			}
+		}
+
+		if len(floodCrc.messageIDs) <= 3 {
+			for _, i := range floodCrc.messageIDs {
+				err := helpers.DeleteMessageWithErrorHandling(b, chatId, i)
+				recordError(err, i)
+			}
+		} else {
+			sem := make(chan struct{}, maxConcurrentMsgDeletions)
+			var wg sync.WaitGroup
+
+			for _, msgId := range floodCrc.messageIDs {
+				wg.Add(1)
+				sem <- struct{}{}
+
+				go func(messageId int64) {
+					defer wg.Done()
+					defer func() { <-sem }()
+					defer error_handling.RecoverFromPanic("floodMsgDelete", "antiflood")
+
+					err := helpers.DeleteMessageWithErrorHandling(b, chatId, messageId)
+					recordError(err, messageId)
+				}(msgId)
+			}
+
+			wg.Wait()
+		}
+
+		if firstError != nil {
+			log.Warnf("[Antiflood] Some flood messages could not be deleted (may be too old): %v", firstError)
+		}
+	} else {
+		_ = helpers.DeleteMessageWithErrorHandling(b, chatId, msg.MessageId)
+	}
+
+	mode, timed := chatsettings.PunishmentMode(flood.Action)
+	request := punishment.Request{
+		ChatID: chatId, Target: punishment.Target{ID: userId, SenderChat: !user.IsUser()},
+		Mode: mode, Source: models.BanSourceAntiflood,
+	}
+	if timed {
+		request.Duration = time.Duration(flood.FloodActionTime) * time.Second
+	}
+	result, err := apply(tracing.UpdateContext(ctx), b, request)
+	if err != nil {
+		log.Errorf(" checkFlood: %d (%d) - %v", chatId, user.Id(), err)
+		return err
+	}
+	if !result.Applied {
+		return ext.ContinueGroups
+	}
+	if request.Mode == punishment.Mute {
+		keyboard = [][]gotgbot.InlineKeyboardButton{
+			{keyboardutils.UnrestrictButton(tr, "button_unmute_admins", "unmute", userId, 0)},
+		}
+	} else if request.Target.SenderChat && request.Mode == punishment.Ban {
+		keyboard = [][]gotgbot.InlineKeyboardButton{
+			{keyboardutils.UnrestrictButton(tr, "antiflood_button_unban_admins", "unban", userId, 0)},
+		}
+	}
+	logAction := floodModeLabel(flood)
+	actionlog.AutomatedWithMarkup(b, chat, result.LogMarkup, "ANTIFLOOD", userId, user.Name(), actionlog.Field{Name: "Action", Value: logAction})
+	if _, err := helpers.SendMessageWithErrorHandling(b, chatId,
+		trSprintf(tr, strings.ToLower(m.moduleName)+"_checkflood_perform_action", formatting.MentionHtml(userId, user.Name()), floodActionLabel(tr, flood)),
+		&gotgbot.SendMessageOpts{
+			ParseMode: formatting.HTML,
+			ReplyMarkup: gotgbot.InlineKeyboardMarkup{
+				InlineKeyboard: keyboard,
+			},
+			MessageThreadId: msg.MessageThreadId,
+		},
+	); err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.ContinueGroups
+}
+
+func (m moduleStruct) setFlood(b *gotgbot.Bot, ctx *ext.Context) error {
+	msg := ctx.EffectiveMessage
+	chat := ctx.EffectiveChat
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+	args := ctx.Args()[1:]
+
+	var replyText string
+
+	if len(args) == 0 {
+		replyText, _ = tr.GetString(strings.ToLower(m.moduleName) + "_errors_expected_args")
+	} else {
+		if slices.Contains([]string{"off", "no", "false", "0"}, strings.ToLower(args[0])) {
+			if err := chatsettings.FloodLimit.Write(chatsettings.WriteContext{Context: tracing.UpdateContext(ctx), ChatID: chat.Id}, 0); err != nil {
+				log.Errorf("[Antiflood] SetFlood failed for chat %d: %v", chat.Id, err)
+				errText, _ := tr.GetString("common_settings_save_failed")
+				_, _ = msg.Reply(b, errText, formatting.Shtml())
+				return ext.EndGroups
+			}
+			replyText, _ = tr.GetString(strings.ToLower(m.moduleName) + "_setflood_disabled")
+		} else {
+			num, err := strconv.Atoi(args[0])
+			if err != nil {
+				replyText, _ = tr.GetString(strings.ToLower(m.moduleName) + "_errors_invalid_int")
+			} else {
+				if chatsettings.FloodLimit.Validate(num) != nil {
+					replyText, _ = tr.GetString(strings.ToLower(m.moduleName) + "_errors_set_in_limit")
+				} else {
+					if err := chatsettings.FloodLimit.Write(chatsettings.WriteContext{Context: tracing.UpdateContext(ctx), ChatID: chat.Id}, num); err != nil {
+						log.Errorf("[Antiflood] SetFlood failed for chat %d: %v", chat.Id, err)
+						errText, _ := tr.GetString("common_settings_save_failed")
+						_, _ = msg.Reply(b, errText, formatting.Shtml())
+						return ext.EndGroups
+					}
+					temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_setflood_success")
+					replyText = fmt.Sprintf(temp, num)
+				}
+			}
+		}
+	}
+
+	_, err := msg.Reply(b, replyText, formatting.Shtml())
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func (m moduleStruct) flood(b *gotgbot.Bot, ctx *ext.Context) error {
+	var text string
+	msg := ctx.EffectiveMessage
+
+	chat := ctx.EffectiveChat
+
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+
+	flood := chatsettings.ReadFloodContext(tracing.UpdateContext(ctx), chat.Id)
+	if flood.Limit == 0 {
+		text, _ = tr.GetString(strings.ToLower(m.moduleName) + "_flood_disabled")
+	} else {
+		temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_flood_show_settings")
+		text = fmt.Sprintf(temp, flood.Limit, floodActionLabel(tr, flood))
+	}
+	_, err := msg.Reply(b, text, formatting.Shtml())
+	if err != nil {
+		return err
+	}
+	return ext.EndGroups
+}
+
+func (m moduleStruct) setFloodMode(b *gotgbot.Bot, ctx *ext.Context) error {
+	msg := ctx.EffectiveMessage
+	chat := ctx.EffectiveChat
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+	args := ctx.Args()[1:]
+
+	if len(args) > 0 {
+		selectedMode := strings.ToLower(args[0])
+		if chatsettings.FloodMode.Validate(selectedMode) == nil {
+			actionTime := 0
+			changes := map[string]any{chatsettings.FloodMode.Key: selectedMode}
+			timed := chatsettings.IsTimedMode(selectedMode)
+			if timed {
+				seconds := extraction.ExtractDuration(b, ctx, strings.Join(args[1:], " "))
+				if seconds == -1 {
+					return ext.EndGroups
+				}
+				actionTime = int(seconds)
+				changes[chatsettings.FloodActionTime.Key] = actionTime
+			}
+			input := chatsettings.WriteContext{Context: tracing.UpdateContext(ctx), ChatID: chat.Id}
+			if len(chatsettings.ValidateChanges(input, changes)) != 0 {
+				text, _ := tr.GetString("antiflood_setfloodmode_specify_action")
+				_, _ = msg.Reply(b, text, formatting.Shtml())
+				return ext.EndGroups
+			}
+			if err := chatsettings.FloodMode.WriteChanges(input, changes); err != nil {
+				log.Errorf("[Antiflood] SetFloodMode failed for chat %d: %v", chat.Id, err)
+				errText, _ := tr.GetString("common_settings_save_failed")
+				_, _ = msg.Reply(b, errText, formatting.Shtml())
+				return ext.EndGroups
+			}
+			key := strings.ToLower(m.moduleName) + "_setfloodmode_success"
+			value := selectedMode
+			if timed {
+				key = "antiflood_mode_" + selectedMode
+				value = formatDuration(actionTime)
+			}
+			temp, _ := tr.GetString(key)
+			_, err := msg.Reply(b, fmt.Sprintf(temp, value), formatting.Shtml())
+			if err != nil {
+				log.Error(err)
+			}
+			return ext.EndGroups
+		} else {
+			temp, _ := tr.GetString(strings.ToLower(m.moduleName) + "_setfloodmode_unknown_type")
+			_, err := msg.Reply(b, fmt.Sprintf(temp, formatting.HtmlEscape(args[0])), formatting.Shtml())
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		text, _ := tr.GetString(strings.ToLower(m.moduleName) + "_setfloodmode_specify_action")
+		_, err := msg.Reply(b, text, formatting.Smarkdown())
+		if err != nil {
+			return err
+		}
+	}
+	return ext.EndGroups
+}
+
+func (m moduleStruct) setFloodDeleter(b *gotgbot.Bot, ctx *ext.Context) error {
+	msg := ctx.EffectiveMessage
+	chat := ctx.EffectiveChat
+	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
+	args := ctx.Args()[1:]
+	var text string
+
+	if len(args) > 0 {
+		selectedMode := strings.ToLower(args[0])
+		switch selectedMode {
+		case "on", "yes":
+			if err := chatsettings.FloodDelete.Write(chatsettings.WriteContext{Context: tracing.UpdateContext(ctx), ChatID: chat.Id}, true); err != nil {
+				log.Errorf("[Antiflood] SetFloodMsgDel failed for chat %d: %v", chat.Id, err)
+				errText, _ := tr.GetString("common_settings_save_failed")
+				_, _ = msg.Reply(b, errText, formatting.Shtml())
+				return ext.EndGroups
+			}
+			text, _ = tr.GetString(strings.ToLower(m.moduleName) + "_flood_deleter_enabled")
+		case "off", "no":
+			if err := chatsettings.FloodDelete.Write(chatsettings.WriteContext{Context: tracing.UpdateContext(ctx), ChatID: chat.Id}, false); err != nil {
+				log.Errorf("[Antiflood] SetFloodMsgDel failed for chat %d: %v", chat.Id, err)
+				errText, _ := tr.GetString("common_settings_save_failed")
+				_, _ = msg.Reply(b, errText, formatting.Shtml())
+				return ext.EndGroups
+			}
+			text, _ = tr.GetString(strings.ToLower(m.moduleName) + "_flood_deleter_disabled")
+		default:
+			text, _ = tr.GetString(strings.ToLower(m.moduleName) + "_flood_deleter_invalid_option")
+		}
+	} else {
+		currSet := chatsettings.FloodDelete.ReadContext(tracing.UpdateContext(ctx), chat.Id).Value.(bool)
+		if currSet {
+			text, _ = tr.GetString(strings.ToLower(m.moduleName) + "_flood_deleter_already_enabled")
+		} else {
+			text, _ = tr.GetString(strings.ToLower(m.moduleName) + "_flood_deleter_already_disabled")
+		}
+	}
+	_, err := msg.Reply(b, text, formatting.Smarkdown())
+	if err != nil {
+		return err
+	}
+
+	return ext.EndGroups
+}
+
+func LoadAntiflood(dispatcher *ext.Dispatcher) {
+	SetModuleEnabled(antifloodModule.moduleName, true)
+
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name: "setflood", PMGroupArg: helpers.PMGroupArgOwn,
+		RequiredChecks: declaredSettingChecks(chatsettings.FloodLimit),
+	}, pipelineHandler(antifloodModule.setFlood))
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name: "setfloodmode", PMGroupArg: helpers.PMGroupArgOwn,
+		RequiredChecks: declaredSettingChecks(chatsettings.FloodMode),
+	}, pipelineHandler(antifloodModule.setFloodMode))
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name: "delflood", Aliases: []string{"clearflood"}, PMGroupArg: helpers.PMGroupArgOwn,
+		RequiredChecks: declaredSettingChecks(chatsettings.FloodDelete),
+	}, pipelineHandler(antifloodModule.setFloodDeleter))
+	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
+		Name: "flood", PMGroupArg: helpers.PMGroupArgNone, Disableable: true,
+		RequiredChecks: []helpers.CheckFunc{helpers.RequireConnectedMember(helpers.BotAdminRequired)},
+	}, pipelineHandler(antifloodModule.flood))
+	dispatcher.AddHandlerToGroup(handlers.NewMessage(message.All, antifloodModule.checkFlood), antifloodModule.handlerGroup)
+}

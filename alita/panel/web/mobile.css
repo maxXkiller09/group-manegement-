@@ -1,0 +1,103 @@
+/*
+ * Mobile-first refinements for Telegram's embedded WebView.
+ * Keep the existing desktop/tablet layout; tighten only narrow screens and
+ * make touch targets, safe areas and long content reliable on phones.
+ */
+
+button,
+.nav-row,
+.import-box summary,
+.collection-note summary {
+  touch-action: manipulation;
+}
+
+button {
+  min-height: 44px;
+}
+
+.list-row button,
+.warn-user > button {
+  min-height: 44px;
+}
+
+@media (max-width: 380px) {
+  body {
+    padding-inline: max(12px, env(safe-area-inset-left))
+      max(12px, env(safe-area-inset-right));
+  }
+
+  .title {
+    font-size: 23px;
+  }
+
+  .overview-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .setting-head {
+    align-items: flex-start;
+  }
+
+  .setting-value {
+    max-width: 100%;
+  }
+
+  .setting-row:not(.stacked) .setting-head {
+    flex-wrap: wrap;
+  }
+
+  .list-controls > *,
+  .timeline-filters > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .save-bar {
+    flex-wrap: wrap;
+  }
+
+  .save-bar button {
+    flex: 1 1 9rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .overview-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .event-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .event-row .event-time {
+    grid-column: 1;
+  }
+
+  .nav-row,
+  .info-row,
+  .list-row {
+    padding-inline: 12px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  body {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .header {
+    margin-bottom: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

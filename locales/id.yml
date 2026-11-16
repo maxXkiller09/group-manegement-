@@ -1,0 +1,3231 @@
+language_flag: "🇮🇩"
+language_name: "Bahasa Indonesia"
+admin_adminlist: "Admin di <b>%s</b>:"
+admin_anon_admin_already_disabled: Mode AnonAdmin sudah <b>dinonaktifkan</b> untuk %s
+admin_anon_admin_already_enabled: Mode AnonAdmin sudah <b>diaktifkan</b> untuk %s
+admin_anon_admin_disabled: "Mode AnonAdmin saat ini <b>dinonaktifkan</b> untuk %s.
+
+  Ini memerlukan admin anonim untuk menekan tombol untuk mengonfirmasi izin mereka."
+admin_anon_admin_disabled_now: "Mode AnonAdmin sekarang <b>dinonaktifkan</b> untuk %s.
+
+  Mulai sekarang, admin anonim harus menekan tombol untuk mengonfirmasi izin mereka."
+admin_anon_admin_enabled: "Mode AnonAdmin saat ini <b>diaktifkan</b> untuk %s.
+
+  Ini memungkinkan semua admin anonim untuk melakukan tindakan admin tanpa batasan."
+admin_anon_admin_enabled_now: "Mode AnonAdmin sekarang <b>diaktifkan</b> untuk %s.
+
+  Mulai sekarang, admin anonim dapat menjalankan perintah admin tanpa konfirmasi dengan tombol."
+admin_anon_admin_invalid_arg:
+  "Argumen tidak valid, saya hanya mengerti <code>on</code>,
+  <code>off</code>, <code>yes</code>, <code>no</code>"
+admin_demote_not_admin: |
+  Orang ini bukan admin, bagaimana saya bisa menurunkannya?
+admin_demote_is_bot_itself: Saya tidak akan menurunkan diri saya sendiri.
+admin_demote_is_owner: Orang ini membuat obrolan ini, bagaimana saya bisa menurunkannya?
+admin_demote_success_demote: Berhasil menurunkan %s!
+admin_errors_err_cannot_demote:
+  "Gagal menurunkan; mungkin saya bukan admin, atau mereka
+  mungkin dipromosikan oleh admin lain."
+admin_errors_err_cannot_promote:
+  "Gagal mempromosikan; mungkin saya bukan admin, atau mereka
+  mungkin dipromosikan oleh admin lain."
+admin_errors_err_set_title:
+  "Gagal mengatur judul admin khusus; Judul mungkin tidak
+  benar atau mungkin mengandung emoji."
+admin_errors_title_empty: Anda perlu memberikan judul admin untuk mengaturnya.
+admin_errors_admin_cache_failed: "Saya kesulitan mengakses daftar admin. Silakan coba lagi nanti."
+admin_help_msg: "Jadikan mudah untuk mempromosikan dan menurunkan pengguna dengan modul admin!
+
+
+  *Perintah Pengguna:*
+
+  × /adminlist: Daftar admin di obrolan saat ini.
+
+
+  *Perintah Admin:*
+
+  × /promote `<reply/username/mention/userid>` `[title]`: Promosikan pengguna, opsional dengan judul admin khusus (maks. 16 karakter).
+
+  × /demote `<reply/username/mention/userid>`: Turunkan pengguna.
+
+  × /title `<reply/username/mention/userid>` `<judul khusus>`: Atur judul khusus untuk
+  pengguna
+
+  × /setgtitle <judul>: Ubah judul grup.
+
+  × /setgpic: Balas sebuah foto untuk menjadikannya gambar grup.
+
+  × /setgdesc [teks]: Ubah deskripsi grup.
+
+  × /invitelink: Dapatkan tautan undangan obrolan.
+
+  × /anonadmin `<on/off>`: on mengizinkan admin anonim bertindak tanpa konfirmasi; off (default) mewajibkan mereka mengonfirmasi dengan tombol (hanya pemilik grup).
+
+  × /admincache: Muat ulang daftar admin.
+
+  × /clearadmincache: Hapus daftar admin yang tersimpan di cache.
+
+  × /timezone `[nama]`: Tampilkan atau atur zona waktu chat sebagai nama IANA, misalnya Asia/Kolkata (bawaan UTC).
+
+  × /ephemeral `<on/off>`: on menampilkan apa yang biasanya saya kirim ke PM (aturan privat, catatan privat, tombol /help) hanya kepada anggota yang meminta, di grup; off (bawaan) tetap memakai tombol ke PM. Saya harus menjadi admin."
+admin_promote_admin_title_truncated: Judul admin dipotong menjadi 16 karakter dari %d
+admin_promote_is_admin: Orang ini sudah menjadi admin, bagaimana saya bisa mempromosikannya?
+admin_promote_is_bot_itself: Kalau saja saya bisa melakukan ini pada diri saya sendiri ;_;
+admin_promote_is_owner: Orang ini membuat obrolan ini, bagaimana saya bisa mempromosikannya?
+admin_promote_success_promote: Berhasil mempromosikan %s!
+admin_title_is_admin: "Orang ini bukan admin, jadi saya tidak bisa mengatur judul admin khusus untuk mereka. Promosikan dulu."
+admin_title_is_bot_itself: Kalau saja saya bisa melakukan ini pada diri saya sendiri ;_;
+admin_title_is_owner:
+  "Orang ini membuat obrolan ini, bagaimana saya bisa mengatur
+  judul admin untuk mereka?"
+admin_title_success_set: Berhasil mengatur judul admin %s menjadi <b>%s</b>
+admin_title_truncated: "\nCatatan: Judul admin dipotong menjadi 16 karakter dari %d"
+admin_cache_cleared: Berhasil menghapus cache admin.
+admin_no_visible_admins: "\nTidak ada admin yang terlihat (semua adalah bot atau anonim)."
+admin_anon_admin_db_error: Gagal memperbarui pengaturan admin anonim. Silakan coba lagi.
+antiflood_checkflood_perform_action:
+  "Ya, saya tidak suka spam Anda. %s telah
+  %s!"
+antiflood_errors_expected_args:
+  "Saya mengharapkan beberapa argumen! Entah off, atau bilangan bulat.
+  misal: <code>/setflood 5</code>, atau <code>/setflood off</code>"
+antiflood_errors_invalid_int:
+  "Itu bukan bilangan bulat yang valid. Berikan bilangan bulat yang valid,
+  atau <code>off</code>."
+antiflood_errors_set_in_limit: Batas antiflood harus diatur antara 3 dan 100.
+antiflood_flood_deleter_already_disabled: "Penghapusan pesan Antiflood saat ini *dinonaktifkan* di obrolan ini. Hanya pesan yang memicu antiflood yang akan dihapus; pesan flood sebelumnya tetap ada."
+antiflood_flood_deleter_already_enabled:
+  "Penghapusan pesan Antiflood saat ini *diaktifkan*
+  di obrolan ini, pesan yang menyebabkan antiflood akan dihapus!"
+antiflood_flood_deleter_disabled: "Menonaktifkan Penghapusan Pesan Antiflood. Hanya pesan yang memicu antiflood yang akan dihapus; pesan flood sebelumnya tetap ada."
+antiflood_flood_deleter_enabled:
+  "Mengaktifkan Penghapusan Pesan Antiflood. Pesan yang menyebabkan
+  antiflood akan dihapus!"
+antiflood_flood_deleter_invalid_option: "Saya hanya mengerti opsi dari: `yes`/`no`/`on`/`off`"
+antiflood_flood_disabled: Obrolan ini saat ini tidak menegakkan kontrol flood.
+antiflood_flood_show_settings:
+  "Obrolan ini saat ini menegakkan kontrol flood setelah
+  %d pesan. Pengguna yang mengirim lebih dari jumlah itu akan %s."
+antiflood_help_msg:
+  "Tahukah Anda bagaimana terkadang, orang bergabung, mengirim 100 pesan, dan merusak
+  obrolan Anda? Dengan antiflood, itu tidak terjadi lagi!
+
+
+  Antiflood memungkinkan Anda mengambil tindakan pada pengguna yang mengirim lebih dari x pesan tanpa jeda lebih dari 60 detik di antaranya (pesan anggota lain tidak mereset hitungan). Tindakannya: ban/kick/mute/tban/tmute
+
+
+  *Perintah Pengguna*:
+
+  × /flood: Dapatkan pengaturan antiflood saat ini.
+
+
+  *Perintah Admin*:
+
+  × /setflood `<number/off/no>`: Atur jumlah pesan setelah itu untuk mengambil tindakan
+  pada pengguna. Atur ke '0', 'off', atau 'no' untuk menonaktifkan.
+
+  × /setfloodmode `<ban/kick/mute/tban/tmute> [durasi]`: Pilih tindakan terhadap pengguna yang melakukan
+  flood. Durasi wajib diberikan untuk tban/tmute, misalnya `/setfloodmode tban 1d` atau `/setfloodmode tmute 10m`.
+
+  × /delflood `<yes/no/on/off>`: Jika Anda ingin bot menghapus pesan yang diflood oleh pengguna."
+antiflood_setflood_disabled: "Oke.
+
+  Saya tidak akan memperingatkan pengguna karena flooding."
+antiflood_setflood_success: Batas Flood telah diatur ke <b>%d</b> pesan.
+antiflood_setfloodmode_specify_action:
+  "Tentukan tindakan yang akan diambil saat
+  flood. Gunakan ban/kick/mute, atau tban/tmute dengan durasi (misalnya tban 1d atau tmute 10m)."
+antiflood_setfloodmode_success: Mode flood telah diatur ke %s.
+antiflood_mode_tban: "Mode flood diatur ke tban selama %s."
+antiflood_mode_tmute: "Mode flood diatur ke tmute selama %s."
+antiflood_setfloodmode_unknown_type: "Tipe tidak dikenal '%s'. Gunakan ban/kick/mute, atau tban/tmute dengan durasi (misalnya tban 1d atau tmute 10m)."
+bans_ban_ban_reason: <b>Alasan:</b> %s
+bans_ban_dban_no_reply: Anda perlu membalas pesan untuk menghapusnya dan melarang pengguna!
+bans_ban_is_admin: Mengapa saya melarang admin? Itu terdengar seperti ide yang sangat bodoh.
+bans_ban_is_bot_itself: Apakah Anda benar-benar berpikir saya akan melarang diri saya sendiri?
+bans_ban_normal_ban: "Satu lagi yang tersingkir...!
+
+  Diblokir %s."
+bans_ban_tban: Diblokir %s untuk %s
+bans_help_msg:
+  "Terkadang pengguna bisa mengganggu dan Anda mungkin ingin menghapus mereka
+  dari obrolan Anda, modul ini tepat membantu Anda untuk menangani itu!.
+
+  Blokir/tendang pengguna dari obrolan Anda, dan buka blokir mereka nanti jika mereka berperilaku baik.
+
+
+  *Perintah Pengguna:*
+
+  × /kickme: menendang pengguna yang mengirim perintah.
+
+  × /banme: melarang pengguna yang mengirim perintah.
+
+
+  *Perintah Blokir* (Admin saja):
+
+  × /ban <userhandle>: melarang pengguna. (melalui handle, atau balasan)
+
+  × /sban <userhandle>: melarang pengguna secara diam-diam, tidak mengirim pesan ke grup dan juga
+  menghapus perintah Anda. (melalui handle, atau balasan)
+
+  × /kick <userhandle>: menendang pengguna. (melalui handle, atau balasan)
+
+  × /skick <userhandle>: menendang pengguna secara diam-diam dan menghapus perintah Anda.
+
+  × /dkick: menendang pengguna dan menghapus pesan yang dibalas. (hanya balasan)
+
+  × /dban: melarang pengguna dan menghapus pesan yang dibalas. (hanya balasan)
+
+  × /tban <userhandle> x(m/h/d/w): melarang pengguna untuk waktu `x`. (melalui handle, atau balasan).
+  m = menit, h = jam, d = hari, w = minggu.
+
+  × /unban <userhandle>: membuka blokir pengguna. (melalui handle, atau balasan)
+
+  × /unbanall: konfirmasi khusus pemilik untuk membuka blokir pengguna yang dikenal.
+
+  × /baninfo <userhandle>: menampilkan ban yang saya catat untuk pengguna: siapa yang memban, kapan, mengapa, apa penyebabnya, dan sampai kapan. (melalui handle, atau balasan)
+
+  × /banlist [pencarian]: menampilkan ban yang saya catat dan masih berlaku, dari yang terbaru, 10 per halaman. Pencarian hanya menyisakan pengguna yang ID, username, atau namanya cocok.
+
+
+  *Perintah Pembatasan:* (Admin saja)
+
+  × /restrict: Menampilkan InlineKeyboard untuk memilih opsi dari kick, ban dan mute
+
+  × /unrestrict: Menampilkan InlineKeyboard untuk memilih opsi dari unmute dan unban."
+bans_kick_cannot_kick_admin:
+  "Mengapa saya menendang admin? Itu terdengar seperti ide yang sangat
+  bodoh."
+bans_kick_is_bot_itself: Mengapa saya menendang diri saya sendiri?
+bans_kick_kicked_reason: <b>Alasan:</b> %s
+bans_kick_kicked_user: Berhasil Menendang %s.
+bans_kick_user_not_in_chat:
+  "Pengguna ini tidak ada di obrolan ini, bagaimana saya bisa
+  membatasi mereka?"
+bans_kickme_is_admin: Anda adalah admin, dan Anda terjebak di sini bersama orang lain!
+bans_kickme_ok_out: Sesuai keinginan Anda, Keluar!
+bans_unban_is_bot_itself: Mengapa saya membuka pembatasan diri saya sendiri ketika saya sudah di sini?
+bans_unban_unbanned_user: "Mari berikan dia kesempatan lain.
+
+  Membuka blokir %s!"
+blacklists_bl_watcher_banned_user: Diblokir %s karena %s
+blacklists_bl_watcher_kicked_user: Ditendang %s karena %s
+blacklists_bl_watcher_muted_user: Dibisukan %s karena %s
+blacklists_bl_watcher_tbanned_user: Diblokir %s selama %s karena %s
+blacklists_bl_watcher_tmuted_user: Dibisukan %s selama %s karena %s
+blacklists_blacklist_added_bl: "Kata-kata ini ditambahkan sebagai daftar hitam:"
+blacklists_blacklist_already_blacklisted: "Kata-kata ini sudah ada di daftar hitam:"
+blacklists_blacklist_give_bl_word: Berikan saya kata untuk ditambahkan ke daftar hitam!
+blacklists_blacklist_word_too_long: "Kata-kata ini terlalu panjang (maks 100 karakter): %s"
+blacklists_help_msg: "*Perintah Pengguna:*
+
+  × /blacklists: Periksa semua daftar hitam di obrolan.
+
+
+  *Perintah Admin:*
+
+  × /addblacklist `<trigger>`: Menambahkan kata ke daftar hitam di obrolan saat ini.
+
+  × /rmblacklist `<trigger>`: Menghapus kata dari Kata-kata yang Didaftar Hitam di Obrolan saat ini.
+
+  × /blaction `<mute/kick/ban/warn/none/tban/tmute> [durasi]`: Atur tindakan saat kata dalam daftar hitam
+  terdeteksi. Durasi wajib diberikan untuk tban/tmute, misalnya `/blaction tban 1d` atau `/blaction tmute 2h`.
+
+  × /blacklistaction: Sama seperti di atas
+
+
+  *Khusus Pemilik:*
+
+  × /remallbl: Menghapus semua kata yang didaftar hitam dari obrolan
+
+
+  *Catatan:*
+
+  Mode default untuk Daftar Hitam adalah *warn*, yang akan menghapus pesan dan memberi
+  peringatan kepada pengguna."
+blacklists_ls_bl_list_bl: "Kata-kata ini didaftar hitam di obrolan ini:"
+blacklists_ls_bl_no_blacklisted: Tidak ada kata yang didaftar hitam di obrolan ini.
+blacklists_rm_all_bl_ask:
+  "Apakah Anda yakin ingin menghapus semua kata yang didaftar hitam dari
+  obrolan ini?"
+blacklists_rm_all_bl_button_handler_no:
+  "Dibatalkan menghapus semua Daftar Hitam dari Obrolan Ini
+  ❌"
+blacklists_rm_all_bl_button_handler_yes: Menghapus semua Daftar Hitam dari Obrolan Ini ✅
+blacklists_set_bl_action_changed_mode: "Berhasil mengubah mode daftar hitam ke: *%s*"
+blist_action_tban: "Mode daftar hitam berhasil diubah ke tban selama %s."
+blist_action_tmute: "Mode daftar hitam berhasil diubah ke tmute selama %s."
+blacklists_set_bl_action_choose_correct_option: "Pilih mute/kick/ban/warn/none, atau tban/tmute dengan durasi (misalnya tban 1d atau tmute 2h)."
+blacklists_set_bl_action_current_mode:
+  "Mode daftar hitam saat ini untuk obrolan ini adalah:
+  %s"
+blacklists_unblacklist_give_bl_word: Berikan saya kata untuk menghapusnya dari daftar hitam!
+blacklists_unblacklist_no_removed_bl:
+  "Tidak ada dari kata-kata yang diberikan ada di daftar hitam
+  yang dapat dihapus!"
+blacklists_unblacklist_removed_bl: |
+  Berhasil menghapus '%s' dari kata-kata yang didaftar hitam!
+captcha_help_msg:
+  "Lindungi grup Anda dari bot dan spammer dengan verifikasi CAPTCHA!
+
+
+  Paksa anggota baru untuk membuktikan mereka manusia dengan menyelesaikan tantangan sederhana sebelum mereka
+  dapat mengirim pesan.
+
+
+  *Tipe Captcha:*
+
+  × Matematika: Selesaikan masalah aritmatika sederhana
+
+  × Teks: Identifikasi teks yang ditampilkan dalam gambar
+
+
+  *Perintah Admin:*
+
+  × /captcha `<on/off>`: Aktifkan atau nonaktifkan verifikasi captcha
+
+  × /captchajoin `<on/off>`: Verifikasi permintaan bergabung melalui pesan pribadi (nonaktif secara default; tanpa argumen menampilkan status).
+  Terpisah dari /captcha, dengan batas waktu maksimal 5 menit.
+
+  × /captchamode `<math/text>`: Atur tipe captcha (masalah matematika atau pengenalan teks)
+
+  × /captchatime `<1-10>`: Atur batas waktu dalam menit (default: 2)
+
+  × /captchaaction `<kick/ban/mute>`: Atur tindakan untuk verifikasi gagal (default:
+  kick)
+
+  × /captchamaxattempts `<1-10>`: Atur maksimum percobaan verifikasi (default: 3)
+
+  × /captchapending `<@user/user_id>`: Tampilkan pesan yang disimpan dari pengguna yang tertunda.
+
+  × /captchaclear `<@user/user_id>`: Hapus pesan yang disimpan dari pengguna yang tertunda.
+
+
+  Ketika diaktifkan, anggota baru akan dibisukan secara otomatis sampai mereka menyelesaikan captcha.
+
+  Jika mereka gagal atau batas waktu habis, tindakan yang dikonfigurasi akan diambil."
+commonstrings_admin_cache_cache_reloaded: Berhasil memuat ulang cache admin.
+connections_allow_connect_currently_off:
+  "Koneksi pengguna saat ini <b>nonaktif</b>.
+
+  Pengguna tidak dapat menghubungkan obrolan ini ke PM mereka!"
+connections_allow_connect_currently_on:
+  "Koneksi pengguna saat ini <b>aktif</b>.
+
+  Pengguna dapat menghubungkan obrolan ini ke PM mereka!"
+connections_allow_connect_turned_off:
+  "Menonaktifkan <b>koneksi pengguna</b> ke
+  obrolan ini!
+
+  Pengguna tidak dapat menghubungkan obrolan ke PM mereka!"
+connections_allow_connect_turned_on:
+  "Mengaktifkan <b>koneksi pengguna</b> ke obrolan ini!
+
+  Pengguna sekarang dapat menghubungkan obrolan ke PM mereka!"
+connections_connect_connected: Anda sekarang terhubung ke <b>%s</b>!
+connections_connect_not_member: "Anda harus menjadi anggota obrolan ini untuk terhubung ke sana."
+connections_connect_connection_disabled:
+  "Koneksi pengguna saat ini <b>dinonaktifkan</b>
+  ke obrolan ini.
+
+  Silakan minta admin untuk mengizinkan jika Anda ingin terhubung!"
+connections_connect_tap_btn_connect:
+  "Silakan tekan tombol di bawah untuk menghubungkan obrolan ini
+  ke PM Anda."
+connections_connected: Anda saat ini terhubung ke <b>%s</b>!
+connections_connections_btns_admin_conn_cmds: Perintah Admin yang Tersedia
+connections_connections_btns_user_conn_cmds: Perintah Pengguna yang Tersedia
+connections_disconnect_disconnected: |
+  Berhasil memutuskan dari obrolan yang terhubung.
+connections_disconnect_need_pm:
+  "Anda perlu mengirim ini di PM ke saya untuk memutuskan dari
+  obrolan!"
+connections_help_msg:
+  "Modul ini memungkinkan Anda untuk terhubung ke database obrolan, dan
+  menambahkan sesuatu ke sana tanpa obrolan mengetahuinya! Untuk alasan yang jelas, Anda perlu
+  menjadi admin untuk menambahkan sesuatu; tetapi anggota mana pun dapat melihat data Anda. (pengguna yang dilarang/ditendang tidak bisa!)
+
+
+  *Perintah*:
+
+  × /connect `<chatid>`: Terhubung ke obrolan yang ditentukan, memungkinkan Anda untuk melihat/mengedit
+  konten.
+
+  × /disconnect: Memutuskan dari obrolan saat ini.
+
+  × /reconnect: Menghubungkan kembali ke obrolan yang terhubung sebelumnya
+
+  × /connection: Melihat informasi tentang obrolan yang saat ini terhubung.
+
+  × /settings: Pilih grup tempat Anda menjadi admin dan lihat semua pengaturannya; nilai yang berbeda dari bawaan ditandai dengan •. Hanya grup tempat Anda menulis sejak saya bergabung yang ditampilkan; untuk yang lain gunakan /connect `<chatid>` atau kirim /settings di grup.
+
+
+  *Perintah Admin:*
+
+  × /allowconnect <yes/no>: Izinkan pengguna untuk terhubung ke obrolan atau tidak.
+
+  Saat terhubung, admin juga dapat menjalankan /captcha, /antiraid, /aispam, /anonadmin, /addreaction, /allowconnect dan /lang group dari obrolan pribadi.
+
+  Di obrolan pribadi, /rules, /notes, /filters, dan banyak perintah pengaturan, seperti /lock, /setflood, /setwelcome, dan /setwarnlimit, menerima grup sebagai argumen pertama: ID-nya, @username-nya, atau judul grup tempat Anda menjadi admin. Judul hanya dicari di antara grup yang terhubung dan 50 grup yang paling baru aktif tempat Anda pernah menulis; sebut grup lain dengan @username atau ID-nya.
+
+  Dari obrolan pribadi, pemilik grup juga dapat menjalankan /clearall, /stopall, /remallbl, /unapproveall, /resetallwarns dan /unbanall, dan adminnya /privnote: sebutkan grupnya dulu (judul, @username, atau ID-nya) atau hubungkan ke grup itu. Konfirmasi berlaku untuk grup itu dan hanya pemiliknya yang dapat menekannya.
+
+  Dari obrolan pribadi, admin grup juga dapat menjalankan /adminlist, /invitelink, /setgtitle, /setgdesc, /timezone, /admincache dan /clearadmincache: sebutkan grupnya dulu (judul, @username, atau ID-nya) atau hubungkan ke grup itu. Hak yang diperlukan sama seperti di grup, dan jawabannya dikirim ke obrolan pribadi.
+
+  Dari obrolan pribadi, admin grup juga dapat menjalankan /ban, /sban, /tban, /unban, /baninfo, /banlist, /kick, /skick, /restrict, /unrestrict, /mute, /smute, /tmute, /unmute, /warn, /swarn, /rmwarn dan /resetwarns: sebutkan grupnya dulu (judul, @username, atau ID-nya), lalu penggunanya (@username, ID, atau mention), atau hubungkan ke grup itu. Saat terhubung, grup lain hanya dapat dipilih dengan @username atau ID. Hak yang diperlukan sama seperti di grup; membalas pesan di obrolan pribadi tidak menunjuk pengguna, dan jawaban serta tombolnya dikirim ke obrolan pribadi.
+
+  Dari obrolan pribadi, anggota grup juga dapat melihat peringatan seorang pengguna di grup itu dengan /warns jika grup mengizinkan anggota terhubung (/allowconnect; jika tidak, hanya adminnya), dan adminnya melihat pengaturan peringatan grup dengan /warnings: sebutkan grupnya dulu (@username atau ID-nya; adminnya juga dapat memakai judulnya), lalu untuk /warns penggunanya, atau hubungkan ke grup itu. Jawabannya dikirim ke obrolan pribadi.
+
+
+  Anda dapat mengambil id obrolan dengan menggunakan perintah /id di obrolan Anda. Jangan terkejut
+  jika id negatif; semua grup super memiliki id negatif."
+connections_is_user_connected_bot_not_admin: Saya bukan admin di obrolan ini!
+connections_is_user_connected_need_group:
+  "Perintah ini dibuat untuk digunakan di grup
+  obrolan, bukan di PM!"
+connections_is_user_connected_user_not_admin: Anda perlu menjadi admin untuk melakukan ini.
+connections_not_connected: Anda tidak terhubung ke obrolan mana pun.
+connections_pm_group_plain_text: "Saya tidak bisa membaca grup dari pesan berformat. Kirim <code>/%s</code> beserta grupnya sebagai pesan teks biasa."
+connections_pm_group_duplicate: "Beberapa grup Anda bernama <code>%s</code>. Sebutkan yang Anda maksud dengan @username atau ID-nya:"
+connections_pm_group_too_many: "Terlalu banyak grup bernama <code>%s</code> untuk diperiksa semuanya. Sebutkan yang Anda maksud dengan @username atau ID-nya (kirim /id di grup)."
+connections_pm_group_not_found: "Saya tidak menemukan grup <code>%s</code>. Sebutkan judul grup tempat Anda admin, @username, atau ID-nya (kirim /id di grup)."
+connections_pm_group_pick: "Dari PM, sebutkan grup terlebih dahulu: judul grup tempat Anda admin (dalam tanda kutip jika ada spasi), @username, atau ID-nya."
+connections_pm_group_your_groups: "Grup Anda:"
+connections_pm_group_confirm_target: "Grup: {title} ({id})"
+connections_stale_connection: "Koneksi Anda sudah tidak valid - saya tidak dapat lagi mengakses obrolan ini. Silakan gunakan /connect untuk terhubung kembali ke obrolan yang valid."
+connections_reconnect_need_pm: Anda perlu berada di PM dengan saya untuk menghubungkan kembali ke obrolan!
+connections_reconnect_no_last_chat: Anda tidak memiliki obrolan terakhir untuk dihubungkan kembali!
+connections_reconnect_reconnected: Anda sekarang terhubung kembali ke <b>%s</b>!!
+disabling_help_msg:
+  "Modul ini memungkinkan Anda untuk menonaktifkan beberapa perintah yang umum digunakan,
+  Jadi, tidak ada yang bisa menggunakannya. Ini juga akan memungkinkan Anda untuk menghapusnya secara otomatis, menghentikan orang
+  dari blue texting.
+
+
+  *Perintah Pengguna*:
+
+  × /disableable: Daftar semua perintah yang dapat dinonaktifkan.
+
+  × /disabled: Daftar perintah yang dinonaktifkan di obrolan ini.
+
+
+  *Perintah Admin*:
+
+  × /disable `<commandname>`: Hentikan pengguna dari menggunakan commandname di grup ini.
+
+  × /enable `<commandname>`: Izinkan pengguna menggunakan commandname lagi di grup ini.
+
+  × /disabledel `<yes/no/on/off>`: Hapus perintah yang dinonaktifkan ketika digunakan oleh non-admin.
+
+
+  Catatan:
+
+  Ketika menonaktifkan perintah, perintah hanya dinonaktifkan untuk non-admin. Semua admin
+  masih dapat menggunakan perintah tersebut.
+
+  Perintah yang dinonaktifkan masih dapat diakses melalui fitur /connect. Jika Anda ingin
+  melihat ini dinonaktifkan juga, beri tahu saya di obrolan dukungan."
+devs_help_msg:
+  "Perintah manajemen bot dan diagnostik yang dibatasi untuk pemilik bot dan
+  pengembang tepercaya. Perintah ini tidak ditampilkan kepada pengguna biasa.
+
+  *Perintah Tim:*
+
+  × /teamusers: Daftar semua anggota tim.
+
+  *Perintah Pemilik:*
+
+  × /addsudo: Berikan izin sudo kepada pengguna.
+
+  × /adddev: Berikan izin pengembang kepada pengguna.
+
+  × /remsudo: Cabut izin sudo dari pengguna.
+
+  × /remdev: Cabut izin pengembang dari pengguna.
+
+  *Perintah Diagnostik:*
+
+  × /stats: Menampilkan statistik bot dan info sistem.
+
+  × /chatinfo: Menampilkan informasi terperinci tentang chat.
+
+  × /chatlist: Hasilkan dan kirim daftar semua chat aktif.
+
+  × /leavechat: Paksa bot untuk meninggalkan chat yang ditentukan."
+filters_help_msg:
+  "Filter tidak peka huruf besar/kecil; setiap kali seseorang mengucapkan kata pemicu
+  Anda, NexGuard akan membalas sesuatu yang lain! Ini dapat digunakan untuk membuat perintah Anda
+  sendiri, jika diinginkan.
+
+
+  Perintah:
+
+  - /filter <trigger> <reply>: Setiap kali seseorang mengatakan trigger, bot akan membalas
+  dengan kalimat. Untuk filter multi-kata, apit trigger dengan tanda kutip.
+
+  - /filters: Daftar semua filter obrolan.
+
+  - /stop <trigger>: Hentikan bot membalas ke trigger.
+
+  - /stopall: Hentikan SEMUA filter di obrolan saat ini. Tindakan ini tidak dapat dibatalkan.
+
+
+  Contoh:
+
+  - Atur filter:
+
+  -> /filter halo Halo! Bagaimana kabar Anda?
+
+  - Atur filter multi-kata:
+
+  -> /filter \"teman saya\" Halo kembali! Lama tidak bertemu!
+
+  - Untuk menyimpan file, gambar, gif, atau lampiran lain, cukup balas ke file
+  dengan:
+
+  -> /filter trigger"
+formatting_fillings: "<b>Isian</b>
+
+
+  Anda juga dapat menyesuaikan konten pesan Anda dengan data kontekstual. Misalnya,
+  Anda bisa menyebut pengguna dengan nama di pesan selamat datang, atau menyebut mereka di filter!
+
+  Anda dapat menggunakan ini untuk menyebut pengguna di catatan juga!
+
+
+  <b>Isian yang didukung:</b>
+
+  - <code>{first}</code>: Nama depan pengguna.
+
+  - <code>{last}</code>: Nama belakang pengguna.
+
+  - <code>{fullname}</code>: Nama lengkap pengguna.
+
+  - <code>{username}</code>: Nama pengguna pengguna. Jika mereka tidak memilikinya, menyebut
+  pengguna sebagai gantinya.
+
+  - <code>{mention}</code>: Sama seperti <code>{username}</code> (@username pengguna, atau sebutan dengan nama depan jika tidak punya).
+
+  - <code>{id}</code>: ID pengguna.
+
+  - <code>{chatname}</code>: Nama obrolan.
+
+  - <code>{count}</code>: Jumlah anggota obrolan.
+
+  - <code>{rules}</code>: Menambahkan tombol Aturan di bawah tombol lain pada pesan (hanya jika obrolan memiliki aturan). Gunakan <code>{rules:same}</code> untuk menaruhnya di baris yang sama dengan tombol sebelumnya, atau <code>{rules:up}</code> untuk menaruhnya sebelum semua tombol lain.
+
+  - <code>{protect}</code>: Melindungi konten dari dibagikan (hanya catatan).
+
+  - <code>{preview}</code>: Mengaktifkan pratinjau tautan (hanya catatan).
+
+  - <code>{nonotif}</code>: Menonaktifkan notifikasi untuk pesan itu (hanya catatan)."
+formatting_help_msg: "NexGuard mendukung banyak opsi pemformatan untuk membuat pesan Anda lebih ekspresif. Lihat dengan mengklik tombol di bawah!
+
+  *Perintah pengguna*:
+
+  × /markdownhelp: Tampilkan panduan pemformatan. Di grup, bot membalas dengan tombol yang membuka panduan di PM.
+
+  × /formatting: Sama seperti /markdownhelp."
+formatting_markdown: |
+  <b>Pemformatan Markdown</b>
+
+  Anda dapat memformat pesan Anda menggunakan <b>tebal</b>, <i>miring</i>, <u>garis bawah</u>,
+  dan banyak lagi. Ayo coba!
+
+  <b>Markdown yang didukung</b>:
+
+  - <code>`kode kata`</code>: Tanda backtick digunakan untuk font monospace. Menampilkan sebagai: <code>kode kata</code>.
+
+  - <code>_kata miring_</code>: Garis bawah digunakan untuk font miring. Menampilkan sebagai: <i>kata miring</i>.
+
+  - <code>*kata tebal*</code>: Asterisk digunakan untuk font tebal. Menampilkan sebagai: <b>kata tebal</b>.
+
+  - <code>~coret~</code>: Tilde digunakan untuk coretan. Menampilkan sebagai: <strike>coret</strike>.
+
+  - <code>||spoiler||</code>: Bilah vertikal ganda digunakan untuk spoiler. Menampilkan sebagai: <tg-spoiler>Spoiler</tg-spoiler>.
+
+  - <code>```pre```</code>: Untuk membuat pemformatan mengabaikan karakter pemformatan lain di dalam teks yang diformat dengan '```', akan seperti: <code>**tebal** | *tebal*</code>.
+
+  - <code>__garis bawah__</code>: Garis bawah ganda digunakan untuk garis bawah. Menampilkan sebagai: garis bawah. CATATAN: Beberapa klien mencoba menjadi pintar dan menginterpretasikannya sebagai miring. Dalam kasus itu, coba gunakan pemformatan bawaan aplikasi Anda.
+
+  - <code>[hyperlink](example.com)</code>: Ini adalah pemformatan yang digunakan untuk hyperlink. Menampilkan sebagai: <a href='https://example.com/'>hyperlink</a>.
+
+  - <code>[Tombol Saya](buttonurl://https://example.com)</code>: Ini adalah pemformatan yang digunakan untuk membuat tombol. Contoh ini akan membuat tombol bernama "Tombol saya" yang membuka <code>https://example.com</code> ketika diklik. Tautan harus diawali <code>http://</code> atau <code>https://</code>; jika tidak, tombol tidak akan dibuat.
+
+  Jika Anda ingin mengirim tombol di baris yang sama, gunakan pemformatan <code>:same</code>.
+
+  <b>Contoh:</b>
+
+  <code>[tombol 1](buttonurl:https://example.com)</code>
+
+  <code>[tombol 2](buttonurl://https://example.com:same)</code>
+
+  <code>[tombol 3](buttonurl://https://example.com)</code>
+
+  Ini akan menampilkan tombol 1 dan 2 di baris yang sama, dengan 3 di bawahnya.
+formatting_random: |
+  <b>Konten Acak</b>
+
+  Hal lain yang bisa menyenangkan, adalah mengacak konten pesan. Buat hal-hal
+  sedikit lebih personal dengan mengacak balasan filter atau catatan!
+
+  Cara menggunakan konten acak:
+
+  - %%%: Pemisah ini dapat digunakan untuk menambahkan balasan acak ke bot.
+
+  Misalnya:
+
+  <code>halo
+
+  %%%
+
+  apa kabar</code>
+
+  Ini akan secara acak memilih antara mengirim pesan pertama, "halo", atau pesan kedua,
+  "apa kabar".
+
+  Gunakan ini untuk membuat NexGuard terasa sedikit lebih disesuaikan! (hanya berfungsi di filter/catatan)
+
+  Contoh filter:
+
+  - Setiap kali seseorang mengatakan "halo", bot akan membalas dengan salah satu dari tiga pesan
+  yang ditampilkan di sini.
+
+  -> /filter "halo"
+
+  halo <code>{first}</code>!
+
+  %%%
+
+  Ooooh, <code>{first}</code> apa kabar?
+
+  %%%
+
+  Ada apa? <code>{first}</code>
+greetings_help_msg:
+  "Sambut pengguna baru ke grup Anda atau ucapkan Selamat Tinggal setelah mereka
+  pergi!
+
+
+  *Perintah Admin:*
+
+  × /setwelcome `<reply/text>`: Mengatur teks selamat datang untuk grup.
+
+  × /welcome `<yes/no/on/off/noformat>`: Tanpa argumen, menampilkan pengaturan selamat datang dan pratinjau pesan selamat datang. on/off mengaktifkan atau menonaktifkan pesan selamat datang; noformat menampilkan pesan apa adanya seperti diketik: kode pemformatan, kode tombol, dan placeholder, tanpa dirender.
+
+  × /resetwelcome: Mengatur ulang pesan selamat datang ke default.
+
+  × /setgoodbye `<reply/text>`: Mengatur teks selamat tinggal untuk grup.
+
+  × /goodbye `<yes/no/on/off/noformat>`: Tanpa argumen, menampilkan pengaturan selamat tinggal dan pratinjau pesan selamat tinggal. on/off mengaktifkan atau menonaktifkan pesan selamat tinggal; noformat menampilkan pesan apa adanya seperti diketik: kode pemformatan, kode tombol, dan placeholder, tanpa dirender.
+
+  × /resetgoodbye: Mengatur ulang pesan selamat tinggal ke default.
+
+  × /cleanservice `<yes/no/on/off>`: Hapus pesan layanan masuk dan keluar, seperti notifikasi 'x bergabung dengan grup'.
+
+  × /cleanwelcome `<yes/no/on/off>`: Hapus pesan selamat datang lama, setiap kali anggota baru
+  bergabung.
+
+  × /cleangoodbye `<yes/no/on/off>`: Hapus pesan selamat tinggal lama, setiap kali anggota keluar.
+
+  × /autoapprove `<yes/no/on/off>`: Setujui permintaan bergabung secara otomatis."
+help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur.
+
+
+  
+
+
+  NexGuard telah online sejak 2020 dan telah melayani ribuan grup dengan ratusan
+  ribu pengguna!
+
+
+  <b>Mengapa NexGuard:</b>
+
+  - Sederhana: Penggunaan mudah dan kompatibel dengan banyak perintah bot.
+
+  - Fitur Lengkap: Banyak fitur yang tidak dimiliki bot manajemen grup lain.
+
+  - Cepat: Tebak apa? Ini tidak dibuat menggunakan Python, kami menggunakan Go
+  sebagai bahasa pemrograman inti kami.
+
+
+  <b>Versi Saat Ini:</b> %s"
+help_configuration_step-1: "Selamat datang di Konfigurasi NexGuard
+
+
+  Hal pertama yang harus dilakukan adalah menambahkan NexGuard 🛡️ ke grup Anda! Untuk melakukan itu, tekan
+  tombol di bawah dan pilih grup Anda, lalu tekan Selesai untuk melanjutkan tutorial."
+help_configuration_step-2: "Ok, bagus!
+
+
+  Sekarang untuk membiarkan saya bekerja dengan benar, Anda perlu menjadikan saya Admin dari Grup Anda!
+
+  Untuk melakukan itu, ikuti langkah-langkah mudah ini:
+
+  ▫️ Pergi ke grup Anda
+
+  ▫️ Tekan Nama Grup
+
+  ▫️ Tekan Modifikasi
+
+  ▫️ Tekan pada Administrator
+
+  ▫️ Tekan Tambah Administrator
+
+  ▫️ Tekan Kaca Pembesar
+
+  ▫️ Cari @%s
+
+  ▫️ Konfirmasi"
+help_configuration_step-3: "Sangat bagus!
+
+
+  Sekarang Bot siap digunakan!
+
+  Semua perintah diawali dengan /
+
+
+  Jika Anda menghadapi kesulitan dalam menyiapkan saya di grup Anda, jangan ragu
+  untuk datang ke NexGuard support.
+
+  Kami akan dengan senang hati membantu Anda."
+help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
+
+  Ketika Anda berdonasi, semua dana masuk ke pengembangan saya yang membuat cepat dan
+  responsif.
+
+  Donasi Anda mungkin juga memberi saya fitur baru, yang tidak dapat saya dapatkan
+  karena keterbatasan server.
+
+  Semua dana akan dimasukkan ke layanan saya seperti database, penyimpanan, dan hosting!
+
+  Anda dapat berdonasi dengan menghubungi pemilik saya di sini: NexGuard team"
+help_help_msg:
+  "Titik masuk utama dan sistem navigasi untuk NexGuard Robot.
+
+  *Perintah Navigasi:*
+
+  × /start: Tampilkan pesan selamat datang dengan menu navigasi.
+
+  × /help: Tampilkan menu bantuan dengan daftar modul; gunakan /help <modul> untuk detail.
+
+  × /about: Tampilkan informasi bot, versi, dan tautan berguna.
+
+  × /donate: Tampilkan informasi donasi untuk mendukung proyek.
+
+  × /extend: Kirim semua perintah dari semua modul dalam satu daftar; di grup, mengirim tombol untuk mendapatkannya di PM."
+languages_help_msg: "Tidak dapat mengubah bahasa bot?
+
+  Ubah dengan mudah menggunakan modul ini!
+
+
+  Ketik saja /lang dan gunakan keyboard inline untuk memilih bahasa untuk diri Anda sendiri atau grup Anda.
+
+  Di obrolan pribadi, admin yang terhubung ke grup dapat menggunakan /lang group untuk mengubah bahasa grup itu.
+
+
+  × /lang: Ubah bahasa bot untuk Anda atau grup.
+
+
+  Anda dapat berkontribusi menerjemahkan melalui repositori NexGuard."
+locks_help_msg: "*Admin saja*:
+
+  × /lock `<tipe> [tipe ...]`: Kunci satu atau lebih tipe kunci (lihat /locktypes).
+
+  × /unlock `<tipe> [tipe ...]`: Buka satu atau lebih tipe kunci.
+
+  × /locks: Lihat Izin Obrolan.
+
+  × /nightmode `<mulai> <selesai> <tipe|all>`: Terapkan juga tipe kunci ini setiap hari dari mulai sampai selesai (HH:MM 24 jam, dalam zona waktu obrolan, lihat /timezone; rentangnya boleh melewati tengah malam). `/nightmode off` mematikannya; /nightmode saja menampilkannya.
+
+
+  *Perintah Pengguna:*
+
+  × /locktypes: Periksa tipe kunci yang tersedia!
+
+
+  Kunci dapat digunakan untuk membatasi pengguna grup.
+
+  Mengunci URL akan menghapus semua pesan dengan URL secara otomatis, mengunci stiker akan menghapus
+  semua stiker, dll.
+
+  Mengunci bot akan menghentikan pengguna yang bukan admin dan tidak disetujui menambahkan bot ke obrolan.
+
+
+  **Contoh:**
+
+  `/lock media`: ini mengunci semua pesan media di obrolan."
+misc_help_msg:
+  "× /info: Dapatkan info pengguna Anda, yang dapat digunakan sebagai balasan atau dengan melewatkan
+  ID Pengguna atau Nama Pengguna.
+
+  × /id [pengguna]: Dapatkan ID Anda, dan ID grup jika digunakan di grup. Berikan username atau ID pengguna, atau balas sebuah pesan, untuk mendapatkan ID pengguna itu (balasan juga menampilkan ID asal terusan, GIF, dan stiker).
+
+  × /ping: Ping Server Telegram!
+
+  × /tr <kode bahasa> <teks>: Terjemahkan teks. Balas sebuah pesan dengan /tr [kode bahasa] untuk menerjemahkannya (ke bahasa Inggris jika kode tidak diberikan).
+
+  × /removebotkeyboard: Menghapus keyboard bot yang macet dari obrolan Anda.
+
+  × /stat: Mendapatkan jumlah total pesan di obrolan.
+
+  × /tell <teks>: (admin, hanya grup) Balas sebuah pesan agar bot mengirim <teks> sebagai balasan untuk pesan itu; pesan perintah Anda akan dihapus.
+
+  × /stickerid: Balas stiker untuk mendapatkan ID file-nya.
+
+  × /zombies: Keluarkan akun terhapus yang dikenal bot (admin).
+
+  × /github <pengguna|pengguna/repo>: Cari pengguna atau repositori GitHub.
+
+  × /wiki <pencarian>: Cari di Wikipedia bahasa Inggris.
+
+  × /ud <istilah>: Cari di Urban Dictionary.
+
+  × /referral: Buat tautan undangan terlacak dan lihat statistik referral (admin, hanya grup).
+
+  × /runs: Sindiran acak.
+  Gunakan perintah modul untuk mengelola komunitas Anda."
+mutes_help_msg:
+  "Terkadang pengguna bisa mengganggu dan Anda mungkin ingin membatasi mereka
+  dari mengirim pesan ke obrolan, modul ini ada di sini untuk membantu, Anda dapat menggunakan modul ini
+  untuk membisukan anggota di grup Anda.
+
+
+  *Perintah Bisu:* (Admin saja)
+
+  × /mute <userhandle>: membisukan pengguna, (melalui handle, atau balasan)
+
+  × /smute <userhandle>: membisukan pengguna secara diam-diam, tidak mengirim pesan ke grup,
+  dan juga menghapus perintah Anda. (melalui handle, atau balasan)
+
+  × /dmute [alasan]: membisukan pengirim pesan yang dibalas dan menghapus pesan tersebut. (hanya balasan)
+
+  × /tmute <userhandle> x(m/h/d/w): membisukan pengguna untuk waktu `x`. (melalui handle, atau balasan).
+  m = menit, h = jam, d = hari, w = minggu.
+
+  × /unmute <userhandle>: membuka bisu pengguna. (melalui handle, atau balasan)"
+notes_help_msg: 'Simpan data untuk pengguna masa depan dengan catatan!
+
+  Catatan bagus untuk menyimpan potongan informasi acak; nomor telepon, gif bagus,
+  gambar lucu - apa saja!
+
+  *Perintah Pengguna:*
+
+  - /get <namacatatan>: Dapatkan catatan.
+
+  - #namacatatan: Sama seperti /get.
+
+  - /notes: Daftar semua catatan di obrolan saat ini.
+
+  - /saved: Sama seperti /notes.
+
+  Perintah Admin:
+
+  - /save /addnote <namacatatan> <teks catatan>: Simpan catatan baru bernama "kata". Membalas pesan
+  akan menyimpan pesan itu. Bahkan berfungsi pada media!
+
+  - /clear /rmnote <namacatatan>: Hapus catatan terkait.
+
+  - /clearall: Hapus SEMUA catatan di obrolan (hanya pemilik obrolan). Ini tidak dapat dibatalkan.
+
+  - /privatenotes /privnote <on/off>: Apakah akan mengirim catatan di PM atau tidak. Akan mengirim pesan dengan
+  tombol yang dapat diklik pengguna untuk mendapatkan catatan di PM. Tanpa argumen, menampilkan pengaturan saat ini.'
+pins_help_msg:
+  "Semua perintah terkait pin dapat ditemukan di sini; jaga obrolan Anda tetap
+  up to date dengan pesan pin sederhana!
+
+
+  *Perintah Pengguna:*
+
+  × /pinned: Dapatkan pesan yang dipin saat ini.
+
+
+  *Perintah Admin:*
+
+  × /pin: Pin pesan yang Anda balas. Tambahkan 'loud', 'notify' atau 'violent' untuk mengirim notifikasi
+  ke anggota grup.
+
+  × /pinned: Mendapatkan pesan yang dipin terbaru di Obrolan Saat Ini.
+
+  × /permapin <teks>: Pin pesan khusus melalui bot. Pesan ini dapat berisi
+  markdown, tombol, dan semua fitur keren lainnya.
+
+  × /unpin: Lepas pin pesan yang dipin saat ini. Jika digunakan sebagai balasan, melepas pin pesan yang dibalas.
+
+  × /unpinall: Melepas pin semua pesan yang dipin.
+
+  × /antichannelpin <yes/no/on/off>: Jangan biarkan telegram memin kanal secara otomatis.
+  Jika tidak ada argumen yang diberikan, tampilkan pengaturan saat ini.
+
+  × /cleanlinked <yes/no/on/off>: Hapus pesan yang dikirim oleh kanal yang terhubung."
+purges_help_msg: "*Admin saja:*
+
+  - /purge <alasan>: menghapus semua pesan antara ini dan pesan yang dibalas. Alasan bersifat opsional dan ditampilkan dalam konfirmasi.
+
+  - /del: menghapus pesan yang Anda balas.
+
+  - /purgefrom: menandai pesan yang dibalas sebagai awal rentang yang akan dihapus (lalu gunakan /purgeto).
+
+  - /purgeto <alasan>: menghapus semua pesan dari tanda /purgefrom sampai pesan yang dibalas. Alasan bersifat opsional dan ditampilkan dalam konfirmasi.
+
+
+  *Contoh*:
+
+  - Hapus semua pesan dari pesan yang dibalas, sampai sekarang.
+
+  -> `/purge`"
+reports_help_msg:
+  "Kita semua orang sibuk yang tidak punya waktu untuk memantau grup kita
+  24/7. Tapi bagaimana Anda bereaksi jika seseorang di grup Anda melakukan spam?
+
+
+  × /report `<reason>`: balas ke pesan untuk melaporkannya ke admin.
+
+  - @admin / @admins: sama seperti /report tetapi bukan perintah.
+
+
+  *Admin Saja:*
+
+  × /reports `<on/off/yes/no/true/false>`: ubah pengaturan laporan, atau lihat status saat ini.
+
+  - Jika dilakukan di PM, mengalihkan status Anda. Ini memerlukan /connect aktif ke grup tempat Anda dan bot sama-sama menjadi admin.
+
+  - Jika di grup, mengalihkan status grup itu.
+
+  × /reports `block` (hanya melalui balasan): Blokir pengguna dari menggunakan /report atau @admin.
+
+  × /reports `unblock` (hanya melalui balasan): Buka blokir pengguna dari menggunakan /report atau @admin.
+
+  × /reports `showblocklist`: Periksa semua pengguna yang diblokir yang tidak dapat menggunakan /report atau
+  @admin.
+
+  × /reports `mute <N>` / `mute off`: bisukan pengguna setelah N (2-20) anggota berbeda memiliki laporan terbuka terhadapnya, sampai admin memutuskan dan paling lama 24 jam. Nonaktif secara default; tidak pernah berlaku untuk admin atau pengguna yang disetujui.
+
+
+  Untuk melaporkan pengguna, cukup balas pesannya dengan @admin atau /report; NexGuard
+  akan kemudian membalas dengan pesan yang menyatakan bahwa admin telah diberitahu.
+
+  Anda HARUS membalas pesan untuk melaporkan pengguna; Anda tidak bisa hanya menggunakan @admin untuk menandai
+  admin tanpa alasan!
+
+
+  *CATATAN:* Tidak satu pun dari ini akan dipicu jika digunakan oleh admin."
+rules_help_msg:
+  "Setiap obrolan bekerja dengan aturan yang berbeda; modul ini akan membantu membuat
+  aturan itu lebih jelas!
+
+  *Perintah Pengguna*:
+
+  × /rules: Periksa aturan obrolan saat ini.
+
+  *Perintah Admin*:
+
+  × /setrules `<teks>`: Atur aturan untuk obrolan ini.
+
+  × /privaterules `<yes/no/on/off>`: Aktifkan/nonaktifkan apakah aturan harus dikirim
+  secara pribadi.
+
+  × /resetrules: Atur ulang aturan obrolan ke default
+
+  × /rulesbtn `<teks khusus>`: Mengatur teks tombol aturan.
+
+  × /resetrulesbutton: Atur ulang teks tombol aturan ke default.
+
+  × /resetrulesbtn: Sama seperti di atas."
+bot_updates_creators_plug: ""
+bot_updates_make_me_admin: "\n\nJadikan saya admin agar semua fitur saya bisa digunakan!"
+warns_help_msg:
+  "Jaga anggota Anda dengan peringatan; hentikan mereka keluar dari
+  kendali!
+
+  Jika Anda mencari peringatan otomatis, baca tentang modul daftar hitam!
+
+
+  *Perintah Pengguna:*
+
+  - /warns [pengguna]: Lihat peringatan Anda atau pengguna lain.
+
+
+  *Perintah Admin:*
+
+  - /warn <alasan>: Peringatkan pengguna.
+
+  - /dwarn <alasan>: Peringatkan pengguna dengan balasan, dan hapus pesan mereka.
+
+  - /swarn <alasan>: Peringatkan pengguna dan hapus pesan perintah Anda; peringatan tetap dikirim.
+
+  - /rmwarn: Hapus peringatan terbaru pengguna.
+
+  - /resetwarns: Atur ulang semua peringatan pengguna ke 0.
+
+  - /resetallwarns: Hapus semua peringatan di obrolan. Semua pengguna kembali ke 0 peringatan. (hanya pembuat)
+
+  - /warnings: Dapatkan pengaturan peringatan obrolan.
+
+  - /setwarnmode <ban/kick/mute/tban/tmute> [time]: Atur mode peringatan obrolan.
+
+  - /setwarntime <time/off>: Atur berapa lama peringatan dihitung, mis. 30d; off menyimpannya selamanya. Peringatan yang diberikan sebelum bot mencatat waktunya tidak pernah kedaluwarsa; /resetwarns menghapusnya.
+
+  - /setwarnlimit <number>: Atur jumlah peringatan sebelum pengguna dihukum.
+
+
+  *Contoh*
+
+  - Peringatkan pengguna.
+
+  -> `/warn @user Karena tidak menaati aturan`"
+users_help_msg:
+  "Pelacak pengguna dan chat latar belakang otomatis. Modul ini tidak memiliki perintah
+  yang terlihat pengguna — modul ini secara diam-diam mencatat setiap pengirim pesan dan chat tempat bot aktif.
+
+  *Apa yang Dilacak:*
+
+  × ID pengguna, nama pengguna, dan nama tampilan untuk setiap pengirim pesan.
+
+  × ID chat dan nama untuk setiap grup tempat bot berada.
+
+  × ID saluran, nama, dan nama pengguna untuk saluran tertaut.
+
+  *Pembatasan Kecepatan:*
+
+  × Data pengguna, chat, dan saluran diperbarui paling sering sekali per jam, atau langsung saat nama, nama pengguna, atau judul chat berubah.
+
+  Modul lain, seperti /info, bergantung pada data yang dikumpulkan oleh modul ini."
+
+# Captcha module strings
+captcha_enable_failed: Gagal mengaktifkan captcha. Silakan coba lagi.
+captcha_disable_failed: Gagal menonaktifkan captcha. Silakan coba lagi.
+captcha_usage: Silakan gunakan <code>/captcha on</code> atau <code>/captcha off</code>
+captcha_mode_specify: "Silakan tentukan mode: <code>math</code> atau <code>text</code>"
+captcha_mode_invalid: Mode tidak valid. Gunakan <code>math</code> atau <code>text</code>
+captcha_mode_failed: Gagal mengatur mode captcha. Silakan coba lagi.
+captcha_timeout_specify: Silakan tentukan batas waktu dalam menit (1-10)
+captcha_timeout_invalid: Batas waktu tidak valid. Silakan gunakan angka antara 1 dan 10.
+captcha_timeout_failed: Gagal mengatur batas waktu. Silakan coba lagi.
+captcha_action_specify: "Silakan tentukan tindakan: <code>kick</code>, <code>ban</code>, atau <code>mute</code>"
+captcha_action_invalid: Tindakan tidak valid. Gunakan <code>kick</code>, <code>ban</code>, atau <code>mute</code>
+captcha_action_failed: Gagal mengatur tindakan kegagalan. Silakan coba lagi.
+captcha_welcome_math_image: |
+  👋 Selamat datang %s!
+
+  Silakan selesaikan masalah yang ditampilkan di gambar dan pilih jawaban yang benar:
+
+  ⏱ Anda punya <b>%d menit</b> untuk menjawab.
+captcha_welcome_text_image: |
+  👋 Selamat datang %s!
+
+  Silakan pilih teks yang ditampilkan di gambar untuk memverifikasi Anda manusia:
+
+  ⏱ Anda punya <b>%d menit</b> untuk menjawab.
+captcha_welcome_math_text: |
+  👋 Selamat datang %s!
+
+  Silakan selesaikan masalah matematika ini untuk memverifikasi Anda manusia:
+
+  <b>%s = ?</b>
+
+  ⏱ Anda punya <b>%d menit</b> untuk menjawab.
+captcha_failed_verify: Gagal memverifikasi. Silakan hubungi admin.
+captcha_wait_refresh: Silakan tunggu beberapa detik sebelum meminta gambar baru.
+captcha_failed_generate: Gagal membuat gambar baru, coba lagi.
+captcha_failed_send: Gagal mengirim gambar captcha baru.
+captcha_invalid_data: Data captcha tidak valid
+captcha_invalid_attempt: ID percobaan tidak valid
+captcha_invalid_user: ID pengguna tidak valid
+captcha_error_processing: Kesalahan memproses jawaban
+captcha_invalid_refresh: Data refresh tidak valid
+
+# Captcha max attempts
+captcha_max_attempts_current: "Maksimum percobaan verifikasi saat ini: <b>%d</b>"
+captcha_max_attempts_invalid: "Nilai tidak valid. Silakan tentukan angka antara 1 dan 10."
+captcha_max_attempts_set: "Maksimum percobaan verifikasi diatur ke <b>%d</b>"
+
+# Help module strings
+help_pm_questions: "Hai :) PM saya jika Anda punya pertanyaan tentang cara menggunakan saya!"
+help_config_private_only: Konfigurasi hanya berfungsi di private
+
+# Rules/helpers module strings
+rules_not_set: Obrolan ini tidak memiliki aturan apa pun!
+rules_for_chat: "Aturan untuk <b>%s</b>:\n\n%s"
+
+# Filters module strings
+filters_invalid: Filter Tidak Valid!
+
+# Warnings module strings
+warns_specify_action: "Anda perlu menentukan tindakan yang akan diambil saat peringatan terlalu banyak. Mode saat ini adalah: ban/kick/mute/tban/tmute"
+
+# Admin module strings
+admin_need_admin: Anda perlu menjadi admin untuk melakukan ini!
+
+# Reports module strings
+reports_reply_to_report: Anda perlu membalas pesan untuk melaporkannya.
+reports_expose_yourself: Anda perlu memperlihatkan diri Anda terlebih dahulu!
+reports_reply_to_block: Anda harus membalas pengguna untuk memblokir mereka.
+reports_reply_to_unblock: Anda harus membalas pengguna untuk membuka blokir mereka.
+
+# Mute module strings
+mute_reply_to_dmute: Anda perlu membalas pesan untuk menghapusnya dan membisukan pengguna!
+
+# Bot updates module strings
+bot_updates_need_admin: Anda perlu menjadi admin untuk melakukan ini!
+
+# Rules module strings
+rules_need_text: "Anda perlu memberikan aturan untuk diatur!\nBalas ke pesan untuk memberikannya dengan perintah."
+
+# Notes module strings
+notes_invalid: Catatan Tidak Valid!
+
+# Misc module strings
+misc_translation_error: Kesalahan membuat permintaan terjemahan!
+
+# Devs module strings
+devs_specify_chat: "Anda harus menentukan ID obrolan."
+
+# Common error messages used across modules
+error_generic: "Terjadi kesalahan. Silakan coba lagi nanti."
+common_anonymous_user_error: Perintah ini tidak dapat digunakan pada pengguna anonim.
+common_cannot_identify_user: Tidak dapat mengidentifikasi pengguna. Perintah ini tidak dapat digunakan oleh kanal.
+command_help_example: "Contoh: {example}"
+common_no_user_specified: Saya tidak tahu siapa yang Anda maksud, Anda perlu menentukan pengguna...!
+common_user_not_in_chat: Pengguna ini tidak ada di obrolan ini, bagaimana saya bisa membatasi mereka?
+common_cannot_target_admin: "Saya tidak dapat melakukan tindakan ini pada admin grup."
+common_cannot_target_self: "Saya tidak dapat melakukan tindakan ini pada diri saya sendiri."
+common_no_reply_to_message: "Anda perlu membalas pesan pengguna untuk melakukan tindakan ini."
+
+# Time units for duration formatting
+common_time_minute: "menit"
+common_time_minutes: "menit"
+common_time_hour: "jam"
+common_time_hours: "jam"
+common_time_day: "hari"
+common_time_days: "hari"
+common_time_week: "minggu"
+common_time_weeks: "minggu"
+
+# Admin module missing strings
+admin_adminlist_note_cached: "\n\nCatatan: Nilai-nilai ini di-cache dan mungkin tidak terbaru"
+admin_adminlist_note_fresh: "\n\nCatatan: Ini adalah nilai-nilai terbaru"
+admin_invitelink_public: "Ini adalah tautan undangan obrolan ini: %s"
+admin_invitelink_private: "Ini adalah tautan undangan obrolan ini: %s"
+
+# Bans module missing strings
+bans_dkick_no_reply: Balas pesan pengguna untuk menghapus dan menendangnya!
+bans_anonymous_ban_user: "Pengguna yang diblokir: %s"
+bans_anonymous_ban_reply_only: Anda hanya dapat memblokir pengguna anonim dengan membalas pesan mereka.
+bans_anonymous_unban_user: "Pengguna yang dibuka blokirnya: %s"
+bans_anonymous_unban_reply_only: Anda hanya dapat membuka blokir pengguna anonim dengan membalas pesan mereka.
+bans_unban_button: Buka Blokir (Khusus Admin)
+bans_restrict_question: Bagaimana saya bisa membatasi pengguna ini?
+bans_restrict_admin_error: Mengapa saya membatasi admin? Itu terdengar seperti ide yang sangat bodoh.
+bans_restrict_self_error: Mengapa saya membatasi diri saya sendiri?
+bans_restrict_kicked: "Admin %s menendang %s dari obrolan ini!"
+bans_restrict_muted: "Admin %s membisukan %s di obrolan!"
+bans_restrict_banned: "Admin %s memblokir %s dari obrolan ini!"
+bans_unrestrict_question: Bagaimana saya bisa membuka pembatasan pengguna ini?
+bans_unrestrict_admin_error: Mengapa saya menendang admin? Itu terdengar seperti ide yang sangat bodoh.
+bans_unrestrict_self_error: Tidak, Anda
+bans_unrestrict_unmuted: "Dibuka bisunya oleh %s!"
+bans_unrestrict_unbanned: "Dibuka blokirnya oleh %s !"
+bans_invalid_callback_data: "Data callback tidak valid."
+bans_invalid_user_id: "ID pengguna tidak valid."
+bans_cannot_identify_user: "Tidak dapat mengidentifikasi pengguna dari pesan yang dibalas."
+
+# Mute module missing strings
+mutes_tmute_message: "Diam...\nDibisukan %s untuk %s"
+mutes_mute_message: "Diam...\nDibisukan %s."
+mutes_reason_suffix: "\n<b>Alasan: </b>%s"
+mutes_unmute_button: Bunyikan (Khusus Admin)
+mutes_mute_admin_error: Mengapa saya membisukan admin? Itu terdengar seperti ide yang sangat bodoh.
+mutes_restrict_self_error: Mengapa saya membatasi diri saya sendiri?
+mutes_unmute_message: "Baik!\nSaya akan izinkan %s untuk berbicara lagi."
+
+# Warns module missing strings
+warns_mode_updated_ban: "Mode peringatan diperbarui ke: blokir"
+warns_mode_updated_kick: "Mode peringatan diperbarui ke: tendang"
+warns_mode_updated_mute: "Mode peringatan diperbarui ke: bisu"
+warns_mode_updated_tban: "Mode peringatan diperbarui ke: tban selama %s"
+warns_mode_updated_tmute: "Mode peringatan diperbarui ke: tmute selama %s"
+warns_mode_unknown: "Tipe tidak dikenal '%s'. Silakan gunakan salah satu dari: ban/kick/mute/tban/tmute"
+warns_admin_warning_error: Saya tidak akan memperingatkan admin!
+warns_limit_kicked: "Itu %d/%d peringatan; Jadi %s telah ditendang!"
+warns_limit_muted: "Itu %d/%d peringatan; Jadi %s telah Dibisukan!"
+warns_limit_banned: "Itu %d/%d peringatan; Jadi %s telah diblokir!"
+warns_limit_tbanned: "Itu %d/%d peringatan; Jadi %s telah diblokir selama %s!"
+warns_limit_tmuted: "Itu %d/%d peringatan; Jadi %s telah dibisukan selama %s!"
+warns_remove_button: ❌ Hapus peringatan
+warns_user_warning: "Pengguna %s punya %d/%d peringatan; hati-hati!"
+warns_warning_reason: "\n<b>Alasan</b>:\n%s"
+warns_settings_display: "Grup memiliki pengaturan berikut:\n<b>Batas Peringatan:</b> <code>%d</code>\n<b>Mode Peringatan:</b> <code>%s</code>\n<b>Masa Berlaku Peringatan:</b> <code>%s</code>"
+warns_user_warnings_list: "Pengguna ini punya %d/%d peringatan, untuk alasan berikut:"
+warns_user_warnings_no_reasons: "Pengguna punya %d/%d peringatan, tetapi tidak ada alasan untuk salah satunya."
+# Reason (issuer, time) of one warn in a warns list.
+warns_entry_meta: "%s (%s, %s)"
+warns_issuer_anonymous: "admin anonim"
+warns_issuer_auto: "otomatis"
+warns_issuer_unknown: "tidak diketahui"
+warns_expiry_set: "Peringatan sekarang kedaluwarsa setelah <code>%s</code>."
+warns_expiry_off: "Peringatan tidak lagi kedaluwarsa."
+warns_expiry_current: "Peringatan kedaluwarsa setelah <code>%s</code>."
+warns_expiry_current_off: "Peringatan tidak pernah kedaluwarsa. Atur masa berlaku dengan <code>/setwarntime 30d</code>."
+warns_expiry_never: "tidak pernah"
+warns_user_no_warnings: Pengguna ini tidak punya peringatan apa pun!
+warns_removed_by: "Peringatan dihapus oleh %s."
+warns_no_warns_to_remove: Pengguna sudah tidak punya peringatan!
+warns_limit_set_help: "Silakan tentukan berapa banyak peringatan yang harus diizinkan untuk pengguna sebelum tindakan diambil. Mis. <code>/setwarnlimit 5</code>"
+warns_invalid_number: "%s bukan bilangan bulat yang valid."
+warns_limit_range_error: Batas peringatan harus diatur antara 1 dan 100.
+warns_limit_updated: "Pengaturan batas peringatan untuk obrolan ini telah diperbarui ke %d."
+warns_reset_success: Peringatan telah diatur ulang!
+warns_no_users_warned: Tidak ada pengguna yang diperingatkan di obrolan ini!
+warns_reset_all_confirm: Apakah Anda yakin ingin menghapus semua peringatan semua pengguna di obrolan ini?
+warns_reset_all_success: Menghapus semua peringatan semua pengguna di obrolan ini!
+warns_reset_all_cancelled: Membatalkan penghapusan semua peringatan semua pengguna di obrolan ini!
+warns_reset_all_final: Menghapus semua peringatan semua pengguna di obrolan ini.
+
+# Locks module strings
+locks_locktypes_header: "Kunci:\n - "
+locks_what_to_lock: Apa yang ingin Anda kunci? Periksa /locktypes untuk opsi yang tersedia.
+locks_invalid_lock_type: "<code>%s</code> bukan tipe kunci yang benar, periksa /locktypes."
+locks_locked_successfully: "Berhasil mengunci berikut di grup ini:\n - %s"
+locks_unlocked_successfully: "Berhasil membuka kunci berikut di grup ini:\n - %s"
+locks_lock_failed: "Gagal mengunci: %s. Silakan coba lagi nanti."
+locks_unlock_failed: "Gagal membuka kunci: %s. Silakan coba lagi nanti."
+locks_what_to_unlock: Apa yang ingin Anda buka kuncinya? Periksa /locktypes untuk opsi yang tersedia.
+locks_current_locks_header: "Ini adalah kunci di obrolan ini:"
+locks_bot_lock_no_permission: Saya melihat bot, dan saya diminta untuk menghentikan mereka bergabung... tetapi saya bukan admin!
+locks_bot_lock_no_ban_permission: Saya melihat bot, dan saya diminta untuk menghentikan mereka bergabung... tetapi saya tidak punya izin untuk melarang mereka!
+locks_bot_only_admins: Hanya admin dan pengguna yang disetujui yang diizinkan untuk menambahkan bot ke obrolan ini!
+nightmode_status_on: "Mode malam aktif: setiap hari dari <b>{start}</b> sampai <b>{end}</b> (waktu {timezone}), kunci ini juga berlaku: <code>{types}</code>."
+nightmode_now_active: "Sekarang pukul {time} di sana, jadi mode malam sedang berlaku."
+nightmode_now_inactive: "Sekarang pukul {time} di sana, jadi mode malam sedang tidak berlaku."
+nightmode_status_off: "Mode malam mati. Nyalakan dengan <code>/nightmode 23:00 07:00 media,url</code>; jamnya mengikuti zona waktu obrolan ini (lihat /timezone)."
+nightmode_disabled: "Mode malam dimatikan. Kunci yang dipasang dengan /lock tetap seperti semula."
+nightmode_invalid_time: "<code>{input}</code> bukan jam yang valid. Gunakan format 24 jam HH:MM, misalnya <code>23:00</code>."
+nightmode_same_times: "Jam mulai dan jam selesai harus berbeda."
+nightmode_no_types: "Sebutkan jam mulai, jam selesai, dan tipe kunci untuk malam hari, misalnya <code>media,url</code> atau <code>all</code> (lihat /locktypes)."
+nightmode_invalid_type: "<code>{type}</code> bukan tipe kunci yang bisa diterapkan mode malam. Lihat /locktypes; <code>bots</code> tidak bisa dikunci pada malam hari."
+
+# Pins module strings
+pins_unpinned_message: Melepas pin pesan ini.
+pins_unpinned_last: Melepas pin pesan terakhir yang disematkan.
+pins_unpin_all_confirm: Apakah Anda yakin ingin melepas pin semua pesan yang disematkan?
+pins_unpin_all_success: Melepas pin semua pesan yang disematkan di obrolan ini!
+pins_unpin_all_cancelled: Membatalkan operasi untuk melepas pin pesan!
+pins_permapin_reply_or_text: Silakan balas ke pesan atau berikan teks untuk disematkan.
+pins_permapin_unsupported: Permapin tidak didukung untuk tipe data!
+pins_pinned_message: Saya telah menyematkan <a href='%s'>pesan ini</a>
+pins_reply_to_pin: Balas ke pesan untuk menyematkannya
+pins_pinned_message_loud: Saya telah menyematkan <a href='%s'>pesan ini</a> dengan keras!
+pins_antichannelpin_enabled: <b>Diaktifkan</b> pin anti kanal. Pin otomatis dari kanal sekarang akan diganti dengan pin sebelumnya.
+pins_antichannelpin_disabled: <b>Dinonaktifkan</b> pin anti kanal. Pin otomatis dari kanal tidak akan dihapus.
+pins_antichannelpin_current_enabled: Pin Anti-Kanal saat ini <b>diaktifkan</b> di %s. Semua posting kanal yang dipin secara otomatis oleh telegram akan diganti dengan pin sebelumnya.
+pins_antichannelpin_current_disabled: Pin Anti-Kanal saat ini <b>dinonaktifkan</b> di %s.
+pins_cleanlinked_enabled: <b>Diaktifkan</b> penghapusan posting kanal yang terhubung. Pesan yang dikirim dari kanal yang terhubung akan dihapus.
+pins_cleanlinked_disabled: <b>Dinonaktifkan</b> penghapusan posting kanal yang terhubung.
+pins_cleanlinked_current_enabled: Penghapusan posting kanal yang terhubung saat ini <b>diaktifkan</b> di %s. Pesan yang dikirim dari kanal yang terhubung akan dihapus
+pins_cleanlinked_current_disabled: Penghapusan posting kanal yang terhubung saat ini <b>dinonaktifkan</b> di %s.
+pins_no_pinned_message: Tidak ada pesan yang disematkan di obrolan saat ini!
+pins_here_is_pinned: <a href='%s'>Ini</a> adalah pesan yang disematkan.
+pins_pinned_message_button: Pesan yang Disematkan
+pins_input_not_recognized: "Masukan Anda tidak dikenali sebagai salah satu dari: yes/no/on/off"
+
+# Purges module strings
+purges_cannot_delete_old: Anda tidak dapat menghapus pesan yang lebih dari dua hari. Silakan pilih pesan yang lebih baru.
+purges_purged_messages: Membersihkan %d pesan.
+purges_purged_with_reason: "Membersihkan %d pesan.\n*Alasan*:\n%s"
+purges_reply_to_purge: Balas ke pesan untuk memilih dari mana mulai membersihkan.
+purges_reply_to_delete: Balas ke pesan untuk menghapusnya!
+purges_message_marked: Pesan ini sudah ditandai untuk pembersihan!
+purges_mark_already_active: "Pesan lain di obrolan ini sudah ditandai untuk pembersihan. Gunakan /purgeto untuk menyelesaikan pembersihan itu atau tunggu hingga tandanya kedaluwarsa."
+purges_marked_for_deletion: Pesan ditandai untuk penghapusan. Balas ke pesan lain dengan /purgeto untuk menghapus semua pesan di antaranya; dalam 30 detik!
+purges_reply_to_purgefrom: Balas ke pesan untuk memilih dari mana mulai membersihkan.
+purges_need_purgefrom: Anda hanya dapat menggunakan perintah ini setelah menggunakan perintah /purgefrom!
+purges_use_del_single: Gunakan perintah /del untuk menghapus satu pesan!
+purges_reply_to_purgeto: Balas ke pesan untuk menunjukkan sampai di mana membersihkan.
+purges_limit_exceeded: "Tidak dapat membersihkan lebih dari %d pesan sekaligus! Silakan pilih rentang yang lebih kecil."
+
+# Rules module strings
+rules_cleared_successfully: Berhasil menghapus aturan!
+rules_private_pm_usage: Penggunaan /rules akan mengirim aturan ke PM pengguna.
+rules_private_group_usage: Semua perintah /rules akan mengirim aturan ke %s.
+rules_private_current_pm: Penggunaan /rules akan mengirim aturan ke PM pengguna.
+rules_private_current_group: Semua perintah /rules akan mengirim aturan ke %s.
+rules_for_chat_header: "Aturan untuk <b>%s</b> adalah:"
+
+rules_no_rules_set: Obrolan ini sepertinya belum memiliki aturan yang diatur... Saya tidak akan menganggap itu sebagai undangan.
+rules_click_for_rules: Klik tombol untuk melihat aturan obrolan!
+rules_set_successfully: Berhasil mengatur aturan untuk grup ini!
+rules_button_too_long: Nama tombol khusus yang Anda masukkan terlalu panjang. Silakan masukkan teks dengan maksimal 30 karakter.
+rules_button_set_successfully: "Berhasil mengatur tombol aturan menjadi: <b>%s</b>"
+rules_button_not_set: 'Anda belum mengatur tombol aturan khusus. Teks default "%s" akan digunakan.'
+rules_button_current: "Tombol aturan saat ini diatur ke teks berikut:\n%s"
+rules_button_cleared: Berhasil menghapus teks tombol aturan khusus!
+
+# Disabling module strings
+disabling_disabled_successfully: "Menonaktifkan penggunaan berikut di obrolan ini:%s"
+disabling_unknown_command: "Perintah tidak dikenal untuk dinonaktifkan:\n-%s\nPeriksa /disableable!"
+disabling_no_command_specified: Anda belum menentukan perintah untuk dinonaktifkan.
+disabling_disableable_commands: "Perintah berikut dapat dinonaktifkan:"
+disabling_no_disabled_commands: Tidak ada perintah yang dinonaktifkan di obrolan ini.
+disabling_disabled_commands: "Perintah berikut dinonaktifkan di obrolan ini:"
+disabling_delete_enabled: Pesan yang dinonaktifkan sekarang akan dihapus.
+disabling_delete_disabled: Pesan yang dinonaktifkan tidak akan lagi dihapus.
+disabling_delete_current_enabled: Penghapusan Perintah yang Dinonaktifkan *diaktifkan*, perintah yang dinonaktifkan dari pengguna akan dihapus!
+disabling_delete_current_disabled: Penghapusan Perintah yang Dinonaktifkan *dinonaktifkan*, perintah yang dinonaktifkan dari pengguna *tidak* akan dihapus!
+disabling_enabled_successfully: "Mengaktifkan kembali penggunaan berikut di obrolan ini:%s"
+disabling_unknown_reenable: "Perintah tidak dikenal untuk Diaktifkan Kembali:\n-%s\nPeriksa /disableable!"
+disabling_no_command_reenable: Anda belum menentukan perintah untuk diaktifkan kembali.
+disabling_invalid_option: "Saya hanya mengerti opsi dari: `yes`/`no`/`on`/`off`"
+
+# Misc module strings
+misc_reply_to_someone: Balas ke seseorang.
+misc_provide_content: Berikan konten untuk dibalas!
+misc_user_not_found: Tidak dapat menemukan informasi tentang pengguna ini.
+misc_user_link: "Tautan pengguna: %s"
+misc_pinging: "<code>Menguji koneksi...</code>"
+misc_ping_result: "🏓 <b>Pong!</b>\n\n<b>RTT API</b> (getMe): <code>%dms</code>\n<b>Kirim pesan</b>: <code>%dms</code>\n<b>Overhead</b>: <code>%dms</code>"
+misc_thread_id: "ID Thread: <code>%d</code>"
+misc_chat_id: "<b>ID Obrolan:</b> <code>%d</code>"
+misc_user_id: "<b>ID %s:</b> <code>%d</code>"
+misc_forwarded_from_user: "<b>Diteruskan dari ID %s:</b> <code>%d</code>"
+misc_forwarded_from_chat: "<b>Diteruskan dari ID obrolan %s:</b> <code>%d</code>"
+misc_gif_id: "<b>ID GIF:</b> <code>%s</code>"
+misc_sticker_id: "<b>ID Stiker:</b> <code>%s</code>"
+misc_user_id_is: "ID %s adalah <code>%d</code>"
+misc_your_id_private: "ID Anda adalah <code>%d</code>"
+misc_your_id_group: "ID Anda adalah <code>%d</code>\nID grup ini adalah <code>%d</code>"
+misc_need_text_and_lang: Saya butuh teks dan kode bahasa untuk menerjemahkan.
+misc_no_text_to_translate: Pesan yang dibalas tidak mengandung teks untuk diterjemahkan.
+misc_provide_text_translate: Silakan berikan teks untuk diterjemahkan.
+misc_removing_keyboard: Menghapus keyboard bot yang macet...
+misc_total_messages: "Total Pesan di %s adalah: %d"
+misc_channel_info_header: "<b>Info Kanal:</b>\n\nID: <code>%d</code>\n\nNama Kanal: %s"
+misc_username: "Nama pengguna: @%s"
+misc_channel_link: "Tautan kanal: @%s"
+misc_user_info_header: "<b>Info Pengguna:</b>\n\nID: <code>%d</code>\n\nNama: %s"
+misc_owner_info: Dia adalah pemilik saya!
+misc_dev_info: Dia adalah salah satu pengguna dev saya!
+misc_translate_read_error: Kesalahan Membaca
+misc_translate_result: "<b>Bahasa Terdeteksi:</b> <code>%s</code>\n\n<b>Terjemahan:</b> <code>%s</code>"
+
+# Devs module strings
+devs_chat_info: "<b>Nama:</b> %s\n<b>ID Obrolan</b>: %d\n<b>Jumlah Pengguna:</b> %d\n<b>Tautan:</b> %s"
+devs_getting_chat_list: Mendapatkan daftar obrolan yang saya ikuti...
+devs_chat_list_caption: Ini adalah daftar obrolan di Database saya!
+devs_left_chat: Oke, saya meninggalkan obrolan!
+devs_user_already_sudo: Pengguna sudah Sudo!
+devs_added_to_sudo: Menambahkan %s ke Daftar Sudo!
+devs_user_already_dev: Pengguna sudah Dev!
+devs_added_to_dev: Menambahkan %s ke Daftar Dev!
+devs_user_not_sudo: Pengguna bukan Sudo!
+devs_removed_from_sudo: Menghapus %s dari Daftar Sudo!
+devs_user_not_dev: Pengguna bukan Dev!
+devs_removed_from_dev: Menghapus %s dari Daftar Dev!
+devs_no_team_users: Tidak ada pengguna yang ditambahkan di Tim!
+devs_dev_users_header: "<b>Pengguna Dev:</b>"
+devs_sudo_users_header: "<b>Pengguna Sudo:</b>"
+devs_no_users: "Tidak Ada Pengguna"
+devs_fetching_stats: "<code>Mengambil statistik bot...</code>"
+devs_failed_to_add_sudo: "Gagal menambahkan pengguna ke daftar Sudo. Silakan coba lagi."
+devs_failed_to_add_dev: "Gagal menambahkan pengguna ke daftar Dev. Silakan coba lagi."
+devs_failed_to_remove_sudo: "Gagal menghapus pengguna dari daftar Sudo. Silakan coba lagi."
+devs_failed_to_remove_dev: "Gagal menghapus pengguna dari daftar Dev. Silakan coba lagi."
+
+# Additional hardcoded strings from modules
+bans_anonymous_ban_only_error: Perintah ini tidak dapat digunakan pada pengguna anonim, pengguna ini hanya dapat diblokir/dibuka blokirnya.
+
+
+# Greetings module strings
+greetings_welcome_status: |
+  Saya saat ini menyambut pengguna: <code>%s</code>
+  Saya saat ini menghapus selamat datang lama: <code>%s</code>
+  Saya saat ini menghapus pesan layanan: <code>%s</code>
+  Pesan selamat datang saat ini adalah:
+greetings_welcome_enabled: "Saya akan menyambut pengguna mulai sekarang."
+greetings_welcome_disabled: "Saya tidak akan menyambut pengguna mulai sekarang."
+greetings_welcome_invalid_option: "Saya hanya mengerti 'on/yes' atau 'off/no'!"
+greetings_welcome_set_success: "Berhasil mengatur pesan selamat datang khusus!"
+greetings_welcome_reset_success: "Berhasil mengatur ulang pesan selamat datang ke default!"
+greetings_goodbye_status: |
+  Saya saat ini mengucapkan selamat tinggal: <code>%s</code>
+  Saya saat ini menghapus selamat tinggal lama: <code>%s</code>
+  Saya saat ini menghapus pesan layanan: <code>%s</code>
+  Pesan selamat tinggal saat ini adalah:
+greetings_goodbye_set_success: "Berhasil mengatur pesan selamat tinggal khusus!"
+greetings_clean_welcome_invalid_option: "Saya hanya mengerti 'on/yes' atau 'off/no'!"
+greetings_clean_goodbye_invalid_option: "Saya hanya mengerti 'on/yes' atau 'off/no'!"
+greetings_clean_service_disable: "Saya tidak akan menghapus pesan bergabung."
+greetings_clean_service_enable: "Saya akan mencoba menghapus pesan bergabung!"
+greetings_clean_service_invalid_option: "Saya hanya mengerti 'on/yes' atau 'off/no'!"
+greetings_captcha_verified_success: "✅ %s telah terverifikasi dan sekarang dapat mengobrol!"
+greetings_join_request_new: "Pengguna baru telah meminta untuk bergabung dengan obrolan!"
+greetings_join_request_approve_btn: "✅ Setujui"
+greetings_join_request_decline_btn: "❌ Tolak"
+greetings_join_request_ban_btn: "✅ Blokir"
+greetings_join_request_accepted: "Diterima %s di Obrolan ✅"
+greetings_join_request_declined: "Ditolak %s untuk bergabung dengan obrolan ❌"
+greetings_join_request_banned: "✅ Berhasil Diblokir! %s"
+greetings_join_request_already_handled: "Permintaan bergabung dari %s sudah ditangani atau dibatalkan."
+greetings_auto_approve_enabled: "Saya menyetujui permintaan bergabung obrolan baru secara otomatis sekarang."
+greetings_auto_approve_disabled: "Saya tidak menyetujui permintaan bergabung obrolan baru secara otomatis sekarang.."
+greetings_auto_approve_disable: "Saya tidak akan menyetujui permintaan bergabung baru secara otomatis!"
+greetings_auto_approve_enable: "Saya akan mencoba menyetujui permintaan bergabung baru secara otomatis!"
+greetings_auto_approve_invalid_option: "Saya hanya mengerti 'on/yes' atau 'off/no'!"
+
+# Captcha module strings (additional)
+captcha_enabled_success: "✅ Verifikasi Captcha telah <b>diaktifkan</b>. Anggota baru perlu menyelesaikan captcha untuk bergabung."
+captcha_disabled_success: "❌ Verifikasi Captcha telah <b>dinonaktifkan</b>."
+captcha_join_enable_button: "🛡 Aktifkan captcha"
+captcha_join_enabled: "✅ Captcha diaktifkan: anggota baru harus menyelesaikannya sebelum bisa menulis. Nonaktifkan dengan /captcha off."
+captcha_join_already_enabled: "Captcha sudah diaktifkan."
+captcha_timeout_set_success: "✅ Batas waktu captcha diatur ke <b>%d menit</b>"
+captcha_action_set_success: "✅ Tindakan kegagalan captcha diatur ke <b>%s</b>"
+captcha_refresh_button: "🔄 Gambar Baru"
+captcha_verified_success_msg: "✅ Terverifikasi dengan sukses!"
+captcha_wrong_answer_final: "❌ Jawaban salah! Anda telah %s."
+captcha_wrong_answer_remaining: "❌ Jawaban salah! %d percobaan tersisa."
+captcha_action_kicked: "ditendang"
+captcha_action_banned: "diblokir"
+captcha_action_muted: "dibisukan selama 24 jam"
+captcha_refresh_success: "🔄 Captcha baru dikirim!"
+captcha_timeout_failure_kicked: "❌ %s gagal menyelesaikan verifikasi captcha dan telah ditendang."
+captcha_timeout_failure_banned: "❌ %s gagal menyelesaikan verifikasi captcha dan telah diblokir."
+captcha_timeout_failure_muted: "❌ %s gagal menyelesaikan verifikasi captcha dan telah dibisukan."
+captcha_timeout_stored_note: "📝 %d pesan telah dicoba tetapi dihapus karena verifikasi tidak lengkap."
+captcha_stored_messages_summary: "📝 %s mencoba mengirim %d pesan (%s) sebelum verifikasi"
+captcha_pending_usage: "Penggunaan: <code>/captchapending @user</code> atau <code>/captchapending user_id</code>"
+captcha_no_pending_messages: "Tidak ada pesan tertunda untuk pengguna ini."
+captcha_clear_usage: "Penggunaan: <code>/captchaclear @user</code> atau <code>/captchaclear user_id</code>"
+captcha_clear_failed: "Gagal menghapus pesan yang disimpan. Silakan coba lagi."
+captcha_clear_success: "✅ Berhasil menghapus semua pesan yang disimpan untuk pengguna %d"
+captcha_bot_cannot_restrict: "⚠️ Captcha aktif, tetapi saya tidak dapat membisukan anggota baru, jadi mereka menerima pesan sambutan tanpa captcha. Admin perlu memberi saya hak <b>Blokir pengguna</b>."
+
+# Notes module strings
+notes_save_success: "Catatan <b>%s</b> tersimpan!\nDapatkan dengan <code>#%s</code> atau <code>/get %s</code>."
+notes_save_failed: "Gagal menyimpan catatan. Silakan coba lagi nanti."
+notes_keyword_required: "Silakan berikan kata kunci untuk dibalas!"
+notes_overwrite_confirm: "Catatan sudah ada!\nApakah Anda ingin menimpanya?"
+notes_remove_keyword_required: "Silakan berikan kata kunci untuk dihapus!"
+notes_not_exists: "Catatan tidak ada!"
+notes_removed_success: "Catatan <b>%s</b> dihapus."
+notes_private_enabled: "Private Notes diaktifkan.\nSekarang pengguna akan mendapatkan catatan sebagai pesan pribadi."
+notes_private_disabled: "Private Notes dimatikan.\nSekarang semua catatan akan dikirim ke Grup Obrolan."
+notes_private_invalid_option: "Saya hanya mengerti opsi dari <on/off/yes/no>"
+notes_private_status_on: "Private Notes saat ini diaktifkan!"
+notes_private_status_off: "Private Notes saat ini dimatikan!"
+notes_none_in_chat: "Tidak ada catatan di obrolan ini!"
+notes_list_for_chat: "Ini adalah catatan saat ini di <b>%s</b>:"
+notes_check_button: "Periksa tombol di bawah untuk mendapatkan Catatan!"
+notes_current_in_chat: "Ini adalah catatan saat ini di Obrolan ini:\n"
+notes_get_instruction: "\nAnda dapat mendapatkan catatan dengan <code>#namacatatan</code> atau <code>/get namacatatan</code>"
+notes_clear_all_confirm: "Apakah Anda yakin ingin menghapus semua Catatan dari obrolan ini?"
+notes_creator_only: "Hanya Pembuat Obrolan yang dapat menggunakan perintah ini."
+notes_overwrite_cancelled: "Dibatalkan menimpa catatan ❌"
+notes_overwrite_success: "Catatan berhasil ditimpa ✅"
+notes_clear_all_success: "Menghapus semua Catatan dari Obrolan Ini ✅"
+notes_clear_all_cancelled: "Dibatalkan menghapus semua catatan dari Obrolan Ini ❌"
+notes_parsing_error: "Ada kesalahan saat menguraikan catatan, silakan laporkan ini di obrolan dukungan."
+notes_admin_only: "Catatan ini hanya dapat diakses oleh admin!"
+notes_click_for_private: "Klik tombol di bawah untuk mendapatkan catatan *%s*"
+notes_get_insufficient_args: "Argumen tidak cukup."
+notes_does_not_exist: "Catatan tidak ada!"
+notes_parsing_error_support: "Ada kesalahan saat menguraikan catatan, silakan laporkan ini ke obrolan dukungan."
+notes_admin_only_access: "Catatan ini hanya dapat diakses oleh admin!"
+notes_private_conflict_warning: "\n\n<b>Catatan:</b> Catatan ini akan dikirim ke pengaturan default catatan grup, karena memiliki <code>{private}</code> dan <code>{noprivate}</code>."
+
+# Filters module strings
+filters_limit_exceeded: |
+  Batas filter terlampaui, grup hanya dapat memiliki maksimum 150 filter!
+  Pembatasan ini karena bot berjalan gratis tanpa donasi dari pengguna.
+filters_keyword_required: "Silakan berikan kata kunci untuk dibalas!"
+filters_keyword_too_long: "Kata kunci filter terlalu panjang! Maksimal 100 karakter diizinkan."
+filters_overwrite_confirm: "Filter sudah ada!\nApakah Anda ingin menimpanya?"
+filters_added_success: "Balasan ditambahkan untuk kata filter <code>%s</code>"
+filters_remove_keyword_required: "Silakan berikan kata filter untuk dihapus!"
+filters_not_exists: "Filter tidak ada!"
+filters_removed_success: "Oke!\nSaya tidak akan lagi membalas ke <code>%s</code>"
+filters_none_in_chat: "Tidak ada filter di obrolan ini!"
+filters_current_in_chat: "Ini adalah filter saat ini di Obrolan ini:"
+filters_clear_all_confirm: "Apakah Anda yakin ingin menghapus semua Filter dari obrolan ini?"
+filters_clear_all_success: "Menghapus semua Filter dari Obrolan Ini ✅"
+filters_clear_all_failed: "Gagal menghapus semua Filter dari Obrolan Ini ❌"
+filters_clear_all_cancelled: "Dibatalkan menghapus semua Filter dari Obrolan Ini ❌"
+filters_overwrite_success: "Filter berhasil ditimpa ✅"
+filters_overwrite_cancelled: "Dibatalkan menimpa filter ❌"
+filters_overwrite_expired: "⏰ Konfirmasi kedaluwarsa! Silakan coba lagi."
+
+# Helpers module strings
+helpers_back_button: "« Kembali"
+helpers_note_not_exist: "Catatan ini tidak ada!"
+helpers_note_admin_only: "Catatan ini hanya dapat diakses oleh admin!"
+helpers_connected_to_chat: "Anda telah terhubung ke %s!"
+
+# Common/Shared strings
+common_yes: "Ya"
+common_no: "Tidak"
+common_back: "Kembali"
+common_back_arrow: "« Kembali"
+common_back_arrow_alt: "⬅ Kembali"
+common_done: "Selesai ✅"
+common_continue: "✅ Lanjutkan ✅"
+common_home: "Beranda"
+common_formatting_button: "Pemformatan"
+common_rules_button_emoji: "Aturan 📝"
+
+# Main module strings
+main_bot_command_start: "Memulai Bot"
+main_bot_command_help: "Periksa Bagian Bantuan bot"
+
+# Help module strings
+help_info_about_header: "Info & Tentang\n\nBerikut adalah beberapa FAQ tentang NexGuard."
+help_news_channel_text: ""
+help_all_commands_usage: "Semua perintah diawali dengan /"
+help_button_about_me: "Tentang saya 👨‍💻"
+help_button_news_channel: ""
+help_button_support_group: ""
+help_button_configuration: "Konfigurasi ⚙️"
+help_button_about: "Tentang ✨"
+help_button_add_to_chat: "➕ Tambahkan saya ke obrolan!"
+help_button_add_alita: "➕ Tambahkan NexGuard ke obrolan!"
+help_button_share: "📤 Bagikan"
+help_share_text: "NexGuard Robot — bot manajemen grup Telegram yang gratis dan open source."
+help_about_panel_hint: "\n\n📊 Admin: buka dasbor kapan saja dari tombol menu di samping kotak pesan."
+help_button_commands_help: "📚 Perintah & Bantuan"
+help_button_language: "Bahasa 🌏"
+help_click_button_info: "Klik tombol di bawah untuk mendapatkan info tentang saya!"
+help_click_here: "Klik di sini untuk bantuan!"
+help_contact_pm: "Hubungi saya di PM untuk bantuan!"
+help_contact_pm_module: "Hubungi saya di PM untuk bantuan tentang <code>{module}</code>!"
+help_markdown_help_button: "Bantuan Markdown"
+help_markdown_formatting_button: "Pemformatan Markdown"
+help_fillings_button: "Isian"
+help_random_content_button: "Konten Acak"
+
+# Chat status permission strings
+chat_status_change_info_button_error: "Anda tidak memiliki izin untuk mengubah info!!"
+chat_status_change_info_cmd_error: "Anda tidak memiliki izin untuk mengubah info di grup ini!"
+chat_status_restrict_button_error: "Anda tidak memiliki izin untuk membatasi anggota!!"
+chat_status_restrict_cmd_error: "Anda tidak memiliki izin untuk membatasi pengguna di grup ini!"
+chat_status_bot_restrict_error: "Saya tidak memiliki izin untuk membatasi anggota!!"
+chat_status_bot_restrict_group_error: "Saya tidak dapat membatasi orang di sini! Pastikan saya admin dan dapat membatasi anggota lain."
+chat_status_promote_button_error: "Anda tidak memiliki izin untuk mempromosikan/menurunkan anggota!!"
+chat_status_promote_cmd_error: "Anda tidak dapat mempromosikan/menurunkan orang di sini! Pastikan Anda memiliki hak yang sesuai!"
+chat_status_bot_promote_error: "Saya tidak dapat mempromosikan/menurunkan orang di sini! Pastikan saya admin dan dapat menunjuk admin baru."
+chat_status_pin_user_error: "Anda tidak dapat menyematkan pesan di sini! Pastikan Anda admin dan dapat menyematkan pesan."
+chat_status_pin_bot_error: "Saya tidak dapat menyematkan pesan di sini! Pastikan saya admin dan dapat menyematkan pesan."
+chat_status_invite_link_bot_error: "Saya tidak memiliki akses ke tautan undangan! Pastikan saya admin dan dapat mengundang pengguna."
+chat_status_invite_link_user_error: "Anda tidak memiliki akses ke tautan undangan; Anda perlu menjadi admin untuk mendapatkan ini!"
+chat_status_delete_button_error: "Anda tidak memiliki izin untuk menghapus pesan!!"
+chat_status_delete_cmd_error: "Anda tidak memiliki Izin untuk Menghapus Pesan!"
+chat_status_bot_delete_error: "Saya tidak memiliki Izin untuk Menghapus Pesan!"
+chat_status_bot_not_admin: "Saya bukan admin!"
+chat_status_user_admin_button_error: "Anda perlu menjadi admin untuk melakukan ini!"
+chat_status_user_admin_cmd_error: "Hanya admin yang dapat mengeksekusi perintah ini!"
+chat_status_owner_button_error: "Anda perlu menjadi pembuat grup untuk melakukan ini!"
+chat_status_owner_cmd_error: "Hanya pembuat grup yang dapat melakukan ini!"
+chat_status_pm_only_error: "Perintah ini dibuat untuk PM, bukan obrolan grup!"
+chat_status_group_only_error: "Perintah ini dibuat untuk digunakan di grup obrolan, bukan di PM!"
+chat_status_anon_confirm: "Sepertinya Anda anonim. Ketuk tombol ini untuk mengonfirmasi identitas Anda."
+chat_status_anon_prove_admin: "Klik untuk membuktikan admin"
+
+# Extraction module strings
+extraction_chat_not_found: "gagal terhubung ke obrolan: gagal mendapatkan obrolan: tidak dapat getChat: Bad Request: obrolan tidak ditemukan"
+extraction_need_chat_id: "Saya butuh id obrolan untuk terhubung!"
+extraction_user_not_found: "Tidak dapat menemukan pengguna dengan nama ini; apakah Anda yakin saya pernah melihat mereka sebelumnya?"
+extraction_invalid_time_amount: "Jumlah waktu yang ditentukan tidak valid."
+extraction_time_limit_exceeded: "Tidak dapat mengatur waktu lebih dari 1 tahun!"
+extraction_no_time_specified: "Silakan tentukan durasi waktu (mis., 1m, 1h, 1d, 1w)."
+extraction_invalid_time_type: "Tipe waktu yang ditentukan tidak valid. Diharapkan m, h, d atau w mendapatkan: %s"
+extraction_invalid_time_format: "Format waktu yang ditentukan tidak valid."
+
+# Database default strings
+db_warn_no_reason: "Tidak Ada Alasan"
+
+# Captcha validation strings
+captcha_invalid_mode_error: "mode captcha tidak valid: harus 'math' atau 'text'"
+captcha_timeout_range_error: "batas waktu harus antara 1 dan 10 menit"
+captcha_invalid_action_error: "tindakan kegagalan tidak valid: harus 'kick', 'ban', atau 'mute'"
+captcha_status_usage: "Gunakan <code>/captcha on</code> atau <code>/captcha off</code> untuk mengubah status."
+captcha_not_for_you: "Captcha ini bukan untuk Anda!"
+captcha_expired_or_not_found: "Captcha kedaluwarsa atau tidak ditemukan"
+captcha_attempt_not_valid: "Percobaan captcha ini tidak lagi valid."
+captcha_refresh_limit_reached: "Batas refresh tercapai untuk captcha ini."
+captcha_internal_update_error: "Kesalahan internal saat memperbarui captcha."
+captcha_internal_error: "Terjadi kesalahan internal saat memperbarui pengaturan captcha. Silakan coba lagi."
+
+# Greetings additional strings
+greetings_goodbye_enable: "Saya akan mengucapkan selamat tinggal kepada pengguna mulai sekarang."
+greetings_goodbye_disable: "Saya tidak akan mengucapkan selamat tinggal kepada pengguna mulai sekarang."
+greetings_goodbye_invalid: "Saya hanya mengerti 'on/yes' atau 'off/no'!"
+greetings_goodbye_reset: "Berhasil mengatur ulang pesan selamat tinggal khusus ke default!"
+greetings_clean_welcome_should: "Saya seharusnya menghapus pesan selamat datang hingga dua hari."
+greetings_clean_welcome_not: "Saya saat ini tidak menghapus pesan selamat datang lama!"
+greetings_clean_welcome_disable: "Saya tidak akan menghapus pesan selamat datang lama!"
+greetings_clean_welcome_enable: "Saya akan mencoba menghapus pesan selamat datang lama!"
+greetings_clean_goodbye_should: "Saya seharusnya menghapus pesan selamat tinggal hingga dua hari."
+greetings_clean_goodbye_not: "Saya saat ini tidak menghapus pesan selamat tinggal lama!"
+greetings_clean_goodbye_disable: "Saya tidak akan menghapus pesan selamat tinggal lama!"
+greetings_clean_goodbye_enable: "Saya akan mencoba menghapus pesan selamat tinggal lama!"
+greetings_clean_service_should: "Saya seharusnya menghapus pesan 'pengguna bergabung dengan obrolan' sekarang."
+greetings_clean_service_not: "Saya saat ini tidak menghapus pesan bergabung."
+
+# Helpers utility strings
+helpers_admin_commands: "Perintah admin"
+helpers_user_commands: "Perintah pengguna"
+helpers_person_no_name: "OrangTanpaNama"
+content_need_filter_content: "Anda perlu memberikan konten untuk filter!"
+content_need_note_content: "Anda perlu memberikan konten untuk catatan!"
+content_invalid_message: "Pesan tidak valid: pesan adalah nil"
+content_need_welcome_content: "Anda perlu memberikan konten untuk menyambut pengguna!"
+content_need_goodbye_content: "Anda perlu memberikan konten untuk mengucapkan selamat tinggal kepada pengguna!"
+content_text_too_long: "Teks pesan Anda %d karakter. Panjang maksimum untuk teks adalah 4096; silakan pangkas ke ukuran yang lebih kecil. Perhatikan bahwa karakter markdown mungkin membutuhkan lebih banyak ruang dari yang diharapkan."
+content_caption_too_long: "Keterangan pesan Anda %d karakter. Panjang maksimum keterangan adalah 1024; silakan pangkas ke ukuran yang lebih kecil. Perhatikan bahwa karakter markdown mungkin membutuhkan lebih banyak ruang dari yang diharapkan."
+helpers_module_help_header: "Berikut adalah bantuan untuk modul *%s*:\n\n"
+helpers_invalid_deep_link: "Deep link tidak valid atau salah format. Silakan periksa URL dan coba lagi."
+helpers_chat_not_found: "Tidak dapat menemukan obrolan tersebut. Obrolan mungkin sudah tidak ada atau saya mungkin tidak memiliki akses ke sana."
+
+
+# Formatting strings
+format_user_info: "Pengguna: %s"
+format_user_id: "ID Pengguna: %d"
+
+# Reports module additional strings
+reports_cannot_report_channel: "Anda tidak dapat melaporkan posting kanal."
+reports_cannot_report_self: "Anda tidak dapat melaporkan pesan Anda sendiri!"
+reports_special_account: "Ini adalah akun khusus telegram!"
+reports_admin_report: "Anda adalah admin, kepada siapa saya akan melaporkan masalah Anda?"
+reports_why_report_myself: "Mengapa saya melaporkan diri saya sendiri?"
+reports_why_report_admin: "Mengapa saya melaporkan admin?"
+reports_turned_on_personal: "Melaporkan diaktifkan! Anda akan diberitahu setiap kali seseorang melaporkan sesuatu di grup tempat Anda admin."
+reports_turned_on_group: "Pengguna sekarang akan dapat melaporkan pesan."
+reports_turned_off_personal: "Pelaporan dimatikan! Anda tidak akan lagi diberitahu setiap kali seseorang melaporkan sesuatu di grup tempat Anda admin."
+reports_turned_off_group: "Pengguna tidak akan lagi dapat melaporkan melalui @admin atau /report."
+reports_group_only: "Perintah ini hanya dapat digunakan di grup!"
+reports_user_blocked: "Pengguna %s diblokir dari pelaporan."
+reports_user_unblocked: "Pengguna %s dibuka blokirnya dari pelaporan."
+reports_no_blocked_users: "Tidak ada pengguna yang saat ini diblokir dari menggunakan perintah pelaporan!"
+reports_user_kicked: "Pengguna ditendang!"
+reports_user_banned: "Pengguna diblokir!"
+reports_message_deleted: "Pesan Dihapus!"
+reports_button_message: "➡ Pesan"
+reports_button_kick: "⚠ Keluarkan"
+reports_button_ban: "⛔️ Blokir"
+reports_button_delete: "❎ Hapus Pesan"
+reports_button_resolved: "✔️ Tandai Selesai"
+reports_blocked_users_header: "Pengguna yang diblokir dari penggunaan perintah laporan:"
+reports_invalid_input: "Masukan Anda tidak dikenali sebagai salah satu dari: <code>&lt;yes/on/true/no/off/false&gt; atau &lt;block/unblock/showblocklist&gt;</code>"
+reports_preference_enabled_private: "Preferensi Anda saat ini adalah true. Anda akan diberitahu setiap kali seseorang melaporkan sesuatu di grup tempat Anda admin."
+reports_preference_disabled_private: "Anda belum mengaktifkan pelaporan. Anda tidak akan diberitahu."
+reports_status_enabled_group: "Pelaporan saat ini diaktifkan di obrolan ini.\nPengguna dapat menggunakan perintah /report, atau menyebut @admin, untuk menandai semua admin."
+reports_status_disabled_group: "Pelaporan saat ini dinonaktifkan di obrolan ini."
+reports_change_settings_hint: "\n\nUntuk mengubah pengaturan ini, coba perintah ini lagi, dengan salah satu argumen berikut: yes/no/on/off/true/false"
+reports_success_kick: "✅ Berhasil menendang"
+reports_success_ban: "✅ Berhasil memblokir"
+reports_success_delete: "✅ Berhasil menghapus"
+reports_resolved_success: "✅ Laporan diselesaikan"
+reports_action_by: "Tindakan diambil oleh %s"
+reports_resolved_by: "<b>Diselesaikan oleh:</b> %s"
+reports_message_template: "<b>⚠️ Laporan:</b>\n<b> • Dilaporkan oleh:</b> %s\n<b> • Pengguna dilaporkan:</b> %s\n<b>Status:</b> <i>Menunggu...</i>"
+reports_invalid_action: "Tindakan tidak valid."
+reports_button_mute: "🔇 Bisukan"
+reports_button_dismiss: "✔️ Abaikan"
+reports_success_mute: "✅ Berhasil membisukan"
+reports_already_handled: "Laporan ini sudah ditangani."
+reports_already_reviewed: "Admin sudah meninjau laporan Anda atas pesan ini."
+reports_expired: "Laporan ini sudah kedaluwarsa."
+reports_action_failed: "Tindakan tidak dapat diselesaikan. Coba lagi."
+reports_sent_to_admins: "Dilaporkan ke admin."
+reports_automute_status_on: "Bisu otomatis: aktif. Pengguna dibisukan paling lama 24 jam setelah {count} anggota berbeda memiliki laporan terbuka terhadapnya."
+reports_automute_status_off: "Bisu otomatis: nonaktif."
+reports_automute_enabled: "Bisu otomatis diaktifkan. Setelah {count} anggota berbeda memiliki laporan terbuka terhadap seorang pengguna, pengguna itu dibisukan sampai admin memutuskan, paling lama 24 jam."
+reports_automute_disabled: "Bisu otomatis dinonaktifkan. Laporan tidak akan lagi membisukan siapa pun."
+reports_automute_usage: "Penggunaan: <code>/reports mute &lt;N&gt;</code> dengan N dari {min} sampai {max}, atau <code>/reports mute off</code>."
+reports_automute_applied: "{user} telah dibisukan sampai admin meninjau laporan terhadapnya (paling lama 24 jam)."
+
+# Language module additional strings
+language_current_user: "Bahasa Anda Saat Ini adalah %s\nPilih bahasa dari keyboard di bawah."
+language_current_group: "Bahasa Grup Ini Saat Ini adalah %s\nPilih bahasa dari keyboard di bawah."
+language_changed_user: "Bahasa Anda telah diubah ke %s"
+language_changed_group: "Bahasa grup ini telah diubah ke %s"
+language_help_translate: "Bantu Kami Menerjemahkan 🌎"
+language_invalid_selection: "Pilihan bahasa tidak valid."
+
+# Bot updates module additional strings
+bot_updates_need_supergroup: "Maaf, tetapi untuk menggunakan semua fitur saya, Anda perlu mengubah grup ini menjadi supergrup."
+bot_updates_thanks_for_adding: "Terima kasih telah menambahkan saya di grup Anda!"
+bot_updates_button_expired: "Tombol ini telah kedaluwarsa, Silakan gunakan perintah lagi."
+
+# Formatting module additional strings
+formatting_press_button: "Tekan tombol di bawah untuk mendapatkan Bantuan Markdown!"
+formatting_large_options: "NexGuard mendukung banyak opsi pemformatan untuk membuat pesan Anda lebih ekspresif. Lihatlah!"
+
+# Help module additional strings
+help_bot_intro: "Hai! Nama saya NexGuard 🛡️.\nSaya di sini untuk membantu Anda mengelola grup Anda!\nTekan /help untuk mengetahui lebih lanjut tentang cara menggunakan saya sepenuhnya.\n\nSmart Protection. Better Communities."
+help_pm_intro: |
+  Hai %s!
+  Nama saya NexGuard 🛡️.
+
+  Saya adalah bot manajemen grup, di sini untuk membantu Anda berkeliling dan menjaga ketertiban di grup Anda!
+  Saya punya banyak fitur praktis, seperti kontrol flood, sistem peringatan, sistem penyimpanan catatan, dan bahkan balasan yang telah ditentukan pada kata kunci tertentu.
+
+  Perintah yang berguna:
+  - /start: Memulai saya! Anda mungkin sudah menggunakan ini.
+  - /help: Mengirim pesan ini; Saya akan memberi tahu Anda lebih banyak tentang diri saya!
+  - /donate: Memberi Anda info tentang cara mendukung saya dan kreator saya.
+
+  Jika Anda memiliki bug atau pertanyaan tentang cara menggunakan saya, lihat <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">situs web saya</a>, atau pergi ke NexGuard support.
+
+# Captcha module strings
+captcha_settings_header: "<b>Pengaturan Captcha:</b>"
+captcha_settings_status: "Keadaan: <code>%s</code>"
+captcha_settings_mode: "Modus: <code>%s</code>"
+captcha_settings_timeout: "Batas Waktu: <code>%d menit</code>"
+captcha_settings_failure_action: "Tindakan Kegagalan: <code>%s</code>"
+captcha_settings_max_attempts: "Maks Percobaan: <code>%d</code>"
+captcha_settings_join_requests: "Permintaan bergabung melalui pesan pribadi: <code>{status}</code>"
+captcha_join_requests_current: "Captcha pribadi untuk permintaan bergabung <b>{status}</b>."
+captcha_join_requests_enabled: "Captcha pribadi untuk permintaan bergabung diaktifkan. Jawaban yang benar menyetujui permintaan meskipun /autoapprove nonaktif."
+captcha_join_requests_disabled: "Captcha pribadi untuk permintaan bergabung dinonaktifkan. Permintaan mengikuti alur persetujuan otomatis atau tombol admin seperti sebelumnya."
+captcha_join_requests_usage: "Gunakan <code>/captchajoin on</code> atau <code>/captchajoin off</code>. Gunakan <code>/captchajoin</code> untuk melihat status saat ini."
+captcha_join_request_prompt: "Untuk bergabung dengan <b>{group}</b>, selesaikan captcha ini:\n\nBatas waktu: <b>{timeout} menit</b>. Percobaan yang diizinkan: <b>{attempts}</b>."
+captcha_join_request_approved: "Permintaan Anda untuk bergabung dengan <b>{group}</b> telah disetujui."
+captcha_join_request_declined: "Permintaan Anda untuk bergabung dengan <b>{group}</b> ditolak karena terlalu banyak jawaban salah."
+captcha_join_request_declined_alert: "Permintaan Anda untuk bergabung ditolak setelah terlalu banyak jawaban salah."
+captcha_join_request_timeout: "Permintaan Anda untuk bergabung dengan <b>{group}</b> ditolak karena batas waktu captcha habis."
+captcha_join_request_wrong: "Jawaban salah. Sisa percobaan: {remaining}."
+captcha_join_request_expired: "Captcha permintaan bergabung ini telah kedaluwarsa atau permintaannya sudah ditangani."
+captcha_join_request_wrong_user: "Captcha permintaan bergabung ini bukan untuk Anda."
+captcha_status_enabled: "diaktifkan"
+captcha_status_disabled: "dinonaktifkan"
+
+# Common button texts
+button_yes: "Ya"
+button_no: "Tidak"
+button_back: "Kembali"
+button_unmute_admins: "Bunyikan (Khusus Admin)"
+button_formatting: "Pemformatan"
+button_click_me: "Klik Saya!"
+button_ban: "Blokir"
+button_kick: "Tendang"
+button_mute: "Bisu"
+button_unban: "Buka Blokir"
+button_unmute: "Bunyikan"
+
+# Captcha module strings
+captcha_mode_math_desc: "masalah matematika"
+captcha_mode_text_desc: "pengenalan teks dari gambar"
+captcha_mode_set_formatted: "✅ Mode captcha diatur ke <b>%s</b> (%s)"
+captcha_welcome_text_detailed: "👋 Selamat datang %s!\n\nSilakan pilih teks yang ditampilkan di gambar untuk memverifikasi Anda manusia:\n\n⏱ Anda punya <b>%d menit</b> untuk menjawab."
+captcha_welcome_math_detailed: "👋 Selamat datang %s!\n\nSilakan selesaikan masalah yang ditampilkan di gambar dan pilih jawaban yang benar:\n\n⏱ Anda punya <b>%d menit</b> untuk menjawab."
+captcha_pending_messages_header: "📋 <b>Pesan tertunda dari pengguna %d:</b>\n\n"
+captcha_pending_message_type: "%d. Tipe: %s\n"
+captcha_pending_message_caption: "   Keterangan: %s\n"
+captcha_pending_message_content: "   Konten: %s\n"
+captcha_pending_message_time: "   Waktu: %s\n\n"
+
+# Message type strings (shared across modules)
+message_type_text: "teks"
+message_type_sticker: "stiker"
+message_type_document: "dokumen"
+message_type_photo: "foto"
+message_type_audio: "berkas audio"
+message_type_voice: "suara"
+message_type_video: "berkas video"
+message_type_video_note: "catatan video"
+message_type_unknown: "tidak diketahui"
+
+# Connections module strings
+connections_invalid_option: "Silakan berikan opsi yang valid dari &lt;yes/on/no/off&gt;"
+connections_button_connect: "Hubungkan ke obrolan"
+
+# Bot updates module strings
+bot_updates_convert_instruction: "Setelah mengubah grup ini menjadi supergrup, Anda dapat menambahkan saya lagi untuk menggunakan saya.\n"
+bot_updates_convert_howto: "Untuk mengubah grup ini menjadi supergrup, silakan ikuti petunjuk di sini:\n"
+
+# Antiflood module strings
+antiflood_button_unban_admins: "Buka Blokir (Khusus Admin)"
+antiflood_action_muted: "dibisukan"
+antiflood_action_banned: "diblokir"
+antiflood_action_kicked: "dikeluarkan"
+antiflood_action_tbanned: "diblokir selama {duration}"
+antiflood_action_tmuted: "dibisukan selama {duration}"
+antiflood_action_none: "tidak ada"
+
+# Helpers module strings
+helpers_notes_current_header: "Ini adalah catatan saat ini di Obrolan ini:\n"
+
+
+# Default button texts
+button_rules_default: "Aturan"
+
+# AI spam filter module strings
+aispam_help_msg: |
+  <b>🤖 Filter Spam AI</b>
+
+  Filter opsional yang menilai setiap pesan di chat ini dengan model AI dan menghapus pesan yang diyakininya sebagai spam.
+
+  Tidak ada hal lain yang terjadi: tidak ada peringatan, mute, balasan, atau pemberitahuan. Pesan yang diyakini model sebagai spam dihapus secara diam-diam, dan pengirimnya tidak pernah diberi tahu.
+
+  Pesan yang ditulis dalam bahasa Inggris bertindak mulai keyakinan 80%, dan pesan dalam bahasa lain mulai 90%, karena model ini dioptimalkan untuk bahasa Inggris.
+
+
+  <b>Perintah admin:</b>
+
+  × /aispam: Menampilkan apakah filter aktif dan persisnya data apa yang dikirim ke model.
+
+  × /aispam <code><on/off></code>: Mengaktifkan atau menonaktifkan filter untuk chat ini.
+
+
+  Filter nonaktif di semua chat sampai seorang admin mengaktifkannya, dan memerlukan kunci API yang sudah dikonfigurasi oleh operator bot.
+aispam_status_enabled: "Filter spam AI sedang <b>aktif</b> di chat ini."
+aispam_status_disabled: "Filter spam AI sedang <b>nonaktif</b> di chat ini. Aktifkan dengan <code>/aispam on</code>."
+aispam_status_key_missing: "⚠️ Tidak tersedia: operator bot belum mengonfigurasi kunci API, jadi tidak ada pesan yang diperiksa."
+aispam_status_globally_disabled: "⚠️ Tidak tersedia: operator bot telah menonaktifkan filter spam AI secara global, jadi tidak ada pesan yang diperiksa."
+aispam_data_notice: |
+  <b>Yang dikirim untuk setiap pesan yang diperiksa:</b>
+  • Judul, deskripsi, aturan, dan bahasa chat
+  • Profil pengirim: berapa hari sejak bot pertama kali melihatnya, jumlah pesan dalam satu jam terakhir, jumlah peringatan
+  • Teks atau keterangan pesan, domain yang ditautkan, dan apakah pesan diteruskan atau balasan
+  • Beberapa pesan terbaru pengirim di chat ini
+
+
+  Nama, nama pengguna, ID pengguna, nomor telepon, atau pesan dari chat lain tidak dikirim.
+aispam_enabled_success: "✅ Filter spam AI sekarang <b>aktif</b>. Pesan yang diyakini model sebagai spam akan dihapus."
+aispam_disabled_success: "❌ Filter spam AI sekarang <b>nonaktif</b>."
+aispam_no_key: "❌ Saya tidak dapat mengaktifkan filter spam AI: operator bot belum mengonfigurasi kunci API. Tidak ada yang berubah."
+aispam_globally_disabled: "❌ Saya tidak dapat mengaktifkan filter spam AI: operator bot telah menonaktifkannya secara global. Tidak ada yang berubah."
+aispam_invalid_option: "Saya hanya memahami salah satu opsi: <code>on</code>/<code>off</code>/<code>yes</code>/<code>no</code>/<code>true</code>/<code>false</code>/<code>enable</code>/<code>disable</code>"
+aispam_breaker_notice: "⚠️ Pemeriksaan spam AI dijeda di chat ini selama beberapa menit setelah penyedia AI gagal berulang kali. Pemeriksaan lanjut sendiri, dan filter tetap aktif."
+
+# Spam database join check strings
+spamdb_help_msg: |
+  <b>🛡 Database Spam</b>
+
+  Pemeriksaan opsional yang mencari setiap anggota baru di database spam saat mereka bergabung, lalu menindak yang terdaftar. CAS (cas.chat) diperiksa secara bawaan; lols.bot dan jaringan Shared bans milik bot ini bisa ditambahkan.
+
+  Admin, pengguna yang disetujui, dan bot tidak pernah diperiksa. Jika sebuah database tidak bisa dihubungi, anggota tetap masuk. Setiap tindakan hanya dilaporkan ke kanal log, tidak pernah di grup.
+
+
+  *Perintah admin:*
+
+  × /spamdb: Tampilkan apakah pemeriksaan aktif, database mana yang ditanyai, dan apa yang dilakukannya.
+
+  × /spamdb `<on/off>`: Aktifkan atau nonaktifkan pemeriksaan di chat ini.
+
+  × /spamdb db `<cas/lols/shared>` `<on/off>`: Pilih database. CAS aktif secara bawaan, dan minimal satu harus tetap aktif. lols.bot mendaftarkan akun lebih agresif, jadi lebih banyak positif palsu. Shared bans nonaktif secara bawaan, membutuhkan jaringan reputasi bersama dari operator, dan mendaftarkan pengguna yang baru-baru ini dikeluarkan oleh beberapa chat.
+
+  × /spamdb action `<ban/mute/log>`: Pilih tindakan untuk anggota yang terdaftar. Bawaannya ban; log hanya melaporkannya.
+
+
+  Pemeriksaan nonaktif di semua chat sampai admin mengaktifkannya. Jika aktif, ID Telegram setiap anggota baru dikirim ke setiap database eksternal yang dipilih (cas.chat, lols.bot). Shared bans tetap di dalam bot dan tidak mengirim apa pun.
+spamdb_status_enabled: "Pemeriksaan database spam saat bergabung <b>aktif</b> di chat ini. Anggota yang terdaftar mendapat: <code>{action}</code>."
+spamdb_status_disabled: "Pemeriksaan database spam saat bergabung <b>nonaktif</b> di chat ini. Aktifkan dengan <code>/spamdb on</code>."
+spamdb_status_databases: "<b>Database:</b> {databases}. Ubah dengan <code>/spamdb db</code>."
+spamdb_status_db_on: "{database} (aktif)"
+spamdb_status_db_off: "{database} (nonaktif)"
+spamdb_status_db_on_inactive: "{database} (aktif, tetapi tidak berjalan: operator bot telah mematikan jaringan larangan bersama)"
+spamdb_status_globally_disabled: "⚠️ Tidak tersedia: operator bot telah mematikan pemeriksaan database spam, jadi tidak ada anggota yang diperiksa."
+spamdb_data_notice: "<b>Yang dikirim:</b> ID Telegram setiap anggota baru, ke {services}. Tidak ada yang lain keluar dari bot."
+spamdb_shared_data_notice: "<b>Shared bans</b> dihitung dari peristiwa moderasi bot ini sendiri; tidak ada informasi tentang chat ini atau anggotanya yang dikirim ke mana pun untuk itu."
+spamdb_enabled_success: "✅ Pemeriksaan database spam saat bergabung sekarang <b>aktif</b>. Anggota baru dicari di database yang dipilih saat bergabung."
+spamdb_disabled_success: "❌ Pemeriksaan database spam saat bergabung sekarang <b>nonaktif</b>."
+spamdb_globally_disabled: "❌ Saya tidak bisa mengaktifkan pemeriksaan database spam: operator bot telah mematikannya. Tidak ada yang berubah."
+spamdb_db_shared_disabled: "❌ Saya tidak bisa mengaktifkan Shared bans: operator bot belum mengaktifkan jaringan reputasi bersama. Tidak ada yang berubah."
+spamdb_invalid_option: "Saya hanya mengerti opsi dari: <code>on</code>/<code>off</code>/<code>yes</code>/<code>no</code>/<code>action</code>/<code>db</code>"
+spamdb_invalid_action: "Pilih tindakan dari: <code>ban</code>/<code>mute</code>/<code>log</code>. Contoh: <code>/spamdb action mute</code>"
+spamdb_action_success: "✅ Anggota yang terdaftar sekarang mendapat: <code>{action}</code>."
+spamdb_db_usage: "Pilih database dan <code>on</code>/<code>off</code>: <code>cas</code> (CAS, aktif secara bawaan), <code>lols</code> (lols.bot) atau <code>shared</code> (Shared bans, nonaktif secara bawaan). Contoh: <code>/spamdb db lols on</code>"
+spamdb_db_enabled: "✅ Anggota baru sekarang akan dicari di {database}."
+spamdb_db_disabled: "❌ Anggota baru tidak akan lagi dicari di {database}."
+spamdb_db_last: "❌ {database} adalah satu-satunya database yang tersisa, jadi tetap aktif. Aktifkan database lain dulu, atau matikan pemeriksaan dengan <code>/spamdb off</code>."
+
+# Spam filter strings
+spamfilter_help_msg: |
+  <b>🧹 Filter Spam</b>
+
+  Filter opsional yang belajar dari spam yang dihapus admin Anda. Balas /spam ke pesan spam untuk menghapusnya, memblokir pengirimnya, dan menyimpan teksnya sebagai sampel spam chat ini. Saat filter aktif, pesan baru yang sangat mirip dengan sampel akan tertangkap, meski tautannya diganti, emoji ditambahkan, atau memakai huruf yang mirip.
+
+  Sebuah teks juga berlaku di setiap chat yang memakai filter setelah dua chat yang tidak berkaitan (pemilik berbeda, tanpa admin yang sama) menandainya.
+
+  Mengaktifkan filter memulai uji coba 7 hari: kecocokan hanya dilaporkan ke kanal log, masing-masing dengan tombol Bukan spam, dan tidak ada yang dihapus. Admin, pengguna yang disetujui, dan anggota yang sedang menjawab captcha tidak pernah diperiksa.
+
+
+  <b>Perintah admin:</b>
+
+  × /spam: Balas ke pesan untuk menghapusnya, memblokir pengirimnya, dan menyimpan teksnya sebagai sampel spam.
+
+  × /spamfilter <code>on/off/dryrun</code>: Aktifkan filter (kecocokan dihapus setelah uji coba 7 hari selesai), matikan, atau jalankan uji coba saja (kecocokan dilaporkan, tidak pernah dihapus). Tanpa opsi, tampilkan status filter.
+  Gunakan /spamfilter threshold <code>0.5-1</code> untuk mengatur seberapa mirip pesan dengan sampel: bawaan 0.85; nilai lebih rendah menangkap lebih banyak dan lebih sering keliru.
+
+  × /spamsamples: Tampilkan sampel spam terbaru beserta ID-nya.
+
+  × /forgetspam <code>ID</code>: Hapus sebuah sampel spam.
+
+
+  Sampel disimpan 90 hari, paling banyak 200 per chat. Membuka blokir pengguna yang diblokir dengan /spam, atau menekan Bukan spam di kanal log, menandai teks itu sebagai bukan spam di chat ini.
+spamfilter_spam_no_reply: "Balas /spam ke pesan spam untuk menghapusnya, memblokir pengirimnya, dan menyimpannya sebagai sampel."
+spamfilter_spam_banned: "🧹 Spam dihapus dan {user} diblokir."
+spamfilter_spam_saved: "Disimpan sebagai sampel spam <code>#{id}</code>."
+spamfilter_spam_too_short: "Pesannya terlalu pendek untuk disimpan sebagai sampel."
+spamfilter_usage: "Pilih <code>on</code>, <code>off</code>, atau <code>dryrun</code>, atau atur kemiripan dengan <code>/spamfilter threshold 0.85</code>."
+spamfilter_threshold_invalid: "Ambang harus berupa angka dari <code>0.5</code> sampai <code>1</code>, misalnya <code>/spamfilter threshold 0.85</code>."
+spamfilter_status_off: "Filter spam <b>nonaktif</b> di chat ini. Coba dengan <code>/spamfilter dryrun</code>."
+spamfilter_status_dryrun: "Filter spam dalam <b>uji coba</b>: kecocokan dilaporkan ke kanal log dan tidak pernah dihapus."
+spamfilter_status_on_pending: "Filter spam <b>aktif</b>, dalam uji coba sampai {date}: sampai saat itu kecocokan hanya dilaporkan ke kanal log."
+spamfilter_status_on: "Filter spam <b>aktif</b>: kecocokan dihapus dan dilaporkan ke kanal log."
+spamfilter_status_threshold: "<b>Ambang:</b> {threshold}"
+spamfilter_status_samples: "<b>Sampel:</b> {spam} spam, {ham} bukan spam. Lihat daftarnya dengan <code>/spamsamples</code>."
+spamfilter_status_no_log: "⚠️ Chat ini tidak punya kanal log, jadi Anda tidak akan melihat apa yang ditangkap filter. Atur dengan <code>/setlog</code>."
+spamfilter_samples_empty: "Chat ini belum punya sampel spam ({ham} bukan spam). Balas <code>/spam</code> ke pesan spam untuk menambahkannya."
+spamfilter_samples_header: "<b>Sampel spam</b>: {spam} spam, {ham} bukan spam. Terbaru lebih dulu:"
+spamfilter_samples_footer: "Hapus salah satunya dengan <code>/forgetspam ID</code>."
+spamfilter_forget_usage: "Berikan ID sampel dari <code>/spamsamples</code>."
+spamfilter_forget_done: "🗑 Sampel spam <code>#{id}</code> dihapus."
+spamfilter_forget_not_found: "Chat ini tidak punya sampel <code>#{id}</code>."
+spamfilter_not_spam_button: "✅ Bukan spam"
+spamfilter_not_spam_invalid: "Tombol ini sudah tidak berfungsi."
+spamfilter_not_spam_failed: "Terjadi kesalahan; tidak ada yang diubah."
+spamfilter_not_spam_done: "Ditandai sebagai bukan spam."
+spamdb_db_lols_warning: "⚠️ lols.bot mendaftarkan akun lebih agresif daripada CAS, jadi akan ada lebih banyak positif palsu. Pertimbangkan <code>/spamdb action log</code> sampai Anda yakin. ID Telegram setiap anggota baru sekarang dikirim ke lols.bot."
+spamdb_db_enabled_idle: "✅ {database} dipilih, tetapi tidak ada yang dicari selama pemeriksaan mati. Lihat statusnya dengan <code>/spamdb</code>."
+spamdb_db_lols_warning_idle: "⚠️ lols.bot mendaftarkan akun lebih agresif daripada CAS, jadi akan ada lebih banyak positif palsu. Pertimbangkan <code>/spamdb action log</code> sampai Anda yakin. Setelah pemeriksaan aktif, ID Telegram setiap anggota baru akan dikirim ke lols.bot."
+
+# New-member probation strings
+probation_help_msg: |
+  <b>🕑 Masa Percobaan</b>
+
+  Masa percobaan opsional untuk anggota baru: siapa pun yang bergabung setelah admin mengaktifkannya tidak bisa mengirim tautan atau pesan terusan (dan, jika Anda pilih, media) sampai mereka mengirim beberapa pesan sungguhan atau waktu yang ditentukan berlalu. Pesan yang diblokir dihapus; mereka tidak dibisukan.
+
+  Anggota yang sudah ada di grup sebelum masa percobaan diaktifkan tidak pernah menjalani masa percobaan. Admin, pengguna yang disetujui, dan bot dilewati.
+
+
+  *Perintah admin:*
+
+  × /probation: Tampilkan pengaturan masa percobaan.
+
+  × /probation `<on/off>`: Aktifkan atau matikan masa percobaan untuk anggota yang bergabung mulai sekarang.
+
+  × /probation time `<durasi>`: Berapa lama masa percobaan berlangsung, dari 1h sampai 30d. Bawaannya 24h.
+
+  × /probation messages `<angka>`: Berapa pesan yang mengakhiri masa percobaan lebih awal, dari 1 sampai 100. Bawaannya 5.
+
+  × /probation minlen `<angka>`: Pesan terpendek, dalam karakter, yang dihitung. Bawaannya 20. Pesan yang diulang dihitung sekali.
+
+  × /probation block `<links,forwards,media>`: Apa yang dihapus selama masa percobaan. Bawaannya tautan dan pesan terusan.
+
+  × /probation notice `<on/off>`: Beri tahu anggota sekali, di grup, mengapa pesannya dihapus. Mati secara bawaan.
+
+
+  Masa percobaan mati di setiap obrolan sampai admin mengaktifkannya. Pesan hanya dihitung jika bot memiliki Redis; tanpanya, masa percobaan berakhir saat waktunya habis. Bot memerlukan hak untuk menghapus pesan.
+probation_usage: "Gunakan <code>/probation on</code>/<code>off</code>, <code>/probation time 24h</code>, <code>/probation messages 5</code>, <code>/probation minlen 20</code>, <code>/probation block links,forwards</code> atau <code>/probation notice on</code>/<code>off</code>."
+probation_status_on: "Masa percobaan anggota baru <b>aktif</b> di obrolan ini."
+probation_status_off: "Masa percobaan anggota baru <b>mati</b> di obrolan ini. Aktifkan dengan <code>/probation on</code>."
+probation_status_details: "Anggota yang bergabung tidak bisa mengirim <b>{blocked}</b> selama <b>{time}</b>, atau sampai mereka mengirim <b>{messages}</b> pesan berbeda dengan sedikitnya <b>{minlen}</b> karakter."
+probation_status_notice_on: "<b>Pemberitahuan:</b> aktif. Anggota diberi tahu sekali, di grup, mengapa pesannya dihapus."
+probation_status_notice_off: "<b>Pemberitahuan:</b> mati. Pesan dihapus tanpa pemberitahuan. Aktifkan dengan <code>/probation notice on</code>."
+probation_status_no_redis: "⚠️ Bot tidak memiliki Redis, jadi pesan tidak dihitung: masa percobaan hanya berakhir saat waktunya habis."
+probation_status_no_delete: "⚠️ Saya tidak bisa menghapus pesan di obrolan ini, jadi masa percobaan tidak berbuat apa-apa sampai saya mendapat hak itu."
+probation_enabled_success: "✅ Masa percobaan anggota baru sekarang <b>aktif</b>. Anggota yang bergabung mulai sekarang menjalani masa percobaan; anggota yang sudah ada tidak."
+probation_disabled_success: "❌ Masa percobaan anggota baru sekarang <b>mati</b>."
+probation_time_success: "✅ Masa percobaan sekarang berlangsung <b>{time}</b>."
+probation_messages_success: "✅ Masa percobaan sekarang berakhir setelah <b>{messages}</b> pesan."
+probation_minlen_success: "✅ Pesan sekarang dihitung mulai <b>{minlen}</b> karakter."
+probation_block_success: "✅ Selama masa percobaan sekarang saya menghapus: <b>{blocked}</b>."
+probation_notice_on_success: "✅ Anggota dalam masa percobaan akan diberi tahu sekali mengapa pesannya dihapus."
+probation_notice_off_success: "❌ Pesan dari anggota dalam masa percobaan sekarang dihapus tanpa pemberitahuan."
+probation_invalid_time: "Berikan waktu dari 1h sampai 30d. Contoh: <code>/probation time 12h</code>"
+probation_invalid_messages: "Berikan jumlah pesan dari 1 sampai 100. Contoh: <code>/probation messages 5</code>"
+probation_invalid_minlen: "Berikan panjang dari 1 sampai 500 karakter. Contoh: <code>/probation minlen 20</code>"
+probation_invalid_block: "Pilih setidaknya satu dari <code>links</code>, <code>forwards</code>, dan <code>media</code>. Contoh: <code>/probation block links,forwards</code>"
+probation_notice: "{user}, anggota baru belum bisa mengirim {blocked}, jadi pesan Anda saya hapus. Ini berakhir setelah beberapa pesan atau beberapa waktu."
+probation_block_links: "tautan"
+probation_block_forwards: "pesan terusan"
+probation_block_media: "media"
+
+# Weekly digest strings
+digest_help_msg: |
+  <b>📊 Ringkasan mingguan</b>
+
+  Bot menghitung pesan, bergabung, dan keluar di chat ini setiap hari dalam UTC dan menyimpan totalnya selama satu tahun. Admin dapat mengaktifkan ringkasan mingguan yang mengirim total minggu sebelumnya, dengan perubahan dari minggu sebelumnya, setiap Senin setelah 00:00 UTC. Ringkasan dikirim ke kanal log jika chat ini memilikinya, jika tidak ke grup.
+
+  *Perintah admin:*
+
+  × /digest: Tampilkan apakah ringkasan aktif dan ke mana dikirim.
+  × /digest on: Aktifkan ringkasan mingguan.
+  × /digest off: Nonaktifkan ringkasan mingguan.
+  × /digest here: Kirim ringkasan ke grup ini.
+  × /digest log: Kirim ringkasan ke kanal log (perlu kanal log).
+  × /digest now: Pratinjau minggu ini dengan tampilan yang sama seperti ringkasan.
+
+  Hitungan disimpan per chat dan tidak pernah menyertakan teks pesan.
+digest_globally_disabled: "❌ Operator bot menonaktifkan ringkasan."
+digest_usage: "Gunakan <code>/digest</code>, <code>/digest on</code>, <code>/digest off</code>, <code>/digest here</code>, <code>/digest log</code>, atau <code>/digest now</code>."
+digest_status_title: "<b>📊 Ringkasan mingguan</b>"
+digest_status_enabled: "Status: <b>aktif</b>"
+digest_status_disabled: "Status: <b>nonaktif</b>"
+digest_destination_log: "kanal log"
+digest_destination_group: "grup ini"
+digest_status_destination_default: "Tujuan: <b>{destination}</b> (bawaan)"
+digest_status_destination_set: "Tujuan: <b>{destination}</b> (dipilih admin)"
+digest_status_hint: "Gunakan <code>/digest on</code>, <code>/digest off</code>, <code>/digest here</code>, <code>/digest log</code>, atau <code>/digest now</code>."
+digest_log_unavailable: "❌ Chat ini tidak punya kanal log, jadi ringkasan tidak bisa dikirim ke sana. Atur kanal dengan <code>/setlog</code> atau gunakan <code>/digest here</code>."
+digest_message_title: "<b>📊 Ringkasan mingguan</b>"
+digest_message_period: "<b>Minggu {date}</b> (UTC)"
+digest_message_messages: "Pesan: <b>{count}</b> — {change}"
+digest_message_joins: "Bergabung: <b>{count}</b> — {change}"
+digest_message_leaves: "Keluar: <b>{count}</b> — {change}"
+digest_message_moderation: "Tindakan moderasi: <b>{count}</b> — {change}"
+digest_message_top_action: "Tindakan tersering: <b>{action}</b>"
+digest_message_empty: "😴 <b>Tidak ada aktivitas tercatat</b>\nTidak ada pesan, bergabung, keluar, atau tindakan moderasi pada periode ini."
+digest_action_ban: "blokir"
+digest_action_kick: "keluarkan"
+digest_action_mute: "bisu"
+digest_action_unban: "buka blokir"
+digest_change_up: "▲ {percent}% dari minggu sebelumnya"
+digest_change_down: "▼ {percent}% dari minggu sebelumnya"
+digest_change_same: "tidak berubah dari minggu sebelumnya"
+digest_change_new: "baru"
+digest_change_none: "—"
+digest_dashboard_button: "📊 Buka dasbor"
+# Recurring messages strings
+recurring_help_msg: |
+  <b>🔁 Pesan berulang</b>
+
+  Admin dapat membuat bot memposting pesan di obrolan ini berulang kali, misalnya pengingat aturan setiap hari. Isinya bekerja seperti catatan: teks dengan format, tombol, dan isian seperti nama obrolan, atau pesan yang dibalas, termasuk media. Waktu dalam UTC. Satu obrolan dapat memiliki hingga 5 pesan berulang, dan interval terpendek adalah 1 jam.
+
+  *Perintah admin:*
+
+  × /recurring add `<interval>` `<balasan/teks>`: Memposting teks, atau pesan yang dibalas, setiap interval (misalnya 6h, 1d, atau 1w) di topik tempat perintah dikirim.
+  Opsi diletakkan di antara interval dan teks: `start=HH:MM` memposting pertama kali pada jam ini (UTC), lalu setiap interval; `end=YYYY-MM-DD` berhenti setelah tanggal itu (`end=YYYY-MM-DDTHH:MM` pada waktu itu); `delete=on` menghapus posting sebelumnya saat posting berikutnya terkirim; `topic=ID` memposting di topik itu.
+  × /recurring list: Menampilkan pesan berulang obrolan ini beserta ID-nya.
+  × /recurring rm `<id>`: Menghapus pesan berulang.
+
+  Pesan yang tidak dapat lagi diposting bot (bot dikeluarkan atau topiknya sudah tidak ada) dihentikan dan tetap ada di daftar sampai dihapus. Jika bot tidak boleh menulis di obrolan, posting dilewati sampai bot boleh menulis lagi.
+recurring_usage: "Gunakan <code>/recurring add &lt;interval&gt; &lt;teks&gt;</code>, <code>/recurring list</code> atau <code>/recurring rm &lt;id&gt;</code>."
+recurring_interval_too_short: "❌ Interval minimal 1 jam."
+recurring_invalid_option: "❌ Saya tidak dapat membaca opsi <code>{option}</code>. Gunakan <code>start=HH:MM</code>, <code>end=YYYY-MM-DD</code>, <code>delete=on</code> atau <code>topic=ID</code>."
+recurring_need_content: "❌ Beri saya sesuatu untuk diposting: teks setelah interval, atau balas sebuah pesan."
+recurring_end_before_start: "❌ Waktu berakhir lebih awal dari posting pertama."
+recurring_limit_reached: "❌ Obrolan ini sudah memiliki {max} pesan berulang, jumlah maksimum. Hapus satu dulu dengan <code>/recurring rm &lt;id&gt;</code>."
+recurring_added: "✅ Pesan berulang <b>#{id}</b> disimpan."
+recurring_list_title: "<b>🔁 Pesan berulang</b> ({count}/{max})"
+recurring_list_item: "<b>#{id}</b> · setiap {interval} · berikutnya {next} UTC"
+recurring_list_item_until: "sampai {end} UTC"
+recurring_list_item_topic: "topik {topic}"
+recurring_list_item_delete_previous: "menggantikan posting sebelumnya"
+recurring_list_item_stopped: "⏸ dihentikan"
+recurring_list_media: "📎 berkas media"
+recurring_list_empty: "Obrolan ini tidak memiliki pesan berulang. Tambahkan dengan <code>/recurring add &lt;interval&gt; &lt;teks&gt;</code>."
+recurring_list_hint: "Hapus satu dengan <code>/recurring rm &lt;id&gt;</code>."
+recurring_not_found: "❌ Obrolan ini tidak memiliki pesan berulang #{id}."
+recurring_removed: "✅ Pesan berulang #{id} dihapus."
+
+# Admin module extended documentation
+admin_extended_docs: |
+  <b>Dukungan Admin Anonim</b>
+
+  Perintah <code>/anonadmin</code> memungkinkan pemilik grup untuk mengalihkan pengenalan admin anonim:
+  <code>/anonadmin on</code> - Percayai admin anonim tanpa verifikasi
+  <code>/anonadmin off</code> - Wajibkan verifikasi dengan tombol (default)
+
+  Ketika dinonaktifkan (default), bot meminta verifikasi dengan tombol sebelum menjalankan tindakan admin dari akun anonim.
+
+  <b>Cara Kerja Verifikasi Admin Anonim:</b>
+  1. Bot mendeteksi pengirim adalah GroupAnonymousBot
+  2. Pesan asli di-cache dengan TTL 20 detik
+  3. Tombol "Klik untuk membuktikan admin" dikirim ke obrolan
+  4. Pengguna yang mengklik diverifikasi sebagai admin, perintah dieksekusi
+  5. Tombol kedaluwarsa setelah 20 detik jika tidak diverifikasi
+
+  <b>Perintah yang Didukung:</b>
+  Admin: /promote, /demote, /title, /setgtitle, /setgpic, /setgdesc
+  Bans: /ban, /dban, /sban, /tban, /unban, /baninfo, /banlist, /kick, /dkick, /skick, /restrict, /unrestrict
+  Bisu: /mute, /smute, /dmute, /tmute, /unmute
+  Pin: /pin, /unpin, /permapin, /unpinall
+  Pembersihan: /purge, /del, /purgefrom, /purgeto
+  Peringatan: /warn, /swarn, /dwarn
+
+admin_notes_docs: |
+  <b>Catatan Keamanan</b>
+  • Semua masukan yang dikontrol pengguna di-escape HTML untuk mencegah serangan injeksi
+  • Perubahan izin admin dijalankan dengan penanganan kesalahan dan pemulihan panic yang tepat
+
+# Antiflood extended docs
+antiflood_notes_docs: |
+  <b>Perilaku Default</b>
+  Antiflood <b>dinonaktifkan secara default</b>. Anda harus secara eksplisit mengaktifkannya menggunakan <code>/setflood &lt;number&gt;</code>.
+
+# Locks module extended documentation
+locks_notes_docs: |
+  <b>Catatan Teknis</b>
+  • Penegakan kunci real-time
+  • Admin dan pengguna yang disetujui dibebaskan dari semua kunci
+  • Kunci bertahan di seluruh restart bot
+  • Cache dihapus saat pembaruan
+
+# Languages extended docs
+languages_extended_docs: |
+  <b>Cara Kerja</b>
+  • <b>Obrolan Pribadi:</b> Pengguna mana pun dapat mengubah bahasa pribadi mereka
+  • <b>Obrolan Grup:</b> Hanya admin yang dapat mengubah bahasa grup
+
+  Preferensi bahasa di-cache untuk kinerja dan disimpan secara terpisah untuk pengguna dan grup.
+
+# Greetings extended docs
+greetings_extended_docs: |
+  <b>Integrasi Captcha</b>
+  Ketika modul Captcha diaktifkan:
+  1. Anggota baru dibisukan saat bergabung
+  2. Tantangan captcha dikirim sebagai gantinya selamat datang
+  3. Setelah verifikasi, pesan selamat datang dikirim
+  4. Kegagalan verifikasi menerapkan tindakan captcha
+
+# Extended documentation locale keys - Notes module
+notes_extended_docs: |
+  <b>Fitur:</b>
+  • <b>Dukungan Teks &amp; Media</b>: Simpan pesan teks, foto, video, dokumen, dan lainnya
+  • <b>Tombol Kustom</b>: Tambahkan tombol keyboard inline ke catatan
+  • <b>Opsi Pemformatan</b>: Kontrol visibilitas dan perilaku catatan
+  • <b>Catatan Khusus Admin</b>: Batasi catatan tertentu hanya untuk administrator
+  • <b>Catatan Pribadi</b>: Kirim catatan secara pribadi ke pengguna melalui DM
+  • <b>Kontrol Pratinjau Web</b>: Pratinjau tautan nonaktif secara bawaan; tambahkan <code>{preview}</code> untuk mengaktifkannya
+  • <b>Konten Dilindungi</b>: Cegah konten catatan diteruskan
+
+  <b>Opsi Pemformatan Catatan:</b>
+  Ketika menyimpan catatan, Anda dapat menggunakan tag khusus untuk mengontrol perilakunya:
+  • <code>{private}</code> - Catatan hanya akan dikirim melalui DM, tidak pernah di grup
+  • <code>{noprivate}</code> - Saat diambil di grup, catatan dikirim di grup meskipun catatan pribadi aktif (jika diambil dari PM, catatan tetap dikirim di PM)
+  • <code>{admin}</code> - Catatan hanya dapat diakses oleh admin
+  • <code>{protect}</code> - Konten tidak dapat diteruskan
+  • <code>{nonotif}</code> - Kirim tanpa suara notifikasi
+  • <code>{preview}</code> - Tampilkan pratinjau tautan (nonaktif secara bawaan)
+
+  <b>Mode Catatan Pribadi:</b>
+  Ketika catatan pribadi diaktifkan (<code>/privatenotes on</code>), semua catatan dikirim ke pengguna melalui DM sebagai gantinya di grup. Ini menjaga grup tetap bersih.
+
+  Catatan individual dapat mengganti perilaku ini:
+  • <code>{private}</code> - Selalu kirim secara pribadi
+  • <code>{noprivate}</code> - Selalu kirim di grup
+
+  <b>Catatan Mentah (Tanpa Pemformatan):</b>
+  Admin dapat melihat konten catatan mentah tanpa pemformatan (untuk diedit):
+  <code>/get namacatatan noformat</code> atau <code>#namacatatan noformat</code>
+
+notes_permissions_docs: |
+  <b>Izin yang Diperlukan:</b>
+  • Simpan/Hapus catatan: Ubah Info Grup
+  • Lihat catatan admin: Status admin
+  • Hapus semua catatan: Pemilik Obrolan
+  • Dapatkan catatan biasa: Pengguna mana pun
+  • Bot: harus menjadi admin untuk /save, /addnote, /clear, /rmnote, /notes, dan /saved (/get dan #namacatatan berfungsi tanpanya)
+
+# Extended documentation locale keys - Pins module
+pins_extended_docs: |
+  <b>Fitur:</b>
+
+  <b>Anti-Channel Pin:</b>
+  Ketika diaktifkan, bot akan secara otomatis melepas pin pesan apa pun yang dipin secara otomatis oleh kanal yang terhubung. Ini berguna ketika Anda ingin menjaga kontrol atas apa yang disematkan di grup Anda.
+
+  <b>Bersihkan Tautan:</b>
+  Ketika diaktifkan, bot akan secara otomatis menghapus pesan apa pun yang dikirim ke grup dari kanal yang terhubung. Ini menjaga obrolan grup Anda tetap bersih dari konten kanal yang cross-posted.
+
+  <b>Permapin:</b>
+  Buat pesan pin kustom dengan:
+  • Teks dengan pemformatan HTML/Markdown
+  • Tombol inline dengan URL
+  • Lampiran media (foto, dokumen, stiker, audio, video, catatan suara, catatan video)
+
+  <b>Didukung melalui Koneksi:</b>
+  Perintah berikut berfungsi ketika terhubung ke obrolan melalui <code>/connect</code>:
+  • <code>/antichannelpin</code>
+  • <code>/cleanlinked</code>
+
+pins_notes_docs: |
+  <b>Catatan:</b>
+  • Perintah <code>/unpinall</code> menampilkan dialog konfirmasi sebelum melepas pin semua pesan
+  • Permapin mendukung teks, foto, dokumen dan GIF, stiker, audio, pesan suara, video, dan catatan video; tipe pesan lainnya ditolak
+  • Pengaturan pin anti-kanal dan bersihkan tautan disimpan per-obrolan dan bertahan di seluruh restart bot
+
+  <b>Izin yang Diperlukan:</b>
+  <b>Bot:</b> Harus admin dengan izin "Pin Pesan" (dan "Hapus Pesan" untuk <code>/cleanlinked</code>)
+  <b>Pengguna:</b> Kebanyakan perintah memerlukan admin dengan izin "Pin Pesan"
+
+# Extended documentation locale keys - Purges module
+purges_extended_docs: |
+  <b>Penghapusan Rentang dengan purgefrom/purgeto:</b>
+  Ketika Anda membutuhkan lebih banyak kontrol atas rentang penghapusan:
+
+  1. Balas ke pesan <b>pertama</b> dalam rentang:
+  <code>/purgefrom</code>
+  Bot akan mengonfirmasi pesan ditandai (kedaluwarsa setelah 30 detik).
+
+  2. Balas ke pesan <b>terakhir</b> dalam rentang:
+  <code>/purgeto</code>
+  Semua pesan antara dua penanda (inklusif) akan dihapus.
+
+  Ini berguna ketika Anda tidak dapat dengan mudah menggulir ke titik awal atau perlu memverifikasi rentang sebelum penghapusan.
+
+  <b>Batas dan Pembatasan:</b>
+  • <b>Maksimum pesan per pembersihan:</b> 1000 pesan
+  • <b>Batas usia pesan:</b> Pesan yang lebih dari 48 jam mungkin tidak dapat dihapus (pembatasan API Telegram)
+  • <b>Izin yang diperlukan:</b> Baik pengguna maupun bot harus memiliki izin "Hapus Pesan"
+
+purges_notes_docs: |
+  <b>Catatan:</b>
+  • Penanda <code>/purgefrom</code> kedaluwarsa setelah 30 detik jika tidak diikuti dengan <code>/purgeto</code>
+  • Menghapus rentang besar menggunakan pemrosesan konkuren untuk kinerja yang lebih baik
+  • Pesan status (menunjukkan berapa banyak pesan yang dihapus) menghapus diri secara otomatis setelah 3 detik
+  • Bot menangani pesan yang sudah dihapus dengan anggun tanpa kesalahan
+
+# Extended documentation locale keys - Reports module
+reports_extended_docs: |
+  <b>Cara Kerja:</b>
+
+  <b>Melaporkan Pesan:</b>
+  1. <b>Balas ke pesan yang melanggar</b> dengan <code>/report</code> atau sebutkan <code>@admin</code>
+  2. Bot mengirim notifikasi menyebut semua admin yang mengaktifkan laporan
+  3. Notifikasi menyertakan tombol tindakan untuk moderasi cepat
+
+  <b>Tombol Tindakan Admin:</b>
+  • <b>➡ Pesan</b> - Tautan ke pesan yang dilaporkan
+  • <b>⚠ Keluarkan</b> - Keluarkan pengguna yang dilaporkan (mereka dapat bergabung kembali)
+  • <b>⛔️ Blokir</b> - Blokir pengguna yang dilaporkan secara permanen
+  • <b>❎ Hapus Pesan</b> - Hapus pesan yang dilaporkan
+  • <b>✔️ Tandai Selesai</b> - Tandai laporan sebagai selesai tanpa tindakan
+
+  <b>Kartu di Kanal Log:</b>
+  Jika grup memiliki kanal log (<code>/setlog</code>) dengan kategori <code>reports</code> aktif, setiap pesan yang dilaporkan juga mendapat satu kartu di sana, dengan tombol <b>Blokir</b>, <b>Bisukan</b>, <b>Hapus</b> dan <b>Abaikan</b> miliknya sendiri. Hanya admin grup yang dilaporkan yang bisa menggunakannya, dengan hak yang sama seperti di grup. Grup tetap menerima laporan lengkap dengan sebutan admin dan tombol yang dijelaskan di atas.
+
+  Di kanal log:
+  • Salinan pesan yang dilaporkan, agar buktinya tetap ada jika pesan aslinya dihapus. Pesan yang tidak bisa disalin dikutip sebagai teks.
+  • Kartu yang membalas salinan itu, berisi pengguna yang dilaporkan, jumlah anggota yang melaporkan pesan itu, pelapor terakhir beserta alasannya, dan tautan ke pesan asli.
+  • Laporan berikutnya atas pesan yang sama memperbarui kartu yang sama; anggota yang melaporkan pesan yang sama dua kali hanya dihitung sekali.
+  • Setelah admin memutuskan laporan seorang anggota, jika anggota itu melaporkan pesan yang sama lagi, ia mendapat balasan bahwa admin sudah meninjaunya, tanpa sebutan admin maupun tombol.
+  • Tombol kartu tetap berfungsi selama masih ada laporan yang terbuka di kartu itu; jika sudah tidak ada, menekannya akan dijawab bahwa laporan sudah kedaluwarsa.
+
+  Setiap laporan juga disimpan di database beserta pelapor, target, ID pesan, 100 karakter pertama teks pesan, dan statusnya, yang dicatat oleh tombol di atas; pesan lengkapnya hanya ada di kanal log. Laporan yang sudah ditutup dihapus 90 hari setelah ditutup, dan laporan yang tidak ditutup siapa pun dihapus 90 hari setelah dibuat. Laporan tidak disertakan dalam <code>/export</code>.
+
+  <b>Pengaturan Pribadi vs Grup:</b>
+  • <b>Di PM:</b> <code>/reports on/off</code> mengalihkan apakah ANDA menerima notifikasi laporan (memerlukan /connect aktif ke grup tempat Anda dan bot sama-sama menjadi admin)
+  • <b>Di Grup:</b> <code>/reports on/off</code> mengalihkan apakah pelaporan diaktifkan untuk grup itu
+  • <b>Bisu otomatis:</b> <code>/reports mute &lt;N&gt;</code> (N dari 2 sampai 20) membisukan pengguna setelah N anggota berbeda memiliki laporan terbuka terhadapnya, sampai admin memutuskan dan paling lama 24 jam. Menandai laporan sebagai selesai atau menghapus pesan mencabut bisu. Tidak pernah berlaku untuk admin atau pengguna yang disetujui. <code>/reports mute off</code> menonaktifkannya (default).
+
+reports_permissions_docs: |
+  <b>Siapa yang Dapat Melaporkan?</b>
+  ✅ Pengguna biasa
+  ❌ Admin (tidak perlu melaporkan ke diri mereka sendiri)
+  ❌ Pengguna yang diblokir
+  ❌ Kanal anonim / Akun sistem Telegram
+
+  <b>Siapa yang Dapat Dilaporkan?</b>
+  ✅ Pengguna biasa
+  ❌ Bot itu sendiri
+  ❌ Admin (dilindungi dari laporan)
+  ❌ Kanal anonim / Akun sistem Telegram
+
+# Extended documentation locale keys - Rules module
+rules_extended_docs: |
+  <b>Fitur:</b>
+
+  <b>Aturan Pribadi:</b>
+  Aktifkan aturan pribadi (<code>/privaterules on</code>) untuk mengirim aturan melalui PM sebagai gantinya di grup. Ini menjaga obrolan grup tetap bersih.
+
+  <b>Tombol Aturan Kustom:</b>
+  Atur teks tombol kustom (maks 30 karakter):
+  <code>/rulesbtn Lihat Aturan</code>
+
+  Atur ulang ke default:
+  <code>/resetrulesbtn</code>
+
+  <b>Mengatur Aturan:</b>
+  Anda dapat mengatur aturan dengan memberikan teks langsung atau dengan membalas pesan:
+  <code>/setrules Harap menghormati semua anggota.</code>
+
+  Atau balas ke pesan:
+  <code>/setrules</code>
+
+  <b>Izin yang Diperlukan:</b>
+  • Perintah pengguna: Tersedia untuk semua pengguna
+  • Perintah admin: Memerlukan izin admin di obrolan
+
+# Extended documentation locale keys - Warns module
+warns_extended_docs: |
+  <b>Pengaturan Default:</b>
+  • <b>Batas peringatan default:</b> 3 peringatan
+  • <b>Mode peringatan default:</b> mute
+  • <b>Masa berlaku peringatan default:</b> mati (peringatan tidak pernah kedaluwarsa)
+
+  <b>Mode Peringatan yang Tersedia:</b>
+  • <code>ban</code> - Blokir pengguna secara permanen dari obrolan
+  • <code>kick</code> - Tendang pengguna (mereka dapat bergabung kembali)
+  • <code>mute</code> - Bisu pengguna (tidak dapat mengirim pesan)
+  • <code>tban</code> - Blokir pengguna selama waktu yang diberikan bersama mode, mis. <code>/setwarnmode tban 1d</code>
+  • <code>tmute</code> - Bisukan pengguna selama waktu yang diberikan bersama mode, mis. <code>/setwarnmode tmute 2h</code>
+
+  <b>Peringatan yang Menghapus Pesan:</b>
+  • <code>/swarn</code> - Hapus perintah Anda; peringatan tetap dikirim
+  • <code>/dwarn</code> - Hapus pesan pengguna dan peringatkan mereka
+
+warns_permissions_docs: |
+  <b>Persyaratan Izin:</b>
+  • <code>/warn</code>: Bot admin + Pengguna admin dengan pembatasan
+  • <code>/dwarn</code>, <code>/swarn</code>: Bot admin + Pengguna admin, keduanya dengan izin membatasi dan menghapus pesan
+  • <code>/rmwarn</code>, <code>/unwarn</code>: Bot admin + Pengguna admin
+  • <code>/resetwarn</code>, <code>/resetwarns</code>: Bot admin + Pengguna admin
+  • <code>/resetallwarns</code>: Pemilik obrolan saja
+  • <code>/setwarnmode</code>, <code>/setwarnlimit</code>, <code>/setwarntime</code>: Bot admin + Pengguna admin
+  • <code>/warnings</code>: Bot admin + Pengguna admin
+  • <code>/warns</code>: Pengguna mana pun (dapat dinonaktifkan)
+
+warns_notes_docs: |
+  <b>Catatan:</b>
+  • Ketika pengguna mencapai batas peringatan, tindakan yang dikonfigurasi (ban/kick/mute/tban/tmute) diterapkan secara otomatis
+  • Alasan peringatan disimpan dan ditampilkan ketika memeriksa peringatan pengguna
+  • Perintah <code>/warns</code> adalah satu-satunya perintah dalam modul ini yang dapat dinonaktifkan oleh admin
+  • Posting kanal anonim tidak dapat diperingatkan
+  • Admin tidak dapat diperingatkan
+
+# Extended documentation locale keys - Mutes module
+mutes_extended_docs: |
+  <b>Format Waktu untuk Bisu Sementara:</b>
+  • <code>m</code> = menit (mis., <code>30m</code>)
+  • <code>h</code> = jam (mis., <code>2h</code>)
+  • <code>d</code> = hari (mis., <code>1d</code>)
+  • <code>w</code> = minggu (mis., <code>1w</code>)
+
+  <b>Varian Bisu:</b>
+  • <code>/mute</code> - Bisu standar dengan alasan opsional
+  • <code>/smute</code> - Bisu diam (menghapus pesan perintah Anda)
+  • <code>/dmute</code> - Bisu hapus (bisu pengguna dan hapus pesan mereka)
+  • <code>/tmute</code> - Bisu sementara dengan durasi yang ditentukan
+
+  <b>Izin yang Diperlukan:</b>
+  <b>Perintah admin saja.</b> Pengguna yang mengeksekusi perintah ini harus memiliki:
+  • Status admin di obrolan
+  • Izin untuk membatasi anggota
+  • Izin untuk menghapus pesan (untuk <code>/smute</code> dan <code>/dmute</code>)
+
+  Bot juga harus memiliki hak istimewa admin dengan izin untuk membatasi anggota, serta izin untuk menghapus pesan untuk <code>/smute</code> dan <code>/dmute</code>.
+
+# Extended documentation locale keys - Filters module
+filters_extended_docs: |
+  <b>Fitur Lanjutan:</b>
+
+  <b>Balasan Acak:</b>
+  Gunakan <code>%%%</code> untuk memisahkan banyak balasan. Satu akan dipilih secara acak:
+  <code>/filter halo Hai!%%%Halo!%%%Hai, apa kabar?</code>
+
+  <b>Filter Media:</b>
+  Balas ke media apa pun (foto, video, dokumen, stiker, dll.) dengan <code>/filter trigger</code> untuk membuat filter yang mengirim media itu.
+
+  <b>Mode Noformat:</b>
+  Admin dapat melihat konten filter mentah (termasuk kode pemformatan) dengan menambahkan <code>noformat</code> setelah trigger:
+  <code>halo noformat</code>
+  Ini berguna untuk debugging filter atau melihat konfigurasi tombol.
+
+  <b>Tombol Filter:</b>
+  Anda dapat menambahkan tombol inline ke filter Anda:
+  <code>/filter halo Halo! Lihat tautan ini:
+  [Tombol 1](buttonurl:https://example.com)
+  [Tombol 2](buttonurl:https://example2.com)</code>
+
+# Extended documentation locale keys - Captcha module
+captcha_extended_docs: |
+  <b>Cara Kerja:</b>
+  1. Ketika captcha diaktifkan, anggota baru secara otomatis dibisukan saat bergabung
+  2. Tantangan captcha dikirim ke anggota baru
+  3. Pengguna harus memilih jawaban yang benar dari opsi yang disediakan
+  4. Jika berhasil, pengguna dibuka bisunya dan dapat berpartisipasi di grup
+  5. Jika mereka gagal atau batas waktu habis, tindakan yang dikonfigurasi diambil (tendang, blokir, atau bisu)
+
+  <b>Tipe Captcha:</b>
+  • <b>Matematika</b>: Selesaikan masalah aritmatika sederhana (penjumlahan, pengurangan, perkalian)
+  • <b>Teks</b>: Identifikasi teks yang ditampilkan dalam gambar yang terdistorsi
+
+  <b>Fitur Pesan Tertunda:</b>
+  Ketika pengguna menyelesaikan captcha, pesan apa pun yang mereka coba kirim disimpan dan dihapus. Admin dapat:
+  • Melihat pesan apa yang dicoba dikirim pengguna menggunakan <code>/captchapending</code>
+  • Menghapus pesan yang disimpan menggunakan <code>/captchaclear</code>
+
+  Ini membantu mengidentifikasi upaya spam potensial sebelum pengguna menyelesaikan verifikasi.
+
+captcha_permissions_docs: |
+  <b>Persyaratan Bot:</b>
+  • Blokir pengguna (untuk tindakan tendang/blokir)
+  • Batasi anggota (untuk membisukan selama verifikasi)
+  • Hapus pesan (untuk membersihkan pesan captcha)
+
+  <b>Tindakan Kegagalan:</b>
+  • <code>kick</code> - Keluarkan pengguna sambil tetap mengizinkannya bergabung kembali
+  • <code>ban</code> - Blokir pengguna secara permanen
+  • <code>mute</code> - Pertahankan pengguna dibisukan selama 24 jam
+
+# Extended documentation locale keys - Blacklists module
+blacklists_extended_docs: |
+  <b>Tindakan yang Tersedia:</b>
+  Tindakan berikut dapat diatur menggunakan <code>/blaction</code>:
+  • <code>none</code> - Hanya menghapus pesan tanpa tindakan lebih lanjut
+  • <code>warn</code> - Hapus pesan dan berikan peringatan ke pengguna (default)
+  • <code>mute</code> - Hapus pesan dan bisu pengguna
+  • <code>kick</code> - Hapus pesan dan tendang pengguna (mereka dapat bergabung kembali)
+  • <code>ban</code> - Hapus pesan dan blokir pengguna secara permanen
+  • <code>tban &lt;durasi&gt;</code> - Menghapus pesan dan memblokir pengguna selama durasi yang wajib ditentukan (misalnya <code>/blaction tban 1d</code>)
+  • <code>tmute &lt;durasi&gt;</code> - Menghapus pesan dan membisukan pengguna selama durasi yang wajib ditentukan (misalnya <code>/blaction tmute 2h</code>)
+
+  <b>Catatan:</b>
+  Mode default untuk Daftar Hitam adalah <b>warn</b>, yang akan menghapus pesan dan memberikan peringatan ke pengguna.
+
+  <b>Perintah:</b>
+  • <code>/addblacklist &lt;trigger&gt;</code> - Menambahkan kata ke daftar hitam di obrolan saat ini
+  • <code>/rmblacklist &lt;trigger&gt;</code> - Menghapus kata dari Kata-kata yang Didaftar Hitam di Obrolan saat ini
+  • <code>/blaction &lt;mute/kick/ban/warn/none/tban/tmute&gt; [durasi]</code> - Mengatur tindakan saat kata dalam daftar hitam terdeteksi; tban/tmute wajib disertai durasi
+  • <code>/remallbl</code> - Menghapus semua kata yang didaftar hitam dari obrolan (Khusus Pemilik)
+
+# Extended documentation locale keys - Disabling module
+disabling_extended_docs: |
+  <b>Fitur Utama:</b>
+  • Nonaktifkan perintah bot tertentu untuk pengguna non-admin
+  • Admin selalu dapat melewati perintah yang dinonaktifkan
+  • Penghapusan otomatis opsional dari pesan perintah yang dinonaktifkan
+  • Dukungan untuk menonaktifkan banyak perintah sekaligus
+
+  <b>Nonaktifkan Banyak Perintah:</b>
+  <code>/disable adminlist rules info</code>
+  Menonaktifkan perintah <code>/adminlist</code>, <code>/rules</code>, dan <code>/info</code> sekaligus.
+
+  <b>Alihkan Penghapusan:</b>
+  <code>/disabledel on</code> - Pesan yang dinonaktifkan sekarang akan dihapus.
+  <code>/disabledel off</code> - Pesan yang dinonaktifkan tidak akan lagi dihapus.
+  <code>/disabledel</code> - Periksa pengaturan penghapusan saat ini.
+
+disabling_notes_docs: |
+  <b>Catatan Penting:</b>
+  • <b>Lewatkan Admin:</b> Perintah yang dinonaktifkan hanya memengaruhi pengguna non-admin. Semua admin masih dapat menggunakan perintah apa pun.
+  • <b>Dukungan Koneksi:</b> Perintah yang dinonaktifkan masih dapat diakses melalui fitur <code>/connect</code> untuk obrolan yang terhubung.
+  • <b>Banyak Perintah:</b> Baik <code>/disable</code> maupun <code>/enable</code> mendukung banyak nama perintah dalam satu pesan.
+
+  <b>Izin yang Diperlukan:</b>
+  • <code>/disable</code>, <code>/enable</code>, <code>/disabledel</code>: Admin saja
+  • <code>/disableable</code>, <code>/disabled</code>: Semua pengguna (tetapi <code>/disabled</code> dapat dinonaktifkan)
+
+# Extended documentation locale keys - Help module
+help_extended_docs: |
+  <b>Sistem Navigasi:</b>
+  Modul Bantuan menyediakan titik masuk utama dan navigasi bot. Ketika pengguna mengirim <code>/start</code> di chat pribadi, bot menampilkan pesan selamat datang dengan keyboard inline untuk menavigasi ke modul yang berbeda.
+
+  Perintah <code>/help</code> menampilkan daftar modul. Mengklik tombol modul menampilkan perintah dan informasi penggunaan modul tersebut. Ketika <code>/help</code> digunakan di chat grup, bot mengarahkan pengguna ke pesan pribadi untuk bantuan terperinci guna menghindari kekacauan grup.
+
+  <code>/about</code> menampilkan informasi bot, versi, dan tautan, sementara <code>/donate</code> menampilkan informasi donasi untuk mendukung proyek.
+
+  <code>/extend</code> mengirim semua perintah dari semua modul dalam satu daftar; di grup, bot membalas dengan tombol yang membuka daftar itu di PM.
+
+# Extended documentation locale keys - Devs module
+devs_extended_docs: |
+  <b>Hierarki Tim:</b>
+  Modul Devs menyediakan perintah manajemen bot dan diagnostik yang dibatasi untuk tim internal bot. Tim memiliki tiga tingkat dengan level hak istimewa yang menurun.
+
+  <b>Tingkat 1 — Pemilik:</b> Diatur melalui variabel lingkungan <code>OWNER_ID</code> saat penyebaran. Kontrol penuh: mengelola daftar tim, semua perintah diagnostik, semua perintah tim.
+
+  <b>Tingkat 2 — Dev:</b> Ditugaskan oleh pemilik melalui <code>/adddev</code>. Memiliki akses perintah diagnostik: <code>/stats</code>, <code>/chatinfo</code>, <code>/chatlist</code>, <code>/leavechat</code>. Juga tercantum di <code>/teamusers</code>, dan ditandai sebagai pengguna dev di <code>/info</code>.
+
+  <b>Tingkat 2 — Sudo:</b> Ditugaskan oleh pemilik melalui <code>/addsudo</code>. Tercantum di <code>/teamusers</code> tetapi TIDAK memiliki akses perintah diagnostik.
+
+  <b>Promosi:</b> Saat pengguna Dev atau Sudo yang merupakan admin chat dengan hak menambahkan admin menggunakan <code>/promote</code>, admin baru mendapatkan setiap hak admin yang dimiliki bot, bahkan yang tidak dimiliki oleh yang mempromosikan. Pembuat chat mendapat perlakuan yang sama. Admin lain hanya dapat memberikan hak yang mereka miliki sendiri.
+
+  <b>Tingkat 3 — Anggota Tim:</b> Secara otomatis mencakup pemilik + semua pengguna sudo + semua pengguna dev. Lihat daftar tim hanya melalui <code>/teamusers</code>.
+
+  <b>Catatan:</b> Dari perintah di modul ini, pengguna Sudo hanya dapat menggunakan <code>/teamusers</code>. <code>/stats</code>, <code>/chatinfo</code>, <code>/chatlist</code>, dan <code>/leavechat</code> memerlukan Dev atau Pemilik.
+
+  <b>Penting:</b> Perintah ini tidak terlihat di menu bantuan publik dan secara diam-diam mengabaikan pengguna yang tidak berwenang.
+
+# Extended documentation locale keys - Users module
+users_extended_docs: |
+  <b>Pelacak Latar Belakang:</b>
+  Modul Pengguna adalah modul latar belakang pasif tanpa perintah yang terlihat pengguna. Modul ini berjalan secara diam-diam pada setiap pesan yang diproses bot, secara otomatis melacak semua pengirim pesan dan semua chat tempat bot aktif.
+
+  <b>Apa yang Dilacak:</b>
+  • ID pengguna, nama pengguna, dan nama tampilan untuk setiap pengirim pesan
+  • ID chat dan nama untuk setiap grup tempat bot berada
+  • ID saluran, nama, dan nama pengguna untuk saluran tertaut
+
+  <b>Pembatasan Kecepatan:</b>
+  • Data pengguna, chat, dan saluran: diperbarui paling sering sekali per jam
+  • Nama, nama pengguna, atau judul chat yang berubah langsung disimpan
+  • Ini mencegah penulisan basis data yang berlebihan sambil menjaga data tetap terkini secara wajar
+
+  <b>Operasi Pasif:</b>
+  • Berjalan sebagai pengawas pesan di grup penangan -1 (dijalankan sebelum semua penangan perintah)
+  • Tidak perlu interaksi pengguna — sepenuhnya otomatis
+  • Modul lain, seperti <code>/info</code>, bergantung pada data yang dikumpulkan oleh modul ini
+
+# Issue #628 remediation keys
+misc_translate_parse_error: "Gagal menguraikan respons terjemahan. Silakan coba lagi."
+blacklists_set_bl_action_update_failed: "Gagal memperbarui tindakan daftar hitam. Silakan coba lagi."
+blacklists_set_bl_action_no_words: "Belum ada kata daftar hitam di obrolan ini. Tambahkan satu dengan /addblacklist, lalu atur tindakannya."
+filters_overwrite_token_failed: "Gagal membuat konfirmasi timpa. Silakan coba lagi."
+notes_overwrite_token_failed: "Gagal membuat konfirmasi timpa. Silakan coba lagi."
+common_settings_save_failed: "Gagal menyimpan pengaturan. Silakan coba lagi nanti."
+devs_chatlist_error: "Gagal membuat daftar obrolan. Silakan coba lagi."
+
+# Reactions module strings
+reactions_help_msg: |
+  <b>🎭 Reaksi Otomatis</b>
+
+  Secara otomatis bereaksi terhadap pesan yang berisi kata kunci tertentu!
+
+  Siapkan reaksi emoji otomatis yang dipicu ketika pengguna mengirim kata-kata tertentu.
+
+  <b>Perintah Pengguna:</b>
+  • /reactions - Daftar reaksi yang dikonfigurasi
+
+  <b>Perintah Admin:</b>
+  • /addreaction <kata_kunci> <emoji> - Tambahkan reaksi otomatis
+  • /removereaction <kata_kunci> - Hapus reaksi
+  • /resetreactions - Hapus semua reaksi
+
+  <b>Contoh:</b>
+  • /addreaction halo 👍 - Bot bereaksi dengan 👍 ketika seseorang mengatakan "halo"
+  Hanya emoji reaksi standar Telegram (misalnya 👍 ❤ 🔥 🎉) yang dapat digunakan.
+
+reactions_add_usage: "Penggunaan: /addreaction &lt;kata_kunci&gt; &lt;emoji&gt;"
+reactions_invalid_emoji: "Silakan berikan emoji yang valid."
+reactions_add_error: "Gagal menyimpan reaksi. Silakan coba lagi."
+reactions_add_success: "Reaksi ditambahkan: <code>{keyword}</code> -> {emoji}"
+reactions_remove_usage: "Penggunaan: /removereaction &lt;kata_kunci&gt;"
+reactions_keyword_not_found: "Tidak ada reaksi untuk kata kunci: <code>{keyword}</code>"
+reactions_remove_error: "Gagal menghapus reaksi. Silakan coba lagi."
+reactions_remove_success: "Reaksi untuk kata kunci dihapus: <code>{keyword}</code>"
+reactions_none: "Tidak ada reaksi yang dikonfigurasi di chat ini."
+reactions_list_header: "<b>Reaksi yang dikonfigurasi:</b>\n{list}"
+reactions_reset_success: "Semua reaksi untuk chat ini telah direset."
+
+# Backup/Restore module strings
+backup_help_msg: |
+  <b>📦 Cadangkan & Pulihkan</b>
+
+  Cadangkan dan pulihkan pengaturan grup Anda menggunakan perintah ini:
+
+  <b>Perintah Admin:</b>
+  • /export - Ekspor semua pengaturan grup ke file JSON
+  • /export notes filters rules - Ekspor modul tertentu saja
+
+  <b>Perintah Pembuat Grup:</b>
+  • /import - Balas ke file cadangan untuk memulihkan pengaturan
+  • /import notes filters - Impor modul tertentu saja
+  • /reset - Atur ulang semua pengaturan ke default
+  • /reset warns locks - Atur ulang modul tertentu saja
+
+  <b>Batas Rate:</b>
+  • Ekspor: 1 per 5 menit
+  • Impor: 1 per 10 menit
+  • Atur Ulang: 1 per jam
+
+backup_export_success: |
+  <b>✅ Ekspor Berhasil!</b>
+
+  <b>Obrolan:</b> %s
+  <b>Modul diekspor:</b> %d
+  <b>Diekspor pada:</b> %s
+
+  <b>Modul:</b>
+  %s
+
+backup_export_rate_limited: "⏳ Silakan tunggu <b>{time}</b> sebelum mengekspor lagi."
+backup_export_no_modules: "❌ Tidak ada modul yang dapat diekspor untuk obrolan ini."
+backup_invalid_modules: "❌ Tidak ada modul tersebut yang dapat digunakan di sini. Modul yang valid: <code>{modules}</code>"
+backup_export_failed: "❌ Gagal mengekspor pengaturan. Silakan coba lagi nanti."
+
+backup_import_success: |
+  <b>✅ Impor Berhasil!</b>
+
+  <b>Modul diimpor:</b> %d
+
+  <b>Modul:</b>
+  %s
+
+backup_import_rate_limited: "⏳ Silakan tunggu <b>{time}</b> sebelum mengimpor lagi."
+backup_import_no_reply: "❌ Silakan balas ke file cadangan dengan <code>/import</code>."
+backup_import_invalid_file: "❌ Format file cadangan tidak valid. Silakan kirim file cadangan JSON yang valid."
+backup_import_file_too_large: "❌ File cadangan terlalu besar. Ukuran maksimum adalah 10MB."
+backup_import_download_failed: "❌ Gagal mengunduh file cadangan. Silakan coba lagi."
+backup_import_version_mismatch: "❌ Cadangan ini menggunakan versi format yang tidak didukung dan tidak dapat diimpor. Ekspor cadangan baru dengan bot ini lalu coba lagi."
+backup_import_creator_only: "❌ Hanya pembuat grup yang dapat mengimpor pengaturan."
+backup_import_confirm: |
+  <b>⚠️ Konfirmasi Impor</b>
+
+  Anda akan mengimpor <b>%s modul</b>:
+  %s
+
+  Ini akan menimpa pengaturan yang ada. Apakah Anda yakin?
+
+backup_import_expired: "❌ Permintaan impor telah kedaluwarsa. Silakan mulai lagi dengan <code>/import</code>."
+backup_import_cancelled: "❌ Impor dibatalkan."
+backup_import_failed: "❌ Impor gagal: %s"
+backup_import_federation_skipped: "⚠️ Federasi <code>{fed_id}</code> dari cadangan tidak ada di bot ini, jadi obrolan ini tidak dimasukkan ke federasi mana pun."
+
+backup_reset_success: |
+  <b>✅ Atur Ulang Berhasil!</b>
+
+  <b>Modul diatur ulang:</b> %d
+
+  <b>Modul:</b>
+  %s
+
+backup_reset_rate_limited: "⏳ Silakan tunggu <b>{time}</b> sebelum mengatur ulang lagi."
+backup_reset_creator_only: "❌ Hanya pembuat grup yang dapat mengatur ulang pengaturan."
+backup_reset_confirm: |
+  <b>⚠️ Konfirmasi Atur Ulang</b>
+
+  Anda akan mengatur ulang <b>%s modul</b>:
+  %s
+
+  <b>Tindakan ini tidak dapat dibatalkan!</b> Apakah Anda yakin?
+
+backup_reset_expired: "❌ Permintaan atur ulang telah kedaluwarsa. Silakan mulai lagi dengan <code>/reset</code>."
+backup_reset_cancelled: "❌ Atur ulang dibatalkan."
+backup_reset_failed: "❌ Atur ulang gagal: %s"
+
+button_confirm_import: "✅ Konfirmasi Impor"
+button_cancel_import: "❌ Batal"
+button_confirm_reset: "⚠️ Ya, Atur Ulang"
+button_cancel_reset: "❌ Batal"
+
+# Callback validation strings (previously hardcoded)
+common_callback_invalid_request: "Permintaan tidak valid."
+common_callback_message_unavailable: "Pesan tidak lagi tersedia."
+
+# Admin module hardcoded strings
+admin_check_status_failed: "Gagal memeriksa status pengguna."
+
+# Reactions module button strings
+reactions_button_add: "Tambah Reaksi"
+reactions_button_remove: "Hapus Reaksi"
+
+# Database default strings
+db_blacklist_default_reason: "Kata di daftar hitam: '%s'"
+
+
+approvals_help_msg: |
+  <b>👤 Persetujuan</b>
+
+  Berikan kekebalan kepada anggota tepercaya dari tindakan anti-spam otomatis tanpa menjadikan mereka admin.
+
+  <b>Perintah Admin:</b>
+
+  × /approve <code><reply/username/mention/userid></code> <code>[reason]</code>
+  × /unapprove <code><reply/username/mention/userid></code>
+  × /approval <code><reply/username/mention/userid></code>
+  × /approved: Daftar semua pengguna yang disetujui
+  × /unapproveall: Hapus semua persetujuan (hanya pembuat)
+
+  Pengguna yang disetujui dibebaskan dari: antiflood, antiraid, blacklists, locks, CAPTCHA, dan filter spam AI.
+approvals_user_approved: "%s disetujui oleh %s.%s"
+approvals_already_approved: "%s sudah disetujui di chat ini."
+approvals_not_approved: "%s tidak ada dalam daftar yang disetujui."
+approvals_user_unapproved: "%s dihapus dari daftar yang disetujui."
+approvals_check_not_approved: "%s saat ini tidak disetujui di chat ini."
+approvals_check_status: |
+  <b>Pengguna:</b> %s
+  <b>Disetujui Pada:</b> %s
+  <b>Disetujui Oleh:</b> %s
+  %s
+approvals_none_approved: "Tidak ada pengguna yang disetujui di chat ini."
+approvals_approved_list_file_caption: "Daftar pengguna yang disetujui untuk %s"
+approvals_list_file_error: "Gagal membuat file pengguna yang disetujui."
+approvals_unapproveall_ask: "Apakah Anda yakin ingin menghapus SEMUA pengguna yang disetujui?"
+approvals_unapproveall_done: "Semua pengguna yang disetujui telah dihapus."
+approvals_unapproveall_cancel: "Pembatalan penghapusan semua persetujuan."
+approvals_approve_error: "Gagal menyetujui pengguna. Silakan coba lagi."
+approvals_unapprove_error: "Gagal menghapus pengguna dari daftar yang disetujui."
+approvals_unapproveall_error: "Gagal menghapus semua pengguna yang disetujui: {error}"
+approvals_reason: "\nAlasan: %s"
+approvals_list_header: "Pengguna yang disetujui:\n"
+approvals_list_item: " - %s"
+approvals_list_file_header: "Pengguna yang disetujui untuk chat %d\n"
+approvals_list_file_item: "%d. %s"
+approvals_list_reason: " (alasan: %s)"
+
+# AntiRaid module strings
+antiraid_help_msg: |
+  Lindungi grup Anda dari serangan spam-join dengan AntiRaid.
+  *Perintah Admin:*
+  /antiraid: Tampilkan status saat ini + tombol aktifkan/nonaktifkan.
+  /antiraid on: Aktifkan mode raid untuk waktu yang dikonfigurasi.
+  /antiraid <duration>: Aktifkan untuk durasi kustom (mis. 3h, 30m).
+  /antiraid off: Nonaktifkan mode raid segera.
+  /raidtime <time>: Atur durasi raid (default: 6h).
+  /raidactiontime <time>: Atur durasi temp-ban (default: 1h).
+  /autoantiraid <N>: Aktifkan otomatis jika N+ bergabung/menit.
+  /autoantiraid off: Nonaktifkan pemicu otomatis.
+antiraid_active_status: "AntiRaid AKTIF | Kedaluwarsa: {expires_in} | Raid: {raid_time} | Tindakan: {action_time} | Otomatis: {auto_threshold}"
+antiraid_inactive_status: "AntiRaid NONAKTIF | Raid: {raid_time} | Tindakan: {action_time} | Otomatis: {auto_threshold}"
+antiraid_enabled: "AntiRaid diaktifkan untuk {duration}."
+antiraid_disabled: "AntiRaid dinonaktifkan."
+antiraid_already_active: "AntiRaid sudah aktif."
+antiraid_not_active: "AntiRaid tidak aktif."
+antiraid_invalid_duration: "Durasi tidak valid. Gunakan format seperti: 30m, 2h, 1d, 1w"
+antiraid_raidtime_usage: "Penggunaan: /raidtime &lt;duration&gt; (mis., 6h)"
+antiraid_raidtime_no_change: "Waktu raid sudah {duration}."
+antiraid_raidtime_set: "Waktu raid diatur ke {duration}."
+antiraid_raidactiontime_usage: "Penggunaan: /raidactiontime &lt;duration&gt; (mis., 1h)"
+antiraid_raidactiontime_no_change: "Waktu tindakan raid sudah {duration}."
+antiraid_raidactiontime_set: "Waktu tindakan raid diatur ke {duration}."
+antiraid_auto_disabled: "Auto-AntiRaid dinonaktifkan."
+antiraid_auto_enabled: "Ambang Auto-AntiRaid: {threshold} bergabung/menit."
+antiraid_invalid_threshold: "Ambang tidak valid. Berikan angka positif atau 'off'."
+antiraid_auto_triggered: "Raid otomatis dipicu! %s pengguna bergabung/menit — pendatang baru dilarang sementara."
+antiraid_btn_enable: "Aktifkan AntiRaid"
+antiraid_btn_disable: "Nonaktifkan AntiRaid"
+
+# Rose feature-parity keys (federations, log channels, extras)
+federations_help_msg: |
+  Federasi berbagi daftar ban di antara grup-grup yang Anda miliki.
+
+  *Pemilik (PM):*
+  × /newfed <name>: Buat federasi (satu per pengguna).
+  × /renamefed <name>: Ganti nama federasi Anda.
+  × /delfed: Hapus federasi Anda (dengan konfirmasi).
+  × /fedpromote /feddemote <user>: Promosikan atau turunkan admin federasi (balasan, ID, atau @username).
+  × /fedreason on/off: Wajibkan alasan untuk fban.
+  × /fednotif on/off: Beri tahu pemilik soal fban lewat PM.
+  × /subfed /unsubfed <fed_id>: Berlangganan atau berhenti berlangganan ban federasi lain (maks. 5).
+  × /fedsubs: Tampilkan federasi yang dilanggan federasi Anda.
+  × /fbanlist [csv|json|minicsv]: Ekspor fban.
+  × /importfbans: Impor dari file CSV/JSON yang dibalas.
+  × /unsetfedlog: Hapus obrolan log federasi.
+
+  *Pemilik (di grup):*
+  × /setfedlog: Jadikan grup ini obrolan log federasi Anda.
+
+  *Pemilik grup:*
+  × /joinfed <fed_id>: Gabungkan obrolan ini ke federasi.
+  × /leavefed: Keluar dari federasi.
+
+  *Admin grup:*
+  × /quietfed on/off: Sembunyikan notifikasi fban pasif.
+
+  *Admin federasi:*
+  × /fban <user> [reason]: Ban pengguna di seluruh federasi (di grup federasi; pemilik juga bisa memakainya di PM).
+  × /unfban /funban <user>: Cabut ban federasi.
+  × /feddemoteme <fed_id>: Mundur sebagai admin federasi.
+
+  *Siapa saja:*
+  × /fedstat /fbanstat [user] [fed_id]: Cek fban seorang pengguna (milik Anda secara bawaan); dengan fed_id, tampilkan alasan ban tersebut.
+  × /fedinfo [fed_id]: Tampilkan info federasi.
+  × /fedadmins [fed_id]: Tampilkan daftar admin sebuah federasi.
+  × /chatfed: Tampilkan federasi grup ini (hanya di grup).
+  × /myfeds: Tampilkan federasi yang Anda miliki atau kelola sebagai admin.
+logchannels_help_msg: |
+  Kirim tindakan admin ke kanal log khusus.
+
+  1. Tambahkan bot ke kanal sebagai admin.
+  2. Di kanal itu, kirim /setlog.
+  3. Teruskan pesan itu ke grup.
+
+  *Perintah admin:*
+  × /setlog: Atur kanal log (kirim di kanal, lalu teruskan pesannya ke grup). Di chat pribadi, sebutkan grup lalu kanalnya, jika kamu admin di keduanya dan bot bisa memposting di kanal.
+  × /unsetlog: Hapus kanal log.
+  × /log <category>: Aktifkan kategori.
+  × /nolog <category>: Nonaktifkan kategori.
+
+  *Siapa saja:*
+  × /logchannel: Tampilkan kanal log saat ini.
+  × /logcategories: Daftar kategori.
+
+  Kategori: settings (perubahan kanal log dan mode AntiRaid), admin (ban, kick, bisukan, unban, dan batal bisukan), user (/kickme dan /banme), reports (laporan pengguna), automated (tindakan yang diambil bot sendiri: temuan di basis data spam, tindakan antiflood dan daftar hitam, batas peringatan yang tercapai lewat peringatan daftar hitam, captcha gagal, mode AntiRaid yang menyala karena ambang bergabung, bot yang diban oleh kunci bots), warns (peringatan yang diberikan, dihapus, dan diatur ulang oleh admin, serta batas peringatan yang tercapai lewat peringatan mereka; mati sampai dinyalakan dengan /log warns), joins (anggota yang lolos captcha; mati sampai dinyalakan dengan /log joins), other. Belum ada yang dicatat di other.
+
+  Di chat pribadi, sebutkan grup lebih dulu pada /setlog, /unsetlog, /log, /nolog dan /logchannel: judulnya, @username, atau ID-nya.
+feds_pm_only: "Perintah ini hanya bisa digunakan di obrolan pribadi dengan saya."
+feds_group_only: "Perintah ini hanya bisa digunakan di grup."
+feds_need_name: "Beri nama federasi Anda."
+feds_already_own: "Anda sudah memiliki federasi. Hapus dulu dengan /delfed."
+feds_create_failed: "Tidak dapat menyelesaikan tindakan federasi itu. Coba lagi."
+feds_created: "Federasi <b>{name}</b> dibuat.\nID: <code>{id}</code>\nSimpan ID ini — pemilik grup memakainya dengan /joinfed."
+feds_no_fed: "Anda tidak memiliki federasi. Buat dengan /newfed."
+feds_rename_failed: "Tidak dapat mengganti nama federasi."
+feds_renamed: "Nama federasi diganti menjadi <b>{name}</b>."
+feds_delfed_confirm: "Hapus federasi <b>{name}</b>? Ini tidak dapat dibatalkan."
+feds_delfed_confirm_btn: "Ya, hapus"
+feds_delfed_cancel_btn: "Batal"
+feds_deleted: "Federasi dihapus."
+feds_delete_failed: "Tidak dapat menghapus federasi."
+feds_owner_only_join: "Hanya pembuat grup yang dapat bergabung atau keluar dari federasi."
+feds_invalid_id: "Itu tidak terlihat seperti ID federasi."
+feds_not_found: "Saya tidak dapat menemukan federasi itu."
+feds_already_joined: "Obrolan ini sudah ada di federasi. Gunakan /leavefed dulu."
+feds_join_failed: "Tidak dapat bergabung ke federasi itu."
+feds_joined: "Obrolan ini bergabung ke federasi <b>{name}</b> (<code>{id}</code>)."
+feds_not_in_fed: "Obrolan ini tidak ada di federasi mana pun."
+feds_left: "Obrolan ini keluar dari federasinya."
+feds_invalid_toggle: "Gunakan on atau off."
+feds_quiet_on: "Federasi senyap aktif. Fban pasif tidak akan diumumkan di sini."
+feds_quiet_off: "Federasi senyap nonaktif. Fban pasif akan diumumkan."
+feds_info: "<b>{name}</b>\nID: <code>{id}</code>\nPemilik: <code>{owner}</code>\nObrolan: {chats}\nBan: {bans}\nAdmin: {admins}\nLangganan: {subs}\nWajib alasan: {reason}\nBeri tahu pemilik: {notify}"
+feds_admins_header: "Admin <b>{name}</b>:"
+feds_chatfed: "Obrolan ini ada di <b>{name}</b> (<code>{id}</code>)."
+feds_myfeds_none: "Anda tidak memiliki atau mengelola federasi mana pun."
+feds_myfeds_header: "Federasi Anda:"
+feds_role_owner: "pemilik"
+feds_role_admin: "admin"
+feds_cannot_promote_self: "Anda sudah menjadi pemilik federasi ini."
+feds_cannot_promote_owner: "Pemilik sudah menjadi admin federasi."
+feds_already_admin: "Pengguna itu sudah menjadi admin federasi."
+feds_promoted: "{user} dijadikan admin federasi."
+feds_not_fed_admin: "Pengguna itu bukan admin federasi."
+feds_demoted: "{user} dicopot dari admin federasi."
+feds_demoteme_not_admin: "Anda bukan admin federasi tersebut."
+feds_demoteme_ok: "Anda bukan lagi admin federasi tersebut."
+feds_demoteme_owner: "Anda adalah pemilik federasi ini, jadi Anda tidak bisa mundur sebagai adminnya. Gunakan /delfed untuk menghapusnya."
+feds_fedreason_on: "Fban sekarang wajib disertai alasan."
+feds_fedreason_off: "Fban tidak lagi wajib disertai alasan."
+feds_fednotif_on: "Anda akan diberi tahu soal fban."
+feds_fednotif_off: "Anda tidak akan diberi tahu soal fban."
+feds_not_admin: "Anda bukan admin federasi di sini."
+feds_cannot_fban_self: "Anda tidak dapat mem-fban diri sendiri."
+feds_cannot_fban_owner: "Anda tidak dapat mem-fban pemilik federasi."
+feds_cannot_fban_admin: "Anda tidak dapat mem-fban admin federasi."
+feds_need_reason: "Federasi ini mewajibkan alasan untuk fban."
+feds_fban_failed: "Tidak dapat mem-fban pengguna itu."
+feds_fban_already: "Pengguna itu sudah di-fban. Alasan diperbarui."
+feds_fban_ok: "{user} di-fban di <b>{name}</b>.\nAlasan: {reason}"
+feds_unfban_not_banned: "Pengguna itu tidak di-fban."
+feds_unfban_ok: "Fban {user} di <b>{name}</b> dicabut."
+feds_log_fban: "FBAN <code>{user_id}</code> oleh {actor}\nAlasan: {reason}"
+feds_log_unfban: "UNFBAN <code>{user_id}</code> oleh {actor}"
+feds_fedstat_none: "Pengguna itu tidak di-fban di federasi mana pun yang saya ketahui."
+feds_fedstat_reason: "Diblokir di <b>{name}</b>: {reason}"
+feds_fedstat_header: "Ban federasi untuk {user}:"
+feds_sub_self: "Federasi tidak dapat berlangganan dirinya sendiri."
+feds_already_sub: "Sudah berlangganan federasi itu."
+feds_sub_max: "Federasi dapat berlangganan paling banyak 5 federasi lain."
+feds_sub_ok: "Berlangganan daftar ban federasi itu."
+feds_not_sub: "Tidak berlangganan federasi itu."
+feds_unsub_ok: "Berhenti berlangganan federasi itu."
+feds_subs_none: "Federasi ini tidak memiliki langganan."
+feds_subs_header: "Langganan:"
+feds_setfedlog_ok: "Obrolan log federasi diatur."
+feds_unsetfedlog_ok: "Obrolan log federasi dihapus."
+feds_export_wait: "Anda dapat mengekspor daftar fban sekali setiap 30 menit. Coba lagi nanti."
+feds_export_empty: "Federasi ini tidak memiliki ban untuk diekspor."
+feds_import_need_file: "Balas ke daftar fban berformat CSV atau JSON."
+feds_import_failed: "Tidak dapat mengimpor daftar fban itu."
+feds_import_ok: "{count} ban federasi diimpor."
+feds_passive_ban: "{user} di-fban di <b>{name}</b> dan telah dikeluarkan.\nAlasan: {reason}"
+feds_callback_denied: "Anda tidak dapat menggunakan tombol ini."
+feds_callback_stale: "Tombol ini sudah tidak berlaku."
+logs_need_channel: "Gunakan /setlog di kanal, lalu teruskan pesan itu ke grup."
+logs_forward_to_group: "Sekarang teruskan pesan /setlog Anda (bukan balasan ini) ke grup yang ingin Anda catat, dalam satu jam ke depan."
+logs_set_ok: "Kanal log diatur. Tindakan admin dari obrolan ini akan dikirim ke sana."
+logs_pm_set_ok: "Kanal log diatur. Tindakan admin dari <b>{group}</b> akan dikirim ke sana."
+logs_unset_ok: "Kanal log dihapus."
+logs_not_set: "Belum ada kanal log untuk obrolan ini."
+logs_current: "Kanal log: <code>{id}</code>"
+logs_categories: "Kategori: settings (perubahan kanal log dan mode AntiRaid), admin (ban, kick, bisukan, unban, dan batal bisukan), user (/kickme dan /banme), reports (laporan pengguna), automated (tindakan yang diambil bot sendiri: temuan di basis data spam, tindakan antiflood dan daftar hitam, batas peringatan yang tercapai lewat peringatan daftar hitam, captcha gagal, mode AntiRaid yang menyala karena ambang bergabung, bot yang diban oleh kunci bots), warns (peringatan yang diberikan, dihapus, dan diatur ulang oleh admin, serta batas peringatan yang tercapai lewat peringatan mereka; mati sampai dinyalakan dengan /log warns), joins (anggota yang lolos captcha; mati sampai dinyalakan dengan /log joins), other. Belum ada yang dicatat di other."
+logs_enabled: "Pencatatan diaktifkan untuk: {cats}"
+logs_disabled: "Pencatatan dinonaktifkan untuk: {cats}"
+logs_unknown_category: "Kategori tidak dikenal. Lihat /logcategories."
+logs_usage: "Penggunaan: /log &lt;kategori&gt; atau /nolog &lt;kategori&gt;"
+logs_pm_need_channel: "Sebutkan kanal setelah grup: <code>/setlog @grupku @kanalku</code>, atau ID kanal. Jadikan aku admin kanal yang bisa memposting pesan terlebih dahulu."
+logs_pm_setlog_usage: "Sebutkan grupnya, lalu satu channel. Selama terhubung, sebutkan grup lain dengan @username atau ID-nya: judulnya tidak dicari."
+logs_pm_not_channel: "<code>{channel}</code> bukan kanal yang bisa kulihat. Jadikan aku admin kanal yang bisa memposting pesan, lalu sebutkan kanalnya dengan @username atau ID."
+logs_pm_user_not_channel_admin: "Untuk menjadikan kanal ini kanal log, kamu harus pemiliknya atau admin dengan izin memposting pesan."
+logs_pm_bot_cannot_post: "Aku harus menjadi admin kanal dengan izin memposting pesan."
+bans_banme_is_admin: "Admin tidak dapat memblokir diri sendiri. Mundur dulu."
+bans_banme_ok: "Sesuai keinginan Anda. Anda diblokir."
+bans_unbanall_ask: "Buka blokir semua pengguna yang dikenal di obrolan ini? Ini tidak mudah dibatalkan."
+bans_unbanall_done: "Buka blokir dikirim untuk {count} pengguna yang dikenal."
+bans_unbanall_cancel: "Dibatalkan."
+bans_baninfo_record: "<b>Catatan ban</b>\n<b>Pengguna:</b> {user} (<code>{id}</code>)\n<b>Status:</b> {status}\n<b>Diban oleh:</b> {admin}\n<b>Tanggal:</b> {date}\n<b>Sumber:</b> {source}\n<b>Sampai:</b> {until}"
+bans_baninfo_reason: "\n<b>Alasan:</b> {reason}"
+bans_baninfo_status_banned: "diban"
+bans_baninfo_status_expired: "ban sementara sudah berakhir"
+bans_baninfo_status_lifted: "ban dibuka oleh {admin} pada {date}"
+bans_baninfo_permanent: "permanen"
+bans_baninfo_none: "Saya tidak punya catatan ban untuk {user} di sini. Saya hanya mencatat ban yang saya lakukan, dan menghapus catatan 90 hari setelah bannya berakhir."
+bans_record_by_bot: "saya, secara otomatis"
+bans_record_by_anonymous: "admin anonim"
+bans_record_read_failed: "Saya tidak dapat membaca catatan ban saat ini. Coba lagi nanti."
+bans_banlist_header: "<b>Ban yang berlaku: {count}</b> (halaman {page} dari {pages})"
+bans_banlist_header_search: "<b>Ban yang berlaku dan cocok dengan</b> <code>{query}</code><b>: {count}</b> (halaman {page} dari {pages})"
+bans_banlist_entry: "{n}. {user} (<code>{id}</code>) · {source} · {date}"
+bans_banlist_entry_until: "{n}. {user} (<code>{id}</code>) · {source} · {date} · sampai {until}"
+bans_banlist_empty: "Tidak ada ban yang saya catat di sini yang masih berlaku. Saya hanya mencatat ban yang saya lakukan."
+bans_banlist_no_match: "Tidak ada ban berlaku yang saya catat di sini yang cocok dengan <code>{query}</code>."
+bans_banlist_expired: "Daftar ini sudah kedaluwarsa. Kirim /banlist lagi."
+bans_banlist_prev: "« Sebelumnya"
+bans_banlist_next: "Berikutnya »"
+bans_log_unban_button: "🔓 Cabut ban"
+bans_log_unban_done: "Ban dicabut."
+bans_log_unban_already: "Ban ini sudah tidak berlaku: sudah dicabut, atau sudah berakhir."
+bans_log_unban_failed: "Saya tidak bisa mencabut ban pengguna ini. Pastikan saya masih bisa mem-ban anggota di grup."
+bans_kick_target_banned: "Pengguna ini di-ban di sini. Menendangnya akan mencabut ban, jadi saya membiarkan ban tetap berlaku."
+admin_setgtitle_need_title: "Berikan saya judul grup yang baru."
+admin_setgtitle_ok: "Judul grup diperbarui."
+admin_setgtitle_failed: "Saya tidak dapat mengubah judul grup. Pastikan saya bisa mengubah info grup."
+admin_setgpic_need_photo: "Balas ke foto untuk menjadikannya gambar grup."
+admin_setgpic_ok: "Gambar grup diperbarui."
+admin_setgpic_failed: "Saya tidak dapat mengubah gambar grup."
+admin_setgdesc_ok: "Deskripsi grup diperbarui."
+admin_setgdesc_failed: "Saya tidak dapat mengubah deskripsi grup."
+timezone_status: "Zona waktu chat ini adalah <b>{timezone}</b> (UTC{offset}); di sana sekarang pukul {time}.\nUbah dengan <code>/timezone &lt;nama&gt;</code>, nama IANA seperti <code>Asia/Jakarta</code>."
+timezone_set: "Zona waktu diatur ke <b>{timezone}</b> (UTC{offset}); di sana sekarang pukul {time}."
+timezone_invalid: "Saya tidak mengenal zona waktu <code>{input}</code>. Gunakan nama IANA seperti <code>Asia/Jakarta</code> atau <code>Asia/Makassar</code> (daftar: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)."
+ephemeral_status_on: "Jawaban privat <b>aktif</b>: aturan privat, catatan privat, dan pengalihan /help ditampilkan di grup hanya kepada anggota yang meminta."
+ephemeral_status_off: "Jawaban privat <b>nonaktif</b>: aturan privat, catatan privat, dan /help mengirim tombol untuk membukanya di PM. Aktifkan dengan <code>/ephemeral on</code>."
+ephemeral_enabled: "Jawaban privat <b>diaktifkan</b>. Anggota yang meminta aturan privat, catatan privat, atau /help kini melihatnya di sini, hanya untuk mereka."
+ephemeral_disabled: "Jawaban privat <b>dinonaktifkan</b>. Aturan privat, catatan privat, dan /help kembali mengirim tombol ke PM."
+misc_stickerid_need_sticker: "Balas ke stiker untuk mendapatkan ID filenya."
+misc_stickerid_result: "ID file stiker: <code>{id}</code>"
+misc_zombies_scanning: "Memindai akun yang dihapus…"
+misc_zombies_none: "Tidak ada akun terhapus di antara anggota yang dikenal."
+misc_zombies_cleaned: "{count} akun terhapus dikeluarkan."
+misc_github_usage: "Penggunaan: /github &lt;pengguna&gt; atau /github &lt;pengguna/repo&gt;"
+misc_github_not_found: "Saya tidak dapat menemukan pengguna atau repositori GitHub itu."
+misc_wiki_usage: "Penggunaan: /wiki &lt;pencarian&gt;"
+misc_wiki_not_found: "Tidak ada hasil Wikipedia untuk itu."
+misc_ud_usage: "Penggunaan: /ud &lt;istilah&gt;"
+misc_ud_not_found: "Tidak ada hasil Urban Dictionary untuk itu."
+misc_runs:
+  - "Kabur."
+  - "Tidak mau."
+  - "Saya pergi."
+  - "Tangkap aku kalau bisa."
+chat_status_bot_change_info_error: "Saya tidak bisa mengubah info grup di sini! Pastikan saya admin dan bisa mengubah info grup."
+
+# /extend: every help-menu command, one line each ("/command — description")
+main_bot_command_extend: "Semua perintah dalam satu daftar"
+main_bot_command_commands: "Perintah per bagian, untuk anggota atau admin"
+help_extend_hint: "\n\nKirim /extend untuk melihat semua perintah dalam satu daftar."
+help_extend_header: "📋 <b>Semua perintah</b>\nArgumen dan contoh: /help → modul."
+help_extend_pm: "Daftar perintah lengkap cukup panjang, jadi saya kirim lewat PM."
+help_extend_button: "📋 Semua perintah"
+commands_menu_member: "📋 <b>Perintah per bagian</b>\nHanya perintah yang bisa dipakai anggota yang ditampilkan. Ketuk sebuah bagian untuk melihat perintahnya."
+commands_menu_admin: "📋 <b>Perintah per bagian</b>\nKamu admin, jadi perintah admin juga ditampilkan. Ketuk sebuah bagian untuk melihat perintahnya."
+commands_section_hint: "<i>Ketuk sebuah perintah untuk melihat cara memakainya.</i>"
+commands_copy_example_button: "📋 Salin contoh"
+commands_open_in_pm: "Daftarnya tergantung siapa yang membaca, jadi saya tampilkan lewat PM."
+commands_open_in_pm_button: "📋 Buka di PM"
+admin_section_desc: "Promosikan, turunkan, dan kelola admin grup"
+aispam_section_desc: "Tangkap spam dengan filter AI"
+antiflood_section_desc: "Tindak pengguna yang mengirim terlalu banyak pesan"
+antiraid_section_desc: "Hentikan raid berupa banyak orang bergabung sekaligus"
+approvals_section_desc: "Bebaskan pengguna tepercaya dari pemeriksaan otomatis"
+backup_section_desc: "Ekspor, impor, dan setel ulang pengaturan chat"
+bans_section_desc: "Ban, tendang, dan batasi pengguna"
+blacklists_section_desc: "Tindak kata yang ada di daftar hitam"
+captcha_section_desc: "Minta anggota baru menyelesaikan captcha"
+connections_section_desc: "Kelola grup dari PM"
+digest_section_desc: "Ringkasan mingguan aktivitas grup"
+recurring_section_desc: "Pesan yang diposting bot sesuai jadwal"
+disabling_section_desc: "Nonaktifkan perintah untuk anggota"
+federations_section_desc: "Bagikan ban ke banyak grup"
+filters_section_desc: "Balasan otomatis untuk kata pemicu"
+formatting_section_desc: "Cara memformat pesan"
+greetings_section_desc: "Pesan sambutan dan perpisahan"
+languages_section_desc: "Ganti bahasa bot"
+locks_section_desc: "Kunci jenis pesan"
+logchannels_section_desc: "Catat tindakan ke kanal"
+misc_section_desc: "Info, ID, terjemahan, dan alat lainnya"
+mutes_section_desc: "Bisukan dan batalkan bisu pengguna"
+notes_section_desc: "Catatan tersimpan yang bisa diambil siapa saja"
+pins_section_desc: "Sematkan pesan dan atur sematan dari kanal"
+probation_section_desc: "Tahan tautan dan media dari anggota baru"
+purges_section_desc: "Hapus banyak pesan sekaligus"
+reactions_section_desc: "Beri reaksi emoji pada kata kunci"
+reports_section_desc: "Laporkan pesan ke admin"
+rules_section_desc: "Aturan grup"
+spamdb_section_desc: "Periksa anggota baru di database spam"
+spamfilter_section_desc: "Belajar dari spam yang dihapus dan tangkap salinan miripnya"
+warns_section_desc: "Beri peringatan dan hukum pengguna saat mencapai batas"
+admin_extend_msg: |
+  /adminlist — daftar admin obrolan
+  /promote — jadikan pengguna sebagai admin
+  /demote — turunkan admin
+  /title — atur judul khusus admin
+  /invitelink — dapatkan tautan undangan obrolan
+  /anonadmin — percayai admin anonim (on) atau wajibkan konfirmasi dengan tombol (off)
+  /admincache — muat ulang daftar admin
+  /clearadmincache — hapus cache daftar admin
+  /setgtitle — ubah judul grup
+  /setgpic — jadikan foto yang dibalas sebagai foto grup
+  /setgdesc — ubah deskripsi grup
+  /timezone — lihat atau ubah zona waktu chat
+  /ephemeral — tampilkan jawaban privat hanya kepada yang meminta, di grup
+aispam_extend_msg: |
+  /aispam — lihat atau ubah filter spam AI
+antiflood_extend_msg: |
+  /flood — lihat pengaturan antiflood
+  /setflood — jumlah pesan yang diizinkan (tanpa jeda lebih dari 60 dtk) sebelum ditindak (off untuk menonaktifkan)
+  /setfloodmode — tindakan untuk flooder: ban, kick, mute, atau tban/tmute dengan durasi wajib (misalnya tmute 10m)
+  /delflood — hapus juga pesan flood
+antiraid_extend_msg: |
+  /antiraid — lihat, aktifkan, atau nonaktifkan mode raid
+  /raidtime — atur durasi mode raid
+  /raidactiontime — atur lama ban sementara saat raid
+  /autoantiraid — aktifkan mode raid otomatis setelah N anggota masuk per menit
+approvals_extend_msg: |
+  /approve — bebaskan pengguna dari antiflood, antiraid, daftar hitam, kunci, captcha, dan filter spam AI
+  /unapprove — cabut persetujuan pengguna
+  /approval — cek apakah pengguna disetujui
+  /approved — daftar pengguna yang disetujui
+  /unapproveall — cabut semua persetujuan (hanya pembuat grup)
+backup_extend_msg: |
+  /export — ekspor pengaturan obrolan ke file JSON
+  /import — pulihkan pengaturan dari file cadangan yang dibalas
+  /reset — kembalikan pengaturan ke default
+bans_extend_msg: |
+  /ban — ban pengguna
+  /sban — ban diam-diam dan hapus perintahmu
+  /dban — ban dan hapus pesan yang dibalas
+  /tban — ban untuk waktu tertentu (m/h/d/w)
+  /unban — buka ban pengguna
+  /kick — tendang pengguna
+  /skick — tendang diam-diam dan hapus perintahmu
+  /dkick — tendang dan hapus pesan yang dibalas
+  /kickme — tendang dirimu sendiri
+  /banme — ban dirimu sendiri
+  /restrict — pilih kick, ban, atau mute lewat tombol
+  /unrestrict — pilih unmute atau unban lewat tombol
+  /unbanall — buka ban semua pengguna yang dikenal (hanya pemilik)
+  /baninfo — lihat catatan ban pengguna
+  /banlist — lihat daftar ban yang berlaku
+blacklists_extend_msg: |
+  /blacklists — daftar kata di daftar hitam
+  /addblacklist — masukkan kata ke daftar hitam
+  /rmblacklist — hapus kata dari daftar hitam
+  /blaction — tindakan untuk kata terlarang: mute, kick, ban, warn, none, atau tban/tmute dengan durasi wajib (misalnya tban 1d)
+  /blacklistaction — sama dengan /blaction
+  /remallbl — kosongkan daftar hitam
+captcha_extend_msg: |
+  /captcha — aktifkan atau nonaktifkan captcha untuk anggota baru
+  /captchajoin — aktifkan atau nonaktifkan captcha pribadi untuk permintaan bergabung
+  /captchamode — jenis captcha: math atau text
+  /captchatime — menit untuk menyelesaikan captcha
+  /captchaaction — tindakan jika gagal: kick, ban atau mute
+  /captchamaxattempts — jumlah percobaan per captcha
+  /captchapending — lihat pesan tersimpan pengguna yang menunggu
+  /captchaclear — hapus pesan tersimpan pengguna yang menunggu
+connections_extend_msg: |
+  /connect — kelola grup dari PM
+  /disconnect — putuskan koneksi dari grup
+  /reconnect — hubungkan lagi ke grup terakhir
+  /connection — lihat grup yang terhubung
+  /settings — lihat pengaturan grup dari PM
+  /allowconnect — izinkan anggota terhubung ke grup ini
+disabling_extend_msg: |
+  /disable — nonaktifkan perintah untuk anggota
+  /enable — aktifkan kembali perintah
+  /disableable — daftar perintah yang bisa dinonaktifkan
+  /disabled — daftar perintah yang dinonaktifkan
+  /disabledel — hapus perintah nonaktif yang dikirim anggota
+federations_extend_msg: |
+  /newfed — buat federasi
+  /renamefed — ganti nama federasimu
+  /delfed — hapus federasimu
+  /fedinfo — lihat info federasi
+  /fedadmins — daftar admin federasi
+  /fedpromote — jadikan pengguna admin federasi
+  /feddemote — copot admin federasi
+  /feddemoteme — mundur sebagai admin federasi
+  /joinfed — gabungkan obrolan ini ke federasi
+  /leavefed — keluar dari federasi
+  /chatfed — lihat federasi obrolan ini
+  /myfeds — daftar federasimu
+  /fban — ban pengguna di seluruh federasi
+  /unfban — cabut ban federasi
+  /funban — sama dengan /unfban
+  /fedstat — cek ban federasi seorang pengguna
+  /fbanstat — sama dengan /fedstat
+  /fedreason — wajibkan alasan untuk fban
+  /fednotif — beri tahu pemilik soal fban lewat PM
+  /quietfed — sembunyikan notifikasi fban pasif di obrolan ini
+  /subfed — berlangganan ban federasi lain
+  /unsubfed — berhenti berlangganan federasi
+  /fedsubs — daftar federasi yang dilanggani
+  /fbanlist — ekspor daftar fban
+  /importfbans — impor fban dari file yang dibalas
+  /setfedlog — atur obrolan log federasi
+  /unsetfedlog — hapus obrolan log federasi
+filters_extend_msg: |
+  /filter — balas otomatis pada kata pemicu
+  /filters — daftar filter
+  /stop — hapus filter
+  /stopall — hapus semua filter
+formatting_extend_msg: |
+  /markdownhelp — tampilkan panduan pemformatan
+  /formatting — sama seperti /markdownhelp
+greetings_extend_msg: |
+  /welcome — tampilkan pesan sambutan, atau aktifkan atau nonaktifkan
+  /setwelcome — atur pesan sambutan
+  /resetwelcome — reset pesan sambutan
+  /goodbye — tampilkan pesan perpisahan, atau aktifkan atau nonaktifkan
+  /setgoodbye — atur pesan perpisahan
+  /resetgoodbye — reset pesan perpisahan
+  /cleanwelcome — hapus pesan sambutan sebelumnya
+  /cleangoodbye — hapus pesan perpisahan sebelumnya
+  /cleanservice — hapus pesan layanan masuk dan keluar
+  /autoapprove — setujui permintaan bergabung otomatis
+languages_extend_msg: |
+  /lang — ganti bahasa bot untukmu atau grup
+locks_extend_msg: |
+  /lock — kunci jenis pesan
+  /unlock — buka kunci jenis pesan
+  /locks — lihat kunci saat ini
+  /locktypes — daftar jenis yang bisa dikunci
+  /nightmode — kunci malam dengan jadwal harian
+logchannels_extend_msg: |
+  /setlog — atur kanal log (kirim di kanal)
+  /unsetlog — hapus kanal log
+  /logchannel — lihat kanal log
+  /logcategories — daftar kategori log
+  /log — aktifkan kategori log
+  /nolog — nonaktifkan kategori log
+logchannels_examples_docs: |
+  <b>Menyiapkan kanal log:</b>
+  1. Tambahkan bot ke kanal sebagai admin yang bisa mengirim pesan.
+  2. Kirim <code>/setlog</code> di kanal.
+  3. Dalam satu jam, teruskan pesan /setlog itu ke grup Anda.
+
+  <b>Menyiapkan dan mengelolanya dari chat pribadi:</b>
+  Di chat pribadi, sebutkan grup lebih dulu: ID-nya, @username-nya, atau judul grup tempat Anda menjadi admin (huruf besar dan kecil tidak dibedakan; beri tanda kutip pada judul yang mengandung spasi). Tidak ada yang diposting di grup, dan kanal hanya menerima catatan pengaturan seperti biasa.
+  • <code>/setlog @mygroup @mychannel</code> - tautkan kanal dengan @username-nya
+  • <code>/setlog -1001234567890 -1009876543210</code> - tautkan dengan ID
+  • <code>/log @mygroup admin</code> - aktifkan satu kategori
+  • <code>/nolog -1001234567890 settings</code> - nonaktifkan satu kategori
+  • <code>/logchannel @mygroup</code> - tampilkan kanal log
+  • <code>/unsetlog @mygroup</code> - hapus kanal log
+  Anda harus menjadi admin grup, dan juga pemilik kanal atau admin kanal dengan izin mengirim pesan, sama seperti yang diperlukan untuk mengirim /setlog di sana; bot harus menjadi admin kanal yang bisa mengirim pesan. Jika Anda terhubung dengan /connect, grup boleh tidak disebutkan: <code>/setlog @mychannel</code>. Selama Anda terhubung, /setlog, /log dan /nolog tidak mencari berdasarkan judul: sebutkan grup lain dengan @username atau ID-nya. Grup melewati pemeriksaan yang sama seperti /connect, dan koneksi Anda tidak berubah.
+
+  <b>Memilih apa yang dicatat:</b>
+  • <code>/logcategories</code> - daftar kategori
+  • <code>/log admin user</code> - aktifkan dua kategori
+  • <code>/nolog settings</code> - nonaktifkan satu kategori
+
+federations_permissions_docs: |
+  <b>Pemilik federasi:</b>
+  • <code>/delfed</code> (di PM), <code>/renamefed</code>, <code>/fedpromote</code>, <code>/feddemote</code>, <code>/fedreason</code>, <code>/fednotif</code>, <code>/subfed</code>, <code>/unsubfed</code>, <code>/fedsubs</code>, <code>/setfedlog</code>, <code>/unsetfedlog</code>, <code>/fbanlist</code>, <code>/importfbans</code>
+
+  <b>Admin federasi:</b>
+  • <code>/fban</code>, <code>/unfban</code>, <code>/funban</code> di grup anggota (di PM berlaku untuk federasi milik Anda), <code>/feddemoteme</code>
+
+  <b>Pembuat grup:</b>
+  • <code>/joinfed</code>, <code>/leavefed</code>
+
+  <b>Admin grup:</b>
+  • <code>/quietfed</code>
+
+  <b>Siapa saja:</b>
+  • <code>/newfed</code> (di PM, satu federasi per pengguna), <code>/fedstat</code>, <code>/fbanstat</code>, <code>/fedinfo</code>, <code>/fedadmins</code>, <code>/chatfed</code>, <code>/myfeds</code>
+
+  <b>Persyaratan Bot:</b>
+  • Blokir pengguna di setiap chat anggota, untuk menegakkan fban
+
+logchannels_permissions_docs: |
+  <b>Izin Pengguna:</b>
+  • <code>/setlog</code> dikirim di kanal itu sendiri, tempat hanya admin kanal yang bisa mengirim pesan.
+  • Hanya admin grup yang bisa menautkan kanal dengan meneruskan pesan itu, dan hanya mereka yang bisa menggunakan <code>/unsetlog</code>, <code>/log</code> dan <code>/nolog</code>.
+  • <code>/setlog</code> di chat pribadi hanya menautkan kanal untuk admin grup yang merupakan pemilik kanal atau admin kanal dengan izin mengirim pesan.
+  • Siapa saja bisa menggunakan <code>/logchannel</code> dan <code>/logcategories</code>; di chat pribadi, <code>/logchannel</code> berfungsi untuk grup yang bisa Anda hubungkan dengan <code>/connect</code>.
+
+  <b>Izin Bot:</b>
+  • Bot harus menjadi admin kanal log dengan izin mengirim pesan, baik untuk melihat <code>/setlog</code> maupun untuk mengirim catatan log. Catatan yang tidak bisa dikirim akan dibuang tanpa pesan kesalahan.
+misc_extend_msg: |
+  /info — lihat info pengguna
+  /id — lihat ID obrolan atau pengguna
+  /ping — cek waktu respons bot
+  /stat — hitung pesan di obrolan
+  /tell — buat bot membalas sebuah pesan dengan teks Anda
+  /tr — terjemahkan pesan
+  /removebotkeyboard — hapus keyboard bot yang macet
+  /stickerid — dapatkan file ID stiker
+  /zombies — tendang akun terhapus
+  /github — cari pengguna atau repositori GitHub
+  /wiki — cari di Wikipedia
+  /ud — cari di Urban Dictionary
+  /referral — buat tautan undangan terlacak dan lihat statistik referral
+  /runs — kalimat acak
+mutes_extend_msg: |
+  /mute — bisukan pengguna
+  /smute — bisukan diam-diam dan hapus perintahmu
+  /dmute — bisukan dan hapus pesan yang dibalas
+  /tmute — bisukan untuk waktu tertentu (m/h/d/w)
+  /unmute — hapus bisu pengguna
+notes_extend_msg: |
+  /save — simpan catatan
+  /addnote — sama dengan /save
+  /get — ambil catatan (atau #name)
+  /notes — daftar catatan
+  /saved — sama dengan /notes
+  /clear — hapus catatan
+  /rmnote — sama dengan /clear
+  /clearall — hapus semua catatan (hanya pemilik)
+  /privatenotes — kirim catatan lewat PM
+  /privnote — sama dengan /privatenotes
+pins_extend_msg: |
+  /pin — sematkan pesan yang dibalas
+  /unpin — lepas sematan pesan
+  /unpinall — lepas semua sematan
+  /pinned — lihat pesan yang disematkan
+  /permapin — sematkan pesan kustom dari bot
+  /antichannelpin — hentikan sematan otomatis dari kanal tertaut
+  /cleanlinked — hapus kiriman kanal tertaut
+purges_extend_msg: |
+  /del — hapus pesan yang dibalas
+  /purge — hapus semuanya mulai dari pesan yang dibalas
+  /purgefrom — tandai awal rentang yang dihapus
+  /purgeto — hapus sampai pesan yang dibalas
+reactions_extend_msg: |
+  /addreaction — beri reaksi emoji pada kata kunci
+  /removereaction — hapus reaksi kata kunci
+  /reactions — daftar reaksi
+  /resetreactions — hapus semua reaksi
+reports_extend_msg: |
+  /report — laporkan pesan yang dibalas ke admin (atau @admin)
+  /reports — aktifkan atau nonaktifkan laporan, blokir atau buka blokir pelapor, bisu otomatis
+rules_extend_msg: |
+  /rules — lihat aturan
+  /setrules — atur aturan
+  /resetrules — reset aturan
+  /privaterules — kirim aturan lewat PM
+  /rulesbtn — atur teks tombol aturan
+  /resetrulesbutton — reset teks tombol aturan
+  /resetrulesbtn — sama dengan /resetrulesbutton
+spamdb_extend_msg: |
+  /spamdb — tampilkan atau ubah pemeriksaan database spam, pilih database-nya, atau atur tindakannya
+probation_extend_msg: |
+  /probation — tampilkan atau ubah masa percobaan anggota baru, atau atur waktu, pesan, panjang, konten yang diblokir, dan pemberitahuannya
+spamfilter_extend_msg: |
+  /spam — hapus spam yang dibalas, blokir pengirimnya, dan simpan sebagai sampel
+  /spamfilter — tampilkan atau ubah filter spam, atau atur ambangnya
+  /spamsamples — daftar sampel spam chat
+  /forgetspam — hapus sebuah sampel spam
+digest_extend_msg: |
+  /digest — tampilkan status ringkasan mingguan, aktifkan atau nonaktifkan, pilih tujuannya, atau lihat pratinjaunya
+recurring_extend_msg: |
+  /recurring — tambah, lihat, atau hapus pesan yang diposting bot sesuai jadwal
+warns_extend_msg: |
+  /warn — beri peringatan pengguna
+  /swarn — beri peringatan dan hapus perintahmu
+  /dwarn — beri peringatan dan hapus pesan yang dibalas
+  /warns — lihat peringatan pengguna
+  /rmwarn — hapus peringatan terakhir pengguna
+  /resetwarns — reset peringatan pengguna
+  /resetallwarns — reset semua peringatan di obrolan
+  /warnings — lihat pengaturan peringatan
+  /setwarnlimit — jumlah peringatan sebelum hukuman
+  /setwarntime — berapa lama peringatan dihitung
+  /setwarnmode — hukuman: ban, kick, mute, tban atau tmute
+settings_summary_legend: "<i>• menandai nilai yang berbeda dari bawaan. Kirim perintah yang ditampilkan untuk mengubahnya.</i>"
+settings_summary_toggle_hint: "<i>Setiap tombol di bawah mengubah pengaturan yang disebutnya ke nilai setelah panah.</i>"
+settings_picker_text: "Pilih grup untuk melihat pengaturannya. Tidak ada di daftar? Kirim /connect &lt;chat id&gt; di sini atau /settings di grup."
+settings_picker_empty: "Saya tidak menemukan grup tempat Anda menjadi admin. Saya hanya tahu grup tempat Anda menulis sejak saya bergabung, jadi kirim /connect &lt;chat id&gt; di sini atau /settings di grup."
+settings_picker_wait: "⏳ Tunggu {seconds} detik sebelum membuka daftar grup lagi."
+settings_open_in_pm: "Ketuk tombol untuk melihat pengaturan grup ini di obrolan pribadi."
+settings_open_in_pm_button: "Buka pengaturan di obrolan pribadi"
+settings_btn_refresh: "🔄 Segarkan"
+settings_btn_other_group: "↩️ Grup lain"
+settings_toggle_saved: "✅ Tersimpan: {command} → {value}"
+
+# Admin panel (Telegram Mini App) PM deep link
+panel_open_message: "Ketuk tombol di bawah untuk membuka panel admin untuk grup ini."
+panel_open_button: "Buka panel admin"

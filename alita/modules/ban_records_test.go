@@ -1,0 +1,401 @@
+//go:build testtools
+
+package modules
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strconv"
+	"testing"
+	"time"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+
+	"github.com/divkix/Alita_Robot/alita/db"
+	"github.com/divkix/Alita_Robot/alita/db/bans"
+	dbcache "github.com/divkix/Alita_Robot/alita/db/cache"
+	"github.com/divkix/Alita_Robot/alita/db/federations"
+	"github.com/divkix/Alita_Robot/alita/db/models"
+)
+
+// banRecordsOf returns the ban_records rows of chatID, oldest first.
+func banRecordsOf(t *testing.T, chatID int64) []models.BanRecord {
+	t.Helper()
+	var rows []models.BanRecord
+	if err := db.DB.Where("chat_id = ?", chatID).Order("id").Find(&rows).Error; err != nil {
+		t.Fatalf("load ban records of chat %d: %v", chatID, err)
+	}
+	return rows
+}
+
+// singleBanRecord fails unless chatID has exactly one ban record and returns it.
+func singleBanRecord(t *testing.T, chatID int64) models.BanRecord {
+	t.Helper()
+	rows := banRecordsOf(t, chatID)
+	if len(rows) != 1 {
+		t.Fatalf("chat %d has %d ban records, want exactly 1", chatID, len(rows))
+	}
+	return rows[0]
+}
+
+// seedBanRecord stores a ban record as punishment.Apply would.
+func seedBanRecord(t *testing.T, r models.BanRecord) {
+	t.Helper()
+	if _, err := bans.Record(r); err != nil {
+		t.Fatalf("Record(%+v) error = %v", r, err)
+	}
+}
+
+// A Kick button stays under its message; pressed after another admin banned
+// the user, it refuses and the ban, and its record, stay.
+func TestRestrictKickOfBannedUserKeepsTheBan(t *testing.T) {
+	useRealLocales(t)
+	f := newAdminChatFixture(t)
+	seedBanRecord(t, models.BanRecord{ChatId: f.chat.Id, UserId: f.member.Id, BannedBy: f.admin.Id, Source: models.BanSourceManual, CreatedAt: time.Now()})
+	f.client.membersByUser["42"] = json.RawMessage(`{"status":"kicked","user":{"id":42,"is_bot":false,"first_name":"Member"}}`)
+
+	data := encodeCallbackData("restrict", map[string]string{"a": "kick", "u": "42"})
+	if err := bansModule.restrictButtonHandler(f.bot, newModuleCallbackContext(f.bot, f.chat, f.admin, data)); err != ext.EndGroups {
+		t.Fatalf("restrictButtonHandler(kick) error = %v, want EndGroups", err)
+	}
+	for _, method := range []string{"unbanChatMember", "editMessageText"} {
+		if calls := f.client.callsFor(method); len(calls) != 0 {
+			t.Fatalf("%s calls = %d, want none for a banned user", method, len(calls))
+		}
+	}
+	if events := chatModerationEvents(t, f.chat.Id); len(events) != 0 {
+		t.Fatalf("moderation events = %+v, want none", events)
+	}
+	answers := f.client.callsFor("answerCallbackQuery")
+	if len(answers) != 1 || fmt.Sprint(answers[0].Params["text"]) != translated(t, "bans_kick_target_banned") {
+		t.Fatalf("answers = %+v, want the banned refusal", answers)
+	}
+	if got := singleBanRecord(t, f.chat.Id); !got.IsOpen(time.Now()) {
+		t.Fatalf("ban record = %+v, want it left open", got)
+	}
+}
+
+// The in-group report Kick refuses the same way and reopens the reports it
+// closed, as for any failed action.
+func TestReportKickOfBannedUserReopensReports(t *testing.T) {
+	useRealLocales(t)
+	f := newReportCardFixture(t, false)
+	admin := gotgbot.User{Id: reportCardAdminID, FirstName: "Group Admin"}
+	seedCallbackAdmins(t, f.chat.Id,
+		gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 999, IsBot: true}, CanRestrictMembers: true},
+		gotgbot.MergedChatMember{Status: "creator", User: admin},
+	)
+	f.report(t, f.reporter, "/report spam")
+	f.client.membersByChat = map[string]json.RawMessage{
+		fmt.Sprintf("%d|43", f.chat.Id): json.RawMessage(`{"status":"kicked","user":{"id":43,"is_bot":false,"first_name":"Spammer"}}`),
+	}
+	f.client.calls = nil
+
+	data := encodeCallbackData("report", map[string]string{"a": "kick", "u": "43", "m": "505"})
+	if err := reportsModule.markResolvedButtonHandler(f.bot, newModuleCallbackContext(f.bot, f.chat, admin, data)); err != ext.EndGroups {
+		t.Fatalf("report kick error = %v, want EndGroups", err)
+	}
+	for _, method := range []string{"unbanChatMember", "editMessageText"} {
+		if calls := f.client.callsFor(method); len(calls) != 0 {
+			t.Fatalf("%s calls = %d, want none for a banned user", method, len(calls))
+		}
+	}
+	if events := chatModerationEvents(t, f.chat.Id); len(events) != 0 {
+		t.Fatalf("moderation events = %+v, want none", events)
+	}
+	requireReportStatus(t, f.chat.Id, models.ReportStatusOpen)
+	answeredWith(t, f, "bans_kick_target_banned")
+}
+
+// Every ban command records the ban it made, with the admin, the reason and,
+// for /tban, its end.
+func TestBanCommandsRecordTheBan(t *testing.T) {
+	tests := []struct {
+		name   string
+		text   string
+		reason string
+		timed  bool
+		run    func(*gotgbot.Bot, *ext.Context) error
+	}{
+		{name: "ban", text: "/ban spam", reason: "spam", run: bansModule.ban},
+		{name: "tban", text: "/tban 1h spam", reason: "spam", timed: true, run: bansModule.tBan},
+		{name: "dban", text: "/dban spam", reason: "spam", run: bansModule.dBan},
+		{name: "sban", text: "/sban", run: bansModule.sBan},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			start := time.Now()
+			ctx := newMuteReplyContext(f.bot, f.chat, f.admin, f.member, tt.text)
+			if err := tt.run(f.bot, ctx); err != ext.EndGroups {
+				t.Fatalf("%s() error = %v, want EndGroups", tt.name, err)
+			}
+
+			got := singleBanRecord(t, f.chat.Id)
+			if got.UserId != f.member.Id || got.BannedBy != f.admin.Id || got.Source != models.BanSourceManual {
+				t.Fatalf("record = %+v, want user %d banned by %d from manual", got, f.member.Id, f.admin.Id)
+			}
+			if got.Reason != tt.reason {
+				t.Fatalf("record reason = %q, want %q", got.Reason, tt.reason)
+			}
+			if !got.IsOpen(time.Now()) {
+				t.Fatalf("record = %+v, want an open ban", got)
+			}
+			switch {
+			case !tt.timed && got.Until != nil:
+				t.Fatalf("record until = %v, want a permanent ban", got.Until)
+			case tt.timed && (got.Until == nil || got.Until.Before(start.Add(59*time.Minute)) || got.Until.After(time.Now().Add(61*time.Minute))):
+				t.Fatalf("record until = %v, want about an hour from now", got.Until)
+			}
+		})
+	}
+}
+
+// "/ban @alice spam" sent as a reply to Bob's message bans Alice for "spam":
+// the user the command names wins over the reply.
+func TestBanNamedUserWinsOverReply(t *testing.T) {
+	f := newAdminChatFixture(t)
+	alice := models.User{UserId: 4_100_241, UserName: "alicenamed1241", Name: "Alice"}
+	if err := db.DB.Create(&alice).Error; err != nil {
+		t.Fatalf("create Alice: %v", err)
+	}
+	ctx := newMuteReplyContext(f.bot, f.chat, f.admin, f.member, "/ban @alicenamed1241 spam")
+	if err := bansModule.ban(f.bot, ctx); err != ext.EndGroups {
+		t.Fatalf("ban() error = %v, want EndGroups", err)
+	}
+	if !targetedIn(f, "banChatMember", f.chat.Id, alice.UserId) || targetedIn(f, "banChatMember", f.chat.Id, f.member.Id) {
+		t.Fatalf("banChatMember calls = %+v, want Alice (%d) only", f.client.callsFor("banChatMember"), alice.UserId)
+	}
+	if got := singleBanRecord(t, f.chat.Id); got.UserId != alice.UserId || got.Reason != "spam" {
+		t.Fatalf("record = %+v, want Alice banned for %q", got, "spam")
+	}
+}
+
+func TestBanMeRecordsTheBanAsTheUsersOwn(t *testing.T) {
+	f := newAdminChatFixture(t)
+	if err := bansModule.banme(f.bot, newModuleMessageContext(f.bot, f.chat, f.member, "/banme")); err != ext.EndGroups {
+		t.Fatalf("banme() error = %v, want EndGroups", err)
+	}
+	got := singleBanRecord(t, f.chat.Id)
+	if got.UserId != f.member.Id || got.BannedBy != f.member.Id || got.Source != models.BanSourceManual {
+		t.Fatalf("record = %+v, want the member's own ban", got)
+	}
+}
+
+// A button without a "c" field acts on the chat it is in; when Telegram sends
+// no message with the press there is no chat, and nothing is moderated. The
+// bans buttons answer it as invalid; rmWarn has nowhere to answer.
+func TestModerationButtonsWithoutAChatTakeNoAction(t *testing.T) {
+	f := newAdminChatFixture(t)
+	user := fmt.Sprint(f.member.Id)
+	cases := []struct {
+		name    string
+		data    string
+		handler func(*gotgbot.Bot, *ext.Context) error
+		answers int
+	}{
+		{"restrict", encodeCallbackData("restrict", map[string]string{"a": "ban", "u": user}), bansModule.restrictButtonHandler, 1},
+		{"unrestrict", encodeCallbackData("unrestrict", map[string]string{"a": "unban", "u": user}), bansModule.unrestrictButtonHandler, 1},
+		{"rmWarn", encodeCallbackData("rmWarn", map[string]string{"u": user}), warnsModule.rmWarnButton, 0},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			query := &gotgbot.CallbackQuery{Id: "callback-1", From: f.admin, Data: tc.data, ChatInstance: "test-chat-instance"}
+			ctx := ext.NewContext(f.bot, &gotgbot.Update{UpdateId: 2, CallbackQuery: query}, nil)
+			before := len(f.client.callsFor("answerCallbackQuery"))
+			if err := tc.handler(f.bot, ctx); err != ext.EndGroups {
+				t.Fatalf("%s error = %v, want EndGroups", tc.name, err)
+			}
+			if got := len(f.client.callsFor("answerCallbackQuery")) - before; got != tc.answers {
+				t.Fatalf("answerCallbackQuery calls = %d, want %d", got, tc.answers)
+			}
+			for _, method := range []string{"banChatMember", "unbanChatMember", "restrictChatMember"} {
+				if calls := f.client.callsFor(method); len(calls) != 0 {
+					t.Fatalf("%s called %d times without a chat", method, len(calls))
+				}
+			}
+		})
+	}
+}
+
+func TestRestrictBanButtonRecordsTheBan(t *testing.T) {
+	f := newAdminChatFixture(t)
+	data := encodeCallbackData("restrict", map[string]string{"a": "ban", "u": fmt.Sprint(f.member.Id)})
+	if err := bansModule.restrictButtonHandler(f.bot, newModuleCallbackContext(f.bot, f.chat, f.admin, data)); err != ext.EndGroups {
+		t.Fatalf("restrictButtonHandler(ban) error = %v, want EndGroups", err)
+	}
+	got := singleBanRecord(t, f.chat.Id)
+	if got.UserId != f.member.Id || got.BannedBy != f.admin.Id || got.Source != models.BanSourceManual {
+		t.Fatalf("record = %+v, want the pressing admin's ban", got)
+	}
+}
+
+// The record follows the ban: a ban Telegram refused records nothing, and a
+// kick is no ban.
+func TestOnlyBansTelegramAcceptedAreRecorded(t *testing.T) {
+	t.Run("refused ban", func(t *testing.T) {
+		f := newAdminChatFixture(t)
+		requestErr := errors.New("Forbidden: bot is not an administrator")
+		f.client.errors["banChatMember"] = requestErr
+		ctx := newMuteReplyContext(f.bot, f.chat, f.admin, f.member, "/ban spam")
+		if err := bansModule.ban(f.bot, ctx); !errors.Is(err, requestErr) {
+			t.Fatalf("ban() error = %v, want the request error", err)
+		}
+		if rows := banRecordsOf(t, f.chat.Id); len(rows) != 0 {
+			t.Fatalf("refused ban recorded %d rows, want none", len(rows))
+		}
+	})
+	t.Run("kick", func(t *testing.T) {
+		f := newAdminChatFixture(t)
+		ctx := newMuteReplyContext(f.bot, f.chat, f.admin, f.member, "/kick spam")
+		if err := bansModule.kick(f.bot, ctx); err != ext.EndGroups {
+			t.Fatalf("kick() error = %v, want EndGroups", err)
+		}
+		if rows := banRecordsOf(t, f.chat.Id); len(rows) != 0 {
+			t.Fatalf("kick recorded %d ban rows, want none", len(rows))
+		}
+	})
+}
+
+// A ban whose record cannot be written still bans and answers as usual.
+func TestBanRecordWriteFailureKeepsTheBanReply(t *testing.T) {
+	f := newAdminChatFixture(t)
+	if err := db.DB.Migrator().DropTable(&models.BanRecord{}); err != nil {
+		t.Fatalf("drop ban_records: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := db.DB.AutoMigrate(&models.BanRecord{}); err != nil {
+			t.Errorf("restore ban_records: %v", err)
+		}
+	})
+	ctx := newMuteReplyContext(f.bot, f.chat, f.admin, f.member, "/ban spam")
+
+	if err := bansModule.ban(f.bot, ctx); err != ext.EndGroups {
+		t.Fatalf("ban() error = %v, want EndGroups despite the record write failure", err)
+	}
+	assertParams(t, f.client.onlyCall(t, "banChatMember"), targetParams(f.chat.Id, f.member.Id))
+	reply := f.client.onlyCall(t, "sendMessage")
+	if reply.Params["reply_markup"] == nil {
+		t.Fatal("ban reply lost its unban button after the record write failed")
+	}
+}
+
+func TestUnbanPathsCloseTheBanRecord(t *testing.T) {
+	for name, unban := range map[string]func(f adminChatFixture) error{
+		"command": func(f adminChatFixture) error {
+			return bansModule.unban(f.bot, newModuleMessageContext(f.bot, f.chat, f.admin, fmt.Sprintf("/unban %d", f.member.Id)))
+		},
+		"button": func(f adminChatFixture) error {
+			data := encodeCallbackData("unrestrict", map[string]string{"a": "unban", "u": fmt.Sprint(f.member.Id)})
+			return bansModule.unrestrictButtonHandler(f.bot, newModuleCallbackContext(f.bot, f.chat, f.admin, data))
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			seedBanRecord(t, models.BanRecord{ChatId: f.chat.Id, UserId: f.member.Id, BannedBy: 7, Source: models.BanSourceAntiflood})
+
+			if err := unban(f); err != ext.EndGroups {
+				t.Fatalf("unban %s error = %v, want EndGroups", name, err)
+			}
+			got := singleBanRecord(t, f.chat.Id)
+			if got.LiftedAt == nil || got.LiftedBy == nil || *got.LiftedBy != f.admin.Id {
+				t.Fatalf("record = %+v, want it lifted by %d", got, f.admin.Id)
+			}
+		})
+	}
+}
+
+func TestUnbanAllClosesTheBanRecordsOfTheUsersItUnbanned(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	const listed, unlisted = 43, 44
+	for _, userID := range []int64{listed, unlisted} {
+		seedBanRecord(t, models.BanRecord{ChatId: f.chat.Id, UserId: userID, Source: models.BanSourceManual, BannedBy: f.admin.Id})
+	}
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", f.chat.Id).
+		Update("users", models.Int64Array{listed}).Error; err != nil {
+		t.Fatalf("seed users of %d: %v", f.chat.Id, err)
+	}
+	dbcache.DeleteCache(dbcache.CacheKey("chat_users", f.chat.Id))
+
+	data := encodeCallbackData("unbanall", map[string]string{"a": "yes"})
+	if err := bansModule.unbanAllCallback(f.bot, newModuleCallbackContext(f.bot, f.chat, f.admin, data)); err != ext.EndGroups {
+		t.Fatalf("unbanAllCallback(yes) error = %v, want EndGroups", err)
+	}
+
+	for _, r := range banRecordsOf(t, f.chat.Id) {
+		lifted := r.LiftedAt != nil && r.LiftedBy != nil && *r.LiftedBy == f.admin.Id
+		if lifted != (r.UserId == listed) {
+			t.Fatalf("record of %d = %+v; want only user %d's lifted, by %d", r.UserId, r, listed, f.admin.Id)
+		}
+	}
+}
+
+func TestBanRecordRetentionDeletesOnlyOldEndedBans(t *testing.T) {
+	f := newAdminChatFixture(t)
+	old := time.Now().Add(-banRecordRetention - 24*time.Hour)
+	seedBanRecord(t, models.BanRecord{ChatId: f.chat.Id, UserId: 1, Source: models.BanSourceManual, CreatedAt: old})
+	seedBanRecord(t, models.BanRecord{ChatId: f.chat.Id, UserId: 2, Source: models.BanSourceManual, CreatedAt: old, Until: &old})
+
+	sweepExpiredBanRecords(time.Now())
+
+	if got := singleBanRecord(t, f.chat.Id); got.UserId != 1 {
+		t.Fatalf("kept the record of %d, want the open permanent ban of 1", got.UserId)
+	}
+}
+
+// A federation ban records the ban in each chat of the federation with the
+// federation as its detail, and the unfban closes those records.
+func TestFedBanWalkRecordsAndUnfbanCloses(t *testing.T) {
+	bot := newModuleTestBot(newModuleBotClient())
+	owner := uniquePositiveUserID()
+	fed, err := federations.CreateFederation(owner, "Record Fed")
+	if err != nil {
+		t.Fatalf("CreateFederation() error = %v", err)
+	}
+	t.Cleanup(func() { _ = federations.DeleteFederation(fed.FedID) })
+	target := uniquePositiveUserID()
+	chat := seedFedChat(t, fed.FedID, target)
+	t.Cleanup(func() { _ = db.DB.Where("chat_id = ?", chat.Id).Delete(&models.BanRecord{}).Error })
+	if _, _, err := federations.Fban(fed.FedID, target, owner, "spam"); err != nil {
+		t.Fatalf("Fban() error = %v", err)
+	}
+
+	applyActiveFban(bot, fed.FedID, target, owner)
+
+	got := singleBanRecord(t, chat.Id)
+	if got.UserId != target || got.BannedBy != owner || got.Source != models.BanSourceFed || got.SourceDetail != fed.FedID {
+		t.Fatalf("record = %+v, want the fed ban of %d by %d from %s", got, target, owner, fed.FedID)
+	}
+	if err := federations.Unfban(fed.FedID, target); err != nil {
+		t.Fatalf("Unfban() error = %v", err)
+	}
+
+	applyActiveUnfban(bot, fed.FedID, target, owner)
+
+	if got := singleBanRecord(t, chat.Id); got.LiftedAt == nil || got.LiftedBy == nil || *got.LiftedBy != owner {
+		t.Fatalf("record = %+v, want it lifted by %d", got, owner)
+	}
+}
+
+// A raid ban records the end Telegram was given, even the shortest one the raid
+// accepts, so /baninfo never shows a 30-second raid ban as permanent.
+func TestRaidBanRecordsTheEndItWasMadeWith(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Raid Chat"}
+	t.Cleanup(func() { _ = db.DB.Where("chat_id = ?", chat.Id).Delete(&models.BanRecord{}).Error })
+
+	banRaidMember(bot, nil, &chat, 4253, 30)
+
+	until, err := strconv.ParseInt(fmt.Sprint(client.onlyCall(t, "banChatMember").Params["until_date"]), 10, 64)
+	if err != nil {
+		t.Fatalf("until_date: %v", err)
+	}
+	got := singleBanRecord(t, chat.Id)
+	if got.Source != models.BanSourceAntiraid || got.Until == nil || got.Until.Unix() != until {
+		t.Fatalf("record = %+v, want an antiraid ban ending at %d", got, until)
+	}
+}

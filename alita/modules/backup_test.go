@@ -1,0 +1,1232 @@
+//go:build testtools
+
+package modules
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"strconv"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/divkix/Alita_Robot/alita/db"
+	"github.com/divkix/Alita_Robot/alita/db/backup"
+	"github.com/divkix/Alita_Robot/alita/db/chats"
+	"github.com/divkix/Alita_Robot/alita/db/disabling"
+	"github.com/divkix/Alita_Robot/alita/db/notes"
+	"github.com/divkix/Alita_Robot/alita/db/rules"
+	"github.com/divkix/Alita_Robot/alita/i18n"
+)
+
+type backupRoundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f backupRoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func backupDispatcher() *ext.Dispatcher {
+	dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
+	LoadBackup(dispatcher)
+	return dispatcher
+}
+
+func TestBackupModuleStructure(t *testing.T) {
+	t.Run("backupModule has correct name", func(t *testing.T) {
+		assert.Equal(t, "Backup", backupModule.moduleName)
+	})
+}
+
+func TestLoadBackupDoesNotRegisterDeadHelpButtons(t *testing.T) {
+	registry := DefaultHelpRegistry()
+	previousButtons, hadButtons := registry.helpKbBuilders[backupModule.moduleName]
+	previousEnabled, hadEnabled := registry.AbleMap[backupModule.moduleName]
+	delete(registry.helpKbBuilders, backupModule.moduleName)
+	delete(registry.AbleMap, backupModule.moduleName)
+	t.Cleanup(func() {
+		if hadButtons {
+			registry.helpKbBuilders[backupModule.moduleName] = previousButtons
+		} else {
+			delete(registry.helpKbBuilders, backupModule.moduleName)
+		}
+		if hadEnabled {
+			registry.AbleMap[backupModule.moduleName] = previousEnabled
+		} else {
+			delete(registry.AbleMap, backupModule.moduleName)
+		}
+	})
+
+	LoadBackup(ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1}))
+
+	assert.True(t, registry.AbleMap[backupModule.moduleName])
+	_, ok := registry.helpKbBuilders[backupModule.moduleName]
+	assert.False(t, ok)
+}
+
+func TestBuildModuleList(t *testing.T) {
+	t.Run("buildModuleList returns empty for empty slice", func(t *testing.T) {
+		result := buildModuleList([]string{})
+		assert.Equal(t, "", result)
+	})
+
+	t.Run("buildModuleList formats correctly", func(t *testing.T) {
+		result := buildModuleList([]string{"notes", "filters", "rules"})
+		assert.Contains(t, result, "notes")
+		assert.Contains(t, result, "filters")
+		assert.Contains(t, result, "rules")
+		assert.Contains(t, result, "•")
+	})
+
+	t.Run("buildModuleList with single module", func(t *testing.T) {
+		result := buildModuleList([]string{"notes"})
+		assert.Equal(t, "• notes", result)
+	})
+}
+
+func testTranslator(t *testing.T) *i18n.Translator {
+	yaml := `
+backup_export_success: "Chat: {chat}, Modules: {modules}, Time: {time}, List: {list}"
+backup_import_file_too_large: "File is too large"
+backup_import_invalid_file: "Invalid backup file"
+backup_import_download_failed: "Download failed"
+backup_import_rate_limited: "Wait {time}"
+backup_import_expired: "Import expired"
+backup_reset_expired: "Reset expired"
+common_callback_invalid_request: "Invalid callback"
+button_confirm_import: "Confirm Import"
+button_cancel_import: "Cancel Import"
+button_confirm_reset: "Confirm Reset"
+button_cancel_reset: "Cancel Reset"
+`
+	tr, err := i18n.NewTestTranslator(yaml)
+	require.NoError(t, err)
+	return tr
+}
+
+func TestParseImportModules(t *testing.T) {
+	t.Parallel()
+
+	backupData := map[string]interface{}{
+		"notes":   map[string]interface{}{"a": 1},
+		"filters": map[string]interface{}{"b": 2},
+		"rules":   map[string]interface{}{"c": 3},
+	}
+
+	t.Run("empty text returns empty slice", func(t *testing.T) {
+		got, err := parseImportModules("", backupData)
+		require.NoError(t, err)
+		assert.Empty(t, got)
+	})
+
+	t.Run("no args returns empty slice", func(t *testing.T) {
+		got, err := parseImportModules("/import", backupData)
+		require.NoError(t, err)
+		assert.Empty(t, got)
+	})
+
+	t.Run("valid modules only", func(t *testing.T) {
+		got, err := parseImportModules("/import notes filters", backupData)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"notes", "filters"}, got)
+	})
+
+	t.Run("invalid modules skipped", func(t *testing.T) {
+		got, err := parseImportModules("/import notes invalid rules", backupData)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"notes", "rules"}, got)
+	})
+
+	t.Run("case insensitive", func(t *testing.T) {
+		got, err := parseImportModules("/import NOTES", backupData)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"notes"}, got)
+	})
+
+	t.Run("deduplicates valid module args while preserving first occurrence", func(t *testing.T) {
+		got, err := parseImportModules("/import notes filters NOTES rules filters", backupData)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"notes", "filters", "rules"}, got)
+	})
+
+	t.Run("all invalid returns error", func(t *testing.T) {
+		got, err := parseImportModules("/import foo bar", backupData)
+		require.ErrorIs(t, err, errNoValidModule)
+		assert.Nil(t, got)
+	})
+}
+
+func TestParseModuleArgs(t *testing.T) {
+	t.Parallel()
+
+	valid := func(module string) bool {
+		return module == "notes" || module == "filters"
+	}
+
+	got, err := parseModuleArgs([]string{"NOTES", "invalid", "filters", "notes", ""}, valid)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"notes", "filters"}, got)
+
+	_, err = parseModuleArgs([]string{"invalid", ""}, valid)
+	require.ErrorIs(t, err, errNoValidModule)
+}
+
+func TestDownloadBackupFileRejectsInvalidDocumentBeforeNetwork(t *testing.T) {
+	t.Parallel()
+
+	tr := testTranslator(t)
+
+	t.Run("non-json file", func(t *testing.T) {
+		data, msg := downloadBackupFile(nil, &gotgbot.Document{FileName: "backup.txt"}, tr)
+		assert.Nil(t, data)
+		assert.Equal(t, "Invalid backup file", msg)
+	})
+
+	t.Run("file larger than ten megabytes", func(t *testing.T) {
+		data, msg := downloadBackupFile(nil, &gotgbot.Document{
+			FileName: "backup.json",
+			FileSize: 10*1024*1024 + 1,
+		}, tr)
+		assert.Nil(t, data)
+		assert.Equal(t, "File is too large", msg)
+	})
+}
+
+func TestDownloadBackupFileReportsGotgbotGetFileFailure(t *testing.T) {
+	tr := testTranslator(t)
+	client := newModuleBotClient()
+	client.errors["getFile"] = fmt.Errorf("telegram getFile failed")
+	bot := newModuleTestBot(client)
+
+	data, msg := downloadBackupFile(bot, &gotgbot.Document{
+		FileName: "backup.json",
+		FileId:   "backup-file-id",
+	}, tr)
+
+	assert.Nil(t, data)
+	assert.NotEmpty(t, msg)
+	assert.Len(t, client.callsFor("getFile"), 1)
+}
+
+func TestDownloadBackupFileDownloadsGetFilePath(t *testing.T) {
+	tr := testTranslator(t)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/file/bot999:test/backups/chat.json", r.URL.Path)
+		_, _ = w.Write([]byte(`{"version":"1.0.0"}`))
+	}))
+	t.Cleanup(server.Close)
+
+	oldBaseURL := backupDownloadBaseURL
+	oldHTTPClient := backupDownloadHTTPClient
+	backupDownloadBaseURL = server.URL + "/file/bot"
+	backupDownloadHTTPClient = server.Client()
+	t.Cleanup(func() {
+		backupDownloadBaseURL = oldBaseURL
+		backupDownloadHTTPClient = oldHTTPClient
+	})
+
+	client := newModuleBotClient()
+	client.responses["getFile"] = json.RawMessage(
+		`{"file_id":"backup-file-id","file_path":"backups/chat.json"}`,
+	)
+	bot := newModuleTestBot(client)
+
+	data, msg := downloadBackupFile(bot, &gotgbot.Document{
+		FileName: "backup.json",
+		FileId:   "backup-file-id",
+	}, tr)
+
+	assert.Equal(t, `{"version":"1.0.0"}`, string(data))
+	assert.Empty(t, msg)
+	assert.Len(t, client.callsFor("getFile"), 1)
+}
+
+func TestDownloadBackupFileLimitsResponseBody(t *testing.T) {
+	tr := testTranslator(t)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(bytes.Repeat([]byte("x"), maxBackupFileSize+1))
+	}))
+	t.Cleanup(server.Close)
+
+	oldBaseURL := backupDownloadBaseURL
+	oldHTTPClient := backupDownloadHTTPClient
+	backupDownloadBaseURL = server.URL + "/file/bot"
+	backupDownloadHTTPClient = server.Client()
+	t.Cleanup(func() {
+		backupDownloadBaseURL = oldBaseURL
+		backupDownloadHTTPClient = oldHTTPClient
+	})
+
+	client := newModuleBotClient()
+	client.responses["getFile"] = json.RawMessage(
+		`{"file_id":"backup-file-id","file_path":"backups/chat.json"}`,
+	)
+	bot := newModuleTestBot(client)
+
+	data, msg := downloadBackupFile(bot, &gotgbot.Document{
+		FileName: "backup.json",
+		FileId:   "backup-file-id",
+	}, tr)
+
+	assert.Nil(t, data)
+	assert.Equal(t, "File is too large", msg)
+}
+
+func TestDownloadBackupFileReportsHTTPStatusFailure(t *testing.T) {
+	tr := testTranslator(t)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "upstream failed", http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
+
+	oldBaseURL := backupDownloadBaseURL
+	oldHTTPClient := backupDownloadHTTPClient
+	backupDownloadBaseURL = server.URL + "/file/bot"
+	backupDownloadHTTPClient = server.Client()
+	t.Cleanup(func() {
+		backupDownloadBaseURL = oldBaseURL
+		backupDownloadHTTPClient = oldHTTPClient
+	})
+
+	client := newModuleBotClient()
+	client.responses["getFile"] = json.RawMessage(
+		`{"file_id":"backup-file-id","file_path":"backups/chat.json"}`,
+	)
+	bot := newModuleTestBot(client)
+
+	data, msg := downloadBackupFile(bot, &gotgbot.Document{
+		FileName: "backup.json",
+		FileId:   "backup-file-id",
+	}, tr)
+
+	assert.Nil(t, data)
+	assert.Equal(t, "Download failed", msg)
+	assert.Len(t, client.callsFor("getFile"), 1)
+}
+
+func TestImportHandlerStoresDownloadedBackupForConfirmation(t *testing.T) {
+	useRealLocales(t)
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	chat, owner := f.chat, f.admin
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+	require.NoError(t, rules.SetChatRules(chat.Id, "rules before import"))
+	backup := backup.NewBackupFormat(chat.Id, chat.Title, owner.Id, []string{"rules", "notes"})
+	backup.Data["rules"] = map[string]interface{}{
+		"settings": map[string]interface{}{"rules": "imported rules"},
+	}
+	backup.Data["notes"] = map[string]interface{}{
+		"notes": []interface{}{
+			map[string]interface{}{"keyword": "welcome", "reply": "hello"},
+		},
+	}
+	backupData, err := backup.ToJSON()
+	require.NoError(t, err)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/file/bot999:test/backups/chat.json", r.URL.Path)
+		_, _ = w.Write(backupData)
+	}))
+	t.Cleanup(server.Close)
+
+	oldBaseURL := backupDownloadBaseURL
+	oldHTTPClient := backupDownloadHTTPClient
+	backupDownloadBaseURL = server.URL + "/file/bot"
+	backupDownloadHTTPClient = server.Client()
+	t.Cleanup(func() {
+		backupDownloadBaseURL = oldBaseURL
+		backupDownloadHTTPClient = oldHTTPClient
+		dropPendingImport(chat.Id)
+	})
+
+	client := f.client
+	client.responses["getFile"] = json.RawMessage(
+		`{"file_id":"backup-file-id","file_path":"backups/chat.json"}`,
+	)
+	bot := f.bot
+	ctx := newModuleMessageContext(bot, chat, owner, "/import rules invalid rules")
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 333,
+		Date:      1,
+		Chat:      chat,
+		Document: &gotgbot.Document{
+			FileId:   "backup-file-id",
+			FileName: "backup.json",
+		},
+	}
+
+	dispatcher := backupDispatcher()
+	err = dispatcher.ProcessUpdate(bot, ctx.Update, nil)
+
+	require.NoError(t, err)
+	gotBackup, gotModules, ok := peekPendingImport(chat.Id)
+	require.True(t, ok)
+	assert.Equal(t, []string{"rules"}, gotModules)
+	assert.Equal(t, backup.Version, gotBackup.Version)
+	assert.Contains(t, gotBackup.Data, "notes")
+	assert.Len(t, client.callsFor("getFile"), 1)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+	assert.Equal(t, "rules before import", rules.GetChatRulesInfo(chat.Id).Rules)
+	confirmation := client.onlyCall(t, "sendMessage")
+	keyboard, ok := confirmation.Params["reply_markup"].(gotgbot.InlineKeyboardMarkup)
+	require.True(t, ok)
+	require.NotEmpty(t, keyboard.InlineKeyboard)
+	require.NotEmpty(t, keyboard.InlineKeyboard[0])
+	callback := newModuleCallbackContext(bot, chat, owner, keyboard.InlineKeyboard[0][0].CallbackData)
+	require.NoError(t, dispatcher.ProcessUpdate(bot, callback.Update, nil))
+	assert.Equal(t, "imported rules", rules.GetChatRulesInfo(chat.Id).Rules)
+}
+
+func TestImportHandlerClearsPendingWhenConfirmationFails(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	chat, owner := f.chat, f.admin
+	bkp := backup.NewBackupFormat(chat.Id, chat.Title, owner.Id, []string{"rules"})
+	bkp.Data["rules"] = map[string]interface{}{"settings": map[string]interface{}{"rules": "test"}}
+	backupData, err := bkp.ToJSON()
+	require.NoError(t, err)
+
+	oldBaseURL := backupDownloadBaseURL
+	oldHTTPClient := backupDownloadHTTPClient
+	backupDownloadBaseURL = "https://example.invalid/file/bot"
+	backupDownloadHTTPClient = &http.Client{Transport: backupRoundTripFunc(func(*http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewReader(backupData)),
+			Header:     make(http.Header),
+		}, nil
+	})}
+	t.Cleanup(func() {
+		backupDownloadBaseURL = oldBaseURL
+		backupDownloadHTTPClient = oldHTTPClient
+		dropPendingImport(chat.Id)
+	})
+
+	client := f.client
+	client.responses["getFile"] = json.RawMessage(
+		`{"file_id":"backup-file-id","file_path":"backups/chat.json"}`,
+	)
+	client.errors["sendMessage"] = errors.New("confirmation send failed")
+	bot := f.bot
+	ctx := newModuleMessageContext(bot, chat, owner, "/import")
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 333,
+		Date:      1,
+		Chat:      chat,
+		Document: &gotgbot.Document{
+			FileId:   "backup-file-id",
+			FileName: "backup.json",
+		},
+	}
+
+	err = backupDispatcher().ProcessUpdate(bot, ctx.Update, nil)
+
+	require.NoError(t, err)
+	_, _, ok := peekPendingImport(chat.Id)
+	assert.False(t, ok)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+}
+
+func TestBuildExportCaption(t *testing.T) {
+	t.Parallel()
+
+	tr := testTranslator(t)
+	backup := backup.NewBackupFormat(12345, "Test Chat", 67890, []string{"notes", "filters"})
+	backup.Data["notes"] = map[string]interface{}{"test": "data"}
+	backup.Data["filters"] = map[string]interface{}{"test": "data"}
+	backup.ExportedAt = backup.ExportedAt.UTC()
+
+	caption := buildExportCaption(tr, backup)
+	assert.Contains(t, caption, "Test Chat")
+	assert.Contains(t, caption, "2")
+	assert.Contains(t, caption, backup.ExportedAt.Format("2006-01-02 15:04:05"))
+	assert.Contains(t, caption, "notes")
+	assert.Contains(t, caption, "filters")
+}
+
+func TestBuildExportCaptionEscapesChatName(t *testing.T) {
+	t.Parallel()
+
+	tr := testTranslator(t)
+	bkp := backup.NewBackupFormat(12345, "A<b>&C", 67890, []string{"notes"})
+	bkp.Data["notes"] = map[string]interface{}{"test": "data"}
+
+	caption := buildExportCaption(tr, bkp)
+	assert.Contains(t, caption, "A&lt;b&gt;&amp;C")
+	assert.NotContains(t, caption, "A<b>&C")
+}
+
+func TestBuildImportKeyboard(t *testing.T) {
+	t.Parallel()
+
+	tr := testTranslator(t)
+	chatID := int64(-9223372036854775807 - 1)
+	token := "0123456789abcdef"
+	keyboard := buildImportKeyboard(tr, chatID, token)
+
+	require.Len(t, keyboard.InlineKeyboard, 1)
+	require.Len(t, keyboard.InlineKeyboard[0], 2)
+
+	confirmBtn := keyboard.InlineKeyboard[0][0]
+	assert.Equal(t, "Confirm Import", confirmBtn.Text)
+	assert.NotEmpty(t, confirmBtn.CallbackData)
+
+	cancelBtn := keyboard.InlineKeyboard[0][1]
+	assert.Equal(t, "Cancel Import", cancelBtn.Text)
+	assert.NotEmpty(t, cancelBtn.CallbackData)
+
+	decodedConfirm, ok := decodeCallbackData(confirmBtn.CallbackData, "backup")
+	require.True(t, ok)
+	action, _ := decodedConfirm.Field("a")
+	assert.Equal(t, "ci", action)
+	chatIDStr, _ := decodedConfirm.Field("c")
+	assert.Equal(t, "-9223372036854775808", chatIDStr)
+	gotToken, _ := decodedConfirm.Field("t")
+	assert.Equal(t, token, gotToken)
+	assert.LessOrEqual(t, len(confirmBtn.CallbackData), 64)
+
+	decodedCancel, ok := decodeCallbackData(cancelBtn.CallbackData, "backup")
+	require.True(t, ok)
+	action, _ = decodedCancel.Field("a")
+	assert.Equal(t, "xi", action)
+	gotToken, _ = decodedCancel.Field("t")
+	assert.Equal(t, token, gotToken)
+	assert.LessOrEqual(t, len(cancelBtn.CallbackData), 64)
+}
+
+func TestBuildResetKeyboard(t *testing.T) {
+	t.Parallel()
+
+	tr := testTranslator(t)
+	chatID := int64(-9223372036854775807 - 1)
+	token := "0123456789abcdef"
+	keyboard := buildResetKeyboard(tr, chatID, token)
+
+	require.Len(t, keyboard.InlineKeyboard, 2)
+	require.Len(t, keyboard.InlineKeyboard[0], 1)
+	require.Len(t, keyboard.InlineKeyboard[1], 1)
+
+	confirmBtn := keyboard.InlineKeyboard[0][0]
+	assert.Equal(t, "Confirm Reset", confirmBtn.Text)
+	assert.NotEmpty(t, confirmBtn.CallbackData)
+
+	cancelBtn := keyboard.InlineKeyboard[1][0]
+	assert.Equal(t, "Cancel Reset", cancelBtn.Text)
+	assert.NotEmpty(t, cancelBtn.CallbackData)
+
+	decodedConfirm, ok := decodeCallbackData(confirmBtn.CallbackData, "backup")
+	require.True(t, ok)
+	action, _ := decodedConfirm.Field("a")
+	assert.Equal(t, "cr", action)
+	chatIDStr, _ := decodedConfirm.Field("c")
+	assert.Equal(t, "-9223372036854775808", chatIDStr)
+	gotToken, _ := decodedConfirm.Field("t")
+	assert.Equal(t, token, gotToken)
+	assert.LessOrEqual(t, len(confirmBtn.CallbackData), 64)
+
+	decodedCancel, ok := decodeCallbackData(cancelBtn.CallbackData, "backup")
+	require.True(t, ok)
+	action, _ = decodedCancel.Field("a")
+	assert.Equal(t, "xr", action)
+	gotToken, _ = decodedCancel.Field("t")
+	assert.Equal(t, token, gotToken)
+	assert.LessOrEqual(t, len(cancelBtn.CallbackData), 64)
+}
+
+// peekPendingImport / peekPendingReset / dropPendingImport / dropPendingReset
+// are white-box accessors over the in-memory pending backup state, used by
+// these tests to assert handler side effects; production handlers manage this
+// state exclusively through store/consume/discard/cleanup paths.
+func peekPendingImport(chatID int64) (*backup.BackupFormat, []string, bool) {
+	pendingMu.Lock()
+	defer pendingMu.Unlock()
+	pending, ok := pendingImports[chatID]
+	if !ok || !time.Now().Before(pending.expiresAt) {
+		delete(pendingImports, chatID)
+		return nil, nil, false
+	}
+	return pending.backup, pending.modules, true
+}
+
+func dropPendingImport(chatID int64) {
+	pendingMu.Lock()
+	defer pendingMu.Unlock()
+	delete(pendingImports, chatID)
+}
+
+func peekPendingReset(chatID int64) ([]string, bool) {
+	pendingMu.Lock()
+	defer pendingMu.Unlock()
+	pending, ok := pendingResets[chatID]
+	if !ok || !time.Now().Before(pending.expiresAt) {
+		delete(pendingResets, chatID)
+		return nil, false
+	}
+	return pending.modules, true
+}
+
+func dropPendingReset(chatID int64) {
+	pendingMu.Lock()
+	defer pendingMu.Unlock()
+	delete(pendingResets, chatID)
+}
+
+func TestPendingImportsMaps(t *testing.T) {
+	t.Run("pending imports maps exist", func(t *testing.T) {
+		assert.NotNil(t, pendingImports)
+		assert.NotNil(t, pendingResets)
+	})
+}
+
+func TestPendingImportRejectsStaleTokenAndConsumesOnce(t *testing.T) {
+	chatID := uniqueModuleChatID()
+	t.Cleanup(func() { dropPendingImport(chatID) })
+
+	oldToken, err := storePendingImport(chatID, &backup.BackupFormat{}, []string{"rules"})
+	require.NoError(t, err)
+	current := &backup.BackupFormat{}
+	currentToken, err := storePendingImport(chatID, current, []string{"notes"})
+	require.NoError(t, err)
+	require.NotEqual(t, oldToken, currentToken)
+
+	_, _, ok := consumePendingImport(chatID, oldToken)
+	assert.False(t, ok)
+
+	var consumed atomic.Int32
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			got, modules, ok := consumePendingImport(chatID, currentToken)
+			if ok {
+				assert.Same(t, current, got)
+				assert.Equal(t, []string{"notes"}, modules)
+				consumed.Add(1)
+			}
+		}()
+	}
+	wg.Wait()
+	assert.Equal(t, int32(1), consumed.Load())
+
+	expiredToken, err := storePendingImport(chatID, current, []string{"notes"})
+	require.NoError(t, err)
+	pendingMu.Lock()
+	expired := pendingImports[chatID]
+	expired.expiresAt = time.Now().Add(-time.Second)
+	pendingImports[chatID] = expired
+	pendingMu.Unlock()
+	_, _, ok = consumePendingImport(chatID, expiredToken)
+	assert.False(t, ok)
+}
+
+func TestPendingResetRejectsStaleAndExpiredTokens(t *testing.T) {
+	chatID := uniqueModuleChatID()
+	t.Cleanup(func() { dropPendingReset(chatID) })
+
+	oldToken, err := storePendingReset(chatID, []string{"rules"})
+	require.NoError(t, err)
+	currentToken, err := storePendingReset(chatID, []string{"notes"})
+	require.NoError(t, err)
+	require.NotEqual(t, oldToken, currentToken)
+
+	assert.False(t, discardPendingReset(chatID, oldToken))
+	modules, ok := peekPendingReset(chatID)
+	require.True(t, ok)
+	assert.Equal(t, []string{"notes"}, modules)
+
+	pendingMu.Lock()
+	pending := pendingResets[chatID]
+	pending.expiresAt = time.Now().Add(-time.Second)
+	pendingResets[chatID] = pending
+	pendingMu.Unlock()
+
+	_, ok = consumePendingReset(chatID, currentToken)
+	assert.False(t, ok)
+	_, ok = peekPendingReset(chatID)
+	assert.False(t, ok)
+}
+
+func TestImportHandlerRequiresReplyDocument(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	ctx := newModuleMessageContext(bot, chat, owner, "/import")
+
+	err := backupDispatcher().ProcessUpdate(bot, ctx.Update, nil)
+	require.NoError(t, err)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+}
+
+func TestImportHandlerRejectsInvalidReplyDocument(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	ctx := newModuleMessageContext(bot, chat, owner, "/import")
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 333,
+		Date:      1,
+		Chat:      chat,
+		Document: &gotgbot.Document{
+			FileId:   "not-json",
+			FileName: "backup.txt",
+		},
+	}
+
+	err := backupDispatcher().ProcessUpdate(bot, ctx.Update, nil)
+	require.NoError(t, err)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+	assert.Empty(t, client.callsFor("getFile"))
+}
+
+func TestExportHandlerSendsRequestedModuleBackupDocument(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+	require.NoError(t, notes.AddNote(chat.Id, "welcome", "hello", "", nil, db.TEXT, false, false, false, true, false, false))
+
+	ctx := newModuleMessageContext(bot, chat, owner, "/export notes invalid notes")
+	err := backupDispatcher().ProcessUpdate(bot, ctx.Update, nil)
+	require.NoError(t, err)
+	assert.Len(t, client.callsFor("sendDocument"), 1)
+	assert.Empty(t, client.callsFor("sendMessage"))
+}
+
+func TestExportHandlerReportsFailureWhenDocumentSendFails(t *testing.T) {
+	useRealLocales(t)
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	client.errors["sendDocument"] = fmt.Errorf("document upload failed")
+	chat, owner := f.chat, f.admin
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+	require.NoError(t, notes.AddNote(chat.Id, "fallback", "hello", "", nil, db.TEXT, false, false, false, true, false, false))
+
+	ctx := newModuleMessageContext(bot, chat, owner, "/export notes")
+	err := backupDispatcher().ProcessUpdate(bot, ctx.Update, nil)
+	require.NoError(t, err)
+	assert.Len(t, client.callsFor("sendDocument"), 1)
+	want, trErr := i18n.MustNewTranslator("en").GetString("backup_export_failed")
+	require.NoError(t, trErr)
+	assert.Equal(t, want, client.onlyCall(t, "sendMessage").Params["text"])
+}
+
+func TestExportAndResetListValidModulesForUnknownNames(t *testing.T) {
+	useRealLocales(t)
+	en := i18n.MustNewTranslator("en")
+	noModules, err := en.GetString("backup_export_no_modules")
+	require.NoError(t, err)
+	for _, tt := range []struct {
+		text string
+	}{
+		{text: "/export bogus"},
+		{text: "/reset bogus"},
+	} {
+		t.Run(tt.text, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			f.makeOwner()
+			client, bot := f.client, f.bot
+			chat, owner := f.chat, f.admin
+			t.Cleanup(func() { dropPendingReset(chat.Id) })
+
+			ctx := newModuleMessageContext(bot, chat, owner, tt.text)
+			require.NoError(t, backupDispatcher().ProcessUpdate(bot, ctx.Update, nil))
+
+			text := fmt.Sprint(client.onlyCall(t, "sendMessage").Params["text"])
+			assert.Contains(t, text, backup.BackupModuleNotes)
+			assert.NotEqual(t, noModules, text)
+			assert.Empty(t, client.callsFor("sendDocument"))
+			_, pending := peekPendingReset(chat.Id)
+			assert.False(t, pending)
+		})
+	}
+}
+
+func TestBackupCommandAuthorization(t *testing.T) {
+	useRealLocales(t)
+	en := i18n.MustNewTranslator("en")
+	for _, command := range []string{"export", "import", "reset"} {
+		for _, role := range []string{"member", "admin", "owner"} {
+			for _, botAdmin := range []bool{true, false} {
+				for _, disabled := range []bool{false, true} {
+					t.Run(fmt.Sprintf("%s/%s/bot-admin=%t/disabled=%t", command, role, botAdmin, disabled), func(t *testing.T) {
+						f := newAdminChatFixture(t)
+						user := f.admin
+						switch role {
+						case "owner":
+							f.makeOwner()
+						case "member":
+							user = f.member
+						}
+						if !botAdmin {
+							f.client.membersByChat = map[string]json.RawMessage{
+								fmt.Sprintf("%d|%d", f.chat.Id, f.bot.Id): json.RawMessage(
+									`{"status":"member","user":{"id":999,"is_bot":true,"first_name":"Alita"}}`,
+								),
+							}
+							f.client.adminsByChat[fmt.Sprint(f.chat.Id)] = json.RawMessage(
+								"[" + string(f.client.membersByUser[fmt.Sprint(f.admin.Id)]) + "]",
+							)
+						}
+						if disabled {
+							require.NoError(t, disabling.DisableCMD(f.chat.Id, command))
+							require.NoError(t, disabling.ToggleDel(f.chat.Id, true))
+						}
+						t.Cleanup(func() { dropPendingReset(f.chat.Id) })
+
+						var wantKey string
+						switch {
+						case command == "export" && role == "member":
+							wantKey = "chat_status_user_admin_cmd_error"
+						case !botAdmin:
+							wantKey = "chat_status_bot_not_admin"
+						case command == "import" && role != "owner":
+							wantKey = "backup_import_creator_only"
+						case command == "reset" && role != "owner":
+							wantKey = "chat_status_owner_cmd_error"
+						case command == "import":
+							wantKey = "backup_import_no_reply"
+						}
+						if command == "export" && wantKey == "" {
+							require.NoError(t, chats.EnsureChatInDb(f.chat.Id, f.chat.Title))
+							require.NoError(t, notes.AddNote(f.chat.Id, "welcome", "hello", "", nil, db.TEXT, false, false, false, true, false, false))
+						}
+
+						ctx := newModuleMessageContext(f.bot, f.chat, user, "/"+command+" notes")
+						require.NoError(t, backupDispatcher().ProcessUpdate(f.bot, ctx.Update, nil))
+
+						assert.Empty(t, f.client.callsFor("deleteMessage"))
+						assert.Empty(t, f.client.callsFor("getFile"))
+						if wantKey != "" {
+							want, err := en.GetString(wantKey)
+							require.NoError(t, err)
+							call := f.client.onlyCall(t, "sendMessage")
+							assertParams(t, call, map[string]any{"chat_id": f.chat.Id, "text": want})
+							if wantKey == "backup_import_creator_only" {
+								assertParams(t, call, map[string]any{"parse_mode": "HTML"})
+							}
+							assert.Empty(t, f.client.callsFor("sendDocument"))
+							_, pending := peekPendingReset(f.chat.Id)
+							assert.False(t, pending)
+						} else if command == "export" {
+							assertParams(t, f.client.onlyCall(t, "sendDocument"), map[string]any{"chat_id": f.chat.Id})
+							assert.Empty(t, f.client.callsFor("sendMessage"))
+						} else {
+							call := f.client.onlyCall(t, "sendMessage")
+							assert.Contains(t, fmt.Sprint(call.Params["text"]), "notes")
+							keyboard, ok := call.Params["reply_markup"].(gotgbot.InlineKeyboardMarkup)
+							require.True(t, ok)
+							require.NotEmpty(t, keyboard.InlineKeyboard)
+							assert.NotEmpty(t, keyboard.InlineKeyboard[0][0].CallbackData)
+							assert.Empty(t, f.client.callsFor("sendDocument"))
+						}
+					})
+				}
+			}
+		}
+	}
+}
+
+func TestBackupCommandsStayGroupOnlyInPM(t *testing.T) {
+	useRealLocales(t)
+	want, err := i18n.MustNewTranslator("en").GetString("chat_status_group_only_error")
+	require.NoError(t, err)
+	for _, command := range []string{"export", "import", "reset"} {
+		for _, role := range []string{"member", "admin", "owner"} {
+			t.Run(command+"/"+role, func(t *testing.T) {
+				f := newAdminChatFixture(t)
+				user := f.admin
+				switch role {
+				case "owner":
+					f.makeOwner()
+				case "member":
+					user = f.member
+				}
+				f.connectAdmin(t)
+				chat := privateChatOf(user)
+				ctx := newModuleMessageContext(f.bot, chat, user, fmt.Sprintf("/%s %d notes", command, f.chat.Id))
+
+				require.NoError(t, backupDispatcher().ProcessUpdate(f.bot, ctx.Update, nil))
+
+				assertParams(t, f.client.onlyCall(t, "sendMessage"), map[string]any{"chat_id": chat.Id, "text": want})
+				assert.Empty(t, f.client.callsFor("getChat"))
+				assert.Empty(t, f.client.callsFor("getChatMember"))
+				assert.Empty(t, f.client.callsFor("getChatAdministrators"))
+				assert.Empty(t, f.client.callsFor("getFile"))
+				assert.Empty(t, f.client.callsFor("sendDocument"))
+			})
+		}
+	}
+}
+
+func TestResetHandlerStoresPendingModulesAndRepliesWithConfirmation(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+	require.NoError(t, rules.SetChatRules(chat.Id, "rules before reset"))
+	ctx := newModuleMessageContext(bot, chat, owner, "/reset rules notes invalid rules")
+	t.Cleanup(func() {
+		dropPendingReset(chat.Id)
+	})
+
+	dispatcher := backupDispatcher()
+	err := dispatcher.ProcessUpdate(bot, ctx.Update, nil)
+	require.NoError(t, err)
+	gotModules, ok := peekPendingReset(chat.Id)
+	assert.True(t, ok)
+	assert.Equal(t, []string{"rules", "notes"}, gotModules)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+	assert.Equal(t, "rules before reset", rules.GetChatRulesInfo(chat.Id).Rules)
+	confirmation := client.onlyCall(t, "sendMessage")
+	keyboard, ok := confirmation.Params["reply_markup"].(gotgbot.InlineKeyboardMarkup)
+	require.True(t, ok)
+	require.NotEmpty(t, keyboard.InlineKeyboard)
+	require.NotEmpty(t, keyboard.InlineKeyboard[0])
+	callback := newModuleCallbackContext(bot, chat, owner, keyboard.InlineKeyboard[0][0].CallbackData)
+	require.NoError(t, dispatcher.ProcessUpdate(bot, callback.Update, nil))
+	assert.Empty(t, rules.GetChatRulesInfo(chat.Id).Rules)
+}
+
+func TestResetHandlerClearsPendingWhenConfirmationFails(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	client.errors["sendMessage"] = errors.New("confirmation send failed")
+	chat, owner := f.chat, f.admin
+	ctx := newModuleMessageContext(bot, chat, owner, "/reset rules")
+	t.Cleanup(func() { dropPendingReset(chat.Id) })
+
+	err := backupDispatcher().ProcessUpdate(bot, ctx.Update, nil)
+
+	require.NoError(t, err)
+	_, ok := peekPendingReset(chat.Id)
+	assert.False(t, ok)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+}
+
+func TestBackupCallbackHandlerConfirmsPendingImport(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+
+	backup := backup.NewBackupFormat(chat.Id, chat.Title, owner.Id, []string{"rules"})
+	backup.Data["rules"] = map[string]interface{}{
+		"settings": map[string]interface{}{
+			"chat_id":   chat.Id,
+			"rules":     "imported rules",
+			"rules_btn": "Read rules",
+			"private":   true,
+		},
+	}
+	token, err := storePendingImport(chat.Id, backup, []string{"rules"})
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		dropPendingImport(chat.Id)
+	})
+
+	callback := encodeCallbackData(
+		"backup",
+		map[string]string{"a": backupActionConfirmImport, "c": strconv.FormatInt(chat.Id, 10), "t": token},
+	)
+	ctx := newModuleCallbackContext(bot, chat, owner, callback)
+	err = backupModule.backupCallbackHandler(bot, ctx)
+	assert.Equal(t, ext.EndGroups, err)
+	_, _, ok := peekPendingImport(chat.Id)
+	assert.False(t, ok)
+	assert.Equal(t, "imported rules", rules.GetChatRulesInfo(chat.Id).Rules)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+}
+
+func TestBackupCallbackHandlerImportReplyNamesSkippedFederation(t *testing.T) {
+	useRealLocales(t)
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+
+	const missingFedID = "11111111-2222-3333-4444-555555555555"
+	bkp := backup.NewBackupFormat(chat.Id, chat.Title, owner.Id, []string{"rules", "federations"})
+	bkp.Data["rules"] = map[string]interface{}{"settings": map[string]interface{}{"rules": "imported rules"}}
+	bkp.Data["federations"] = map[string]interface{}{"membership": map[string]interface{}{"fed_id": missingFedID}}
+	token, err := storePendingImport(chat.Id, bkp, bkp.Modules)
+	require.NoError(t, err)
+	t.Cleanup(func() { dropPendingImport(chat.Id) })
+
+	callback := encodeCallbackData(
+		"backup",
+		map[string]string{"a": backupActionConfirmImport, "c": strconv.FormatInt(chat.Id, 10), "t": token},
+	)
+	ctx := newModuleCallbackContext(bot, chat, owner, callback)
+	assert.Equal(t, ext.EndGroups, backupModule.backupCallbackHandler(bot, ctx))
+	assert.Equal(t, "imported rules", rules.GetChatRulesInfo(chat.Id).Rules)
+	sent := client.callsFor("sendMessage")
+	require.Len(t, sent, 1)
+	text := fmt.Sprint(sent[0].Params["text"])
+	assert.Contains(t, text, translatedWith(t, "backup_import_federation_skipped", i18n.TranslationParams{"fed_id": missingFedID}))
+	assert.Contains(t, text, missingFedID)
+}
+
+func TestBackupCallbackHandlerConfirmsPendingReset(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	require.NoError(t, chats.EnsureChatInDb(chat.Id, chat.Title))
+	if err := rules.SetChatRules(chat.Id, "rules before reset"); err != nil {
+		t.Fatalf("rules.SetChatRules() error = %v", err)
+	}
+	token, err := storePendingReset(chat.Id, []string{"rules"})
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		dropPendingReset(chat.Id)
+	})
+
+	callback := encodeCallbackData(
+		"backup",
+		map[string]string{"a": backupActionConfirmReset, "c": strconv.FormatInt(chat.Id, 10), "t": token},
+	)
+	ctx := newModuleCallbackContext(bot, chat, owner, callback)
+	err = backupModule.backupCallbackHandler(bot, ctx)
+	assert.Equal(t, ext.EndGroups, err)
+	_, ok := peekPendingReset(chat.Id)
+	assert.False(t, ok)
+	assert.Empty(t, rules.GetChatRulesInfo(chat.Id).Rules)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+}
+
+func TestBackupCallbackHandlerIgnoresWrongChatConfirmation(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	token, err := storePendingReset(chat.Id, []string{"rules"})
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		dropPendingReset(chat.Id)
+	})
+
+	callback := encodeCallbackData(
+		"backup",
+		map[string]string{"a": backupActionConfirmReset, "c": strconv.FormatInt(chat.Id+1, 10), "t": token},
+	)
+	ctx := newModuleCallbackContext(bot, chat, owner, callback)
+	err = backupModule.backupCallbackHandler(bot, ctx)
+	assert.Equal(t, ext.EndGroups, err)
+	_, ok := peekPendingReset(chat.Id)
+	assert.True(t, ok)
+	assert.Empty(t, client.callsFor("sendMessage"))
+	assert.Len(t, client.callsFor("answerCallbackQuery"), 1)
+}
+
+func TestBackupCallbackHandlerRejectsInvalidCallbackData(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+	for _, data := range []string{
+		"not-a-backup-callback",
+		encodeCallbackData("backup", map[string]string{
+			"a": "crafted",
+			"c": strconv.FormatInt(chat.Id, 10),
+			"t": "token",
+		}),
+		encodeCallbackData("backup", map[string]string{
+			"a": backupActionConfirmReset,
+			"c": "not-a-chat",
+			"t": "token",
+		}),
+		encodeCallbackData("backup", map[string]string{
+			"a": backupActionConfirmReset,
+			"c": strconv.FormatInt(chat.Id, 10),
+		}),
+	} {
+		ctx := newModuleCallbackContext(bot, chat, owner, data)
+		assert.Equal(t, ext.EndGroups, backupModule.backupCallbackHandler(bot, ctx))
+	}
+	assert.Len(t, client.callsFor("answerCallbackQuery"), 4)
+}
+
+func TestBackupCallbackHandlerTellsNonOwnerWhichActionIsCreatorOnly(t *testing.T) {
+	useRealLocales(t)
+	en := i18n.MustNewTranslator("en")
+	for _, tt := range []struct {
+		action string
+		key    string
+	}{
+		{action: backupActionConfirmReset, key: "backup_reset_creator_only"},
+		{action: backupActionCancelReset, key: "backup_reset_creator_only"},
+		{action: backupActionConfirmImport, key: "backup_import_creator_only"},
+	} {
+		t.Run(tt.action, func(t *testing.T) {
+			client := newModuleBotClient()
+			bot := newModuleTestBot(client)
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Backup Chat"}
+			member := gotgbot.User{Id: 42, FirstName: "Member"}
+			data := encodeCallbackData("backup", map[string]string{
+				"a": tt.action,
+				"c": strconv.FormatInt(chat.Id, 10),
+				"t": "token",
+			})
+
+			ctx := newModuleCallbackContext(bot, chat, member, data)
+			require.Equal(t, ext.EndGroups, backupModule.backupCallbackHandler(bot, ctx))
+
+			want, err := en.GetString(tt.key)
+			require.NoError(t, err)
+			require.NotEmpty(t, want)
+			call := client.onlyCall(t, "answerCallbackQuery")
+			assert.Equal(t, want, call.Params["text"])
+			assert.Equal(t, true, call.Params["show_alert"])
+		})
+	}
+}
+
+func TestBackupConfirmHandlersReportExpiredState(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := &gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Backup Chat"}
+	tr := testTranslator(t)
+	ctx := &ext.Context{}
+	t.Cleanup(func() {
+		dropPendingImport(chat.Id)
+		dropPendingReset(chat.Id)
+	})
+
+	err := backupModule.handleConfirmImport(bot, ctx, tr, chat, "")
+	assert.Equal(t, ext.EndGroups, err)
+	assert.Len(t, client.callsFor("sendMessage"), 1)
+
+	err = backupModule.handleConfirmReset(bot, ctx, tr, chat, "")
+	assert.Equal(t, ext.EndGroups, err)
+	assert.Len(t, client.callsFor("sendMessage"), 2)
+}
+
+func TestBackupCallbackCancelImportAndResetCleanup(t *testing.T) {
+	f := newAdminChatFixture(t)
+	f.makeOwner()
+	client, bot := f.client, f.bot
+	chat, owner := f.chat, f.admin
+
+	importToken, err := storePendingImport(chat.Id, backup.NewBackupFormat(chat.Id, chat.Title, owner.Id, []string{"rules"}), []string{"rules"})
+	require.NoError(t, err)
+	cancelImport := encodeCallbackData(
+		"backup",
+		map[string]string{"a": backupActionCancelImport, "c": strconv.FormatInt(chat.Id, 10), "t": importToken},
+	)
+	importCtx := newModuleCallbackContext(bot, chat, owner, cancelImport)
+	err = backupModule.handleCancelImport(bot, importCtx, testTranslator(t), importCtx.CallbackQuery, importToken)
+	assert.Equal(t, ext.EndGroups, err)
+	_, _, ok := peekPendingImport(chat.Id)
+	assert.False(t, ok)
+
+	resetToken, err := storePendingReset(chat.Id, []string{"rules"})
+	require.NoError(t, err)
+	cancelReset := encodeCallbackData(
+		"backup",
+		map[string]string{"a": backupActionCancelReset, "c": strconv.FormatInt(chat.Id, 10), "t": resetToken},
+	)
+	resetCtx := newModuleCallbackContext(bot, chat, owner, cancelReset)
+	err = backupModule.handleCancelReset(bot, resetCtx, testTranslator(t), resetCtx.CallbackQuery, resetToken)
+	assert.Equal(t, ext.EndGroups, err)
+	_, ok = peekPendingReset(chat.Id)
+	assert.False(t, ok)
+
+	assert.Len(t, client.callsFor("answerCallbackQuery"), 2)
+}
+
+// /export and /import are admin commands and cannot be disabled. A chat that
+// disabled them on an older release still answers a non-admin with the
+// permission refusal instead of silently deleting the command.
+func TestBackupCommandsIgnoreStaleDisableRows(t *testing.T) {
+	for _, tt := range []struct {
+		cmd string
+	}{
+		{cmd: "export"},
+		{cmd: "import"},
+	} {
+		t.Run(tt.cmd, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			require.NoError(t, disabling.DisableCMD(f.chat.Id, tt.cmd))
+			require.NoError(t, disabling.ToggleDel(f.chat.Id, true))
+
+			ctx := newModuleMessageContext(f.bot, f.chat, f.member, "/"+tt.cmd)
+			require.NoError(t, backupDispatcher().ProcessUpdate(f.bot, ctx.Update, nil))
+			if calls := f.client.callsFor("sendMessage"); len(calls) != 1 {
+				t.Fatalf("sendMessage calls = %d, want the permission refusal", len(calls))
+			}
+			if calls := f.client.callsFor("deleteMessage"); len(calls) != 0 {
+				t.Fatalf("deleteMessage calls = %d, want the command left in place", len(calls))
+			}
+		})
+	}
+}
+
+// The real locales fill the backup messages with %-verbs, while the fake one
+// above uses {names}; both styles must come out with every value in place.
+func TestBackupMessagesFillEveryLocale(t *testing.T) {
+	t.Parallel()
+
+	bkp := backup.NewBackupFormat(12345, "A<B", 67890, []string{"notes", "rules"})
+	bkp.Data["notes"] = map[string]interface{}{"test": "data"}
+	bkp.Data["rules"] = map[string]interface{}{"test": "data"}
+	bkp.ExportedAt = time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+	modules := []string{"notes", "rules"}
+
+	named := "backup_import_confirm: \"{modules} {list}\"\n" +
+		"backup_reset_confirm: \"{modules} {list}\"\n" +
+		"backup_import_success: \"{modules} {list}\"\n" +
+		"backup_reset_success: \"{modules} {list}\"\n" +
+		"backup_export_success: \"{chat} {modules} {time} {list}\"\n"
+	sources := map[string]string{"named": named}
+	for _, code := range localeCodes {
+		raw, err := os.ReadFile("../../locales/" + code + ".yml")
+		require.NoError(t, err)
+		sources[code] = string(raw)
+	}
+
+	for name, content := range sources {
+		tr, err := i18n.NewTestTranslator(content)
+		require.NoError(t, err, name)
+
+		outputs := map[string]string{"backup_export_success": buildExportCaption(tr, bkp)}
+		for key, params := range map[string]i18n.TranslationParams{
+			"backup_import_confirm": backupConfirmParams(modules),
+			"backup_reset_confirm":  backupConfirmParams(modules),
+			"backup_import_success": backupResultParams(modules),
+			"backup_reset_success":  backupResultParams(modules),
+		} {
+			outputs[key], _ = tr.GetString(key, params)
+		}
+
+		for key, text := range outputs {
+			for _, want := range []string{"2", "• notes\n• rules"} {
+				assert.Contains(t, text, want, "%s %s", name, key)
+			}
+			for _, bad := range []string{"%s", "%d", "%!", "{"} {
+				assert.NotContains(t, text, bad, "%s %s", name, key)
+			}
+		}
+		assert.Contains(t, outputs["backup_export_success"], "A&lt;B", name)
+		assert.Contains(t, outputs["backup_export_success"], "2026-01-02 03:04:05", name)
+	}
+}

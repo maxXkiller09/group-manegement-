@@ -1,0 +1,96 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "alita/**"
+      - "scripts/**"
+      - ".github/workflows/docs.yml"
+      - "locales/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "alita/**"
+      - "scripts/**"
+      - ".github/workflows/docs.yml"
+      - "locales/**"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        id: go
+        uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          cache: false
+
+      # ci.yml's Docs & Translations job seeds this family on main.
+      - name: Restore Go docs cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-docs-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum') }}-${{ hashFiles('**/*.go') }}
+          restore-keys: go-docs-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum') }}-
+
+      - name: Generate documentation
+        run: make generate-docs
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: docs
+        run: bun install --frozen-lockfile
+
+      - name: Build documentation
+        working-directory: docs
+        run: bun run build
+
+      - name: Install wrangler v4
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: |
+          bun install wrangler@4
+
+      - name: Deploy to Cloudflare Workers
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: docs
+          command: deploy
+
+      - name: Skip Cloudflare deploy when credentials are unavailable
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == '')
+        run: echo "Documentation build passed; Cloudflare deploy skipped because repository deployment secrets are not configured."

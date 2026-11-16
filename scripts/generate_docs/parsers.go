@@ -1,0 +1,765 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
+)
+
+// MessageWatcher represents a message handler registration
+type MessageWatcher struct {
+	Handler      string
+	Module       string
+	HandlerGroup int
+	SourceFile   string
+}
+
+// LockType represents a lock type that can be enabled/disabled
+type LockType struct {
+	Name        string
+	Description string
+	Category    string // "permission" or "restriction"
+}
+
+// ExtendedDocs holds all extended documentation for a module
+type ExtendedDocs struct {
+	Extended    string // Technical documentation
+	Features    string // Feature lists
+	Permissions string // Permission requirements
+	Examples    string // Usage examples
+	Notes       string // Important notes/limitations
+}
+
+// parseTranslations parses locale YAML files and extracts help messages and extended docs
+func parseTranslations(localesPath string) (map[string]string, map[string]ExtendedDocs, map[string][]string, error) {
+	helpTexts := make(map[string]string)
+	extendedDocs := make(map[string]ExtendedDocs)
+	aliases := make(map[string][]string)
+
+	// Parse en.yml for help messages and extended docs
+	enPath := filepath.Join(localesPath, "en.yml")
+	data, err := os.ReadFile(filepath.Clean(enPath))
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to read %s: %w", enPath, err)
+	}
+
+	var translations map[string]any
+	if err := yaml.Unmarshal(data, &translations); err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to parse %s: %w", enPath, err)
+	}
+
+	// Extract help messages and extended documentation
+	for key, value := range translations {
+		str, ok := value.(string)
+		if !ok {
+			continue
+		}
+
+		// Extract help messages
+		if strings.HasSuffix(key, "_help_msg") {
+			helpTexts[key] = str
+			continue
+		}
+
+		// Extract extended documentation
+		if strings.HasSuffix(key, "_extended_docs") {
+			moduleName := strings.TrimSuffix(key, "_extended_docs")
+			docs := extendedDocs[moduleName]
+			docs.Extended = str
+			extendedDocs[moduleName] = docs
+			continue
+		}
+
+		if strings.HasSuffix(key, "_features_docs") {
+			moduleName := strings.TrimSuffix(key, "_features_docs")
+			docs := extendedDocs[moduleName]
+			docs.Features = str
+			extendedDocs[moduleName] = docs
+			continue
+		}
+
+		if strings.HasSuffix(key, "_permissions_docs") {
+			moduleName := strings.TrimSuffix(key, "_permissions_docs")
+			docs := extendedDocs[moduleName]
+			docs.Permissions = str
+			extendedDocs[moduleName] = docs
+			continue
+		}
+
+		if strings.HasSuffix(key, "_examples_docs") {
+			moduleName := strings.TrimSuffix(key, "_examples_docs")
+			docs := extendedDocs[moduleName]
+			docs.Examples = str
+			extendedDocs[moduleName] = docs
+			continue
+		}
+
+		if strings.HasSuffix(key, "_notes_docs") {
+			moduleName := strings.TrimSuffix(key, "_notes_docs")
+			docs := extendedDocs[moduleName]
+			docs.Notes = str
+			extendedDocs[moduleName] = docs
+			continue
+		}
+	}
+
+	// Parse config.yml for aliases
+	configPath := filepath.Join(localesPath, "config.yml")
+	configData, err := os.ReadFile(filepath.Clean(configPath))
+	if err != nil {
+		log.Warnf("Could not read config.yml: %v", err)
+		return helpTexts, extendedDocs, aliases, nil
+	}
+
+	var configYaml map[string]any
+	if err := yaml.Unmarshal(configData, &configYaml); err != nil {
+		log.Warnf("Could not parse config.yml: %v", err)
+		return helpTexts, extendedDocs, aliases, nil
+	}
+
+	// Extract alt_names
+	if altNames, ok := configYaml["alt_names"].(map[string]any); ok {
+		for module, aliasList := range altNames {
+			switch v := aliasList.(type) {
+			case []any:
+				for _, alias := range v {
+					if str, ok := alias.(string); ok {
+						aliases[module] = append(aliases[module], str)
+					}
+				}
+			case string:
+				aliases[module] = []string{v}
+			}
+		}
+	}
+
+	return helpTexts, extendedDocs, aliases, nil
+}
+
+// parseCommands extracts descriptor registrations from production Go source files.
+func parseCommands(modulesPath string) ([]Command, error) {
+	var commands []Command
+
+	moduleNamePattern := regexp.MustCompile(`(\w+)Module\s*=\s*moduleStruct\s*\{\s*moduleName:\s*"([^"]+)"`)
+
+	// Track module names from struct declarations
+	moduleNames := make(map[string]string)
+
+	files, err := filepath.Glob(filepath.Join(modulesPath, "*.go"))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Clean(file))
+		if err != nil {
+			log.Warnf("Could not read %s: %v", file, err)
+			continue
+		}
+
+		content := string(data)
+		fileName := filepath.Base(file)
+		moduleName := strings.TrimSuffix(fileName, ".go")
+
+		// Find module name declarations
+		moduleMatches := moduleNamePattern.FindAllStringSubmatch(content, -1)
+		for _, match := range moduleMatches {
+			if len(match) >= 3 {
+				moduleNames[match[1]+"Module"] = match[2]
+			}
+		}
+
+		// Special case: DefaultHelpRegistry is used in help.go
+		if strings.Contains(content, "func DefaultHelpRegistry()") {
+			moduleNames["DefaultHelpRegistry"] = "Help"
+		}
+
+		commands = append(commands, parseWrapCommands(content, moduleName, moduleNames)...)
+	}
+
+	// Sort commands
+	sort.Slice(commands, func(i, j int) bool {
+		if commands[i].Module != commands[j].Module {
+			return commands[i].Module < commands[j].Module
+		}
+		return commands[i].Name < commands[j].Name
+	})
+
+	return commands, nil
+}
+
+// wrapDescriptor is what the docs need from a helpers.CommandDescriptor literal.
+type wrapDescriptor struct {
+	name        string
+	aliases     []string
+	disableable bool
+}
+
+var (
+	wrapDescDeclPattern    = regexp.MustCompile(`(\w+Desc)\s*=\s*helpers\.CommandDescriptor\s*\{`)
+	wrapDescNamePattern    = regexp.MustCompile(`\bName:\s*"([^"]+)"`)
+	wrapDescAliasPattern   = regexp.MustCompile(`\bAliases:\s*\[\]string\s*\{([^}]*)\}`)
+	wrapDescDisablePattern = regexp.MustCompile(`\bDisableable:\s*true\b`)
+	quotedStringPattern    = regexp.MustCompile(`"([^"]+)"`)
+
+	wrapNamedDescPattern  = regexp.MustCompile(`helpers\.WrapCommand(?:Raw)?\s*\(\s*\w+\s*,\s*(\w+)Desc\s*,\s*(?:\w+\(\s*)?(\w+)\.(\w+)\s*\)?\s*\)`)
+	wrapInlineDescPattern = regexp.MustCompile(`helpers\.WrapCommand(?:Raw)?\s*\(\s*\w+\s*,\s*helpers\.CommandDescriptor\s*\{`)
+	wrapHandlerAfterDesc  = regexp.MustCompile(`^\s*,\s*(?:\w+\(\s*)?(\w+)\.(\w+)`)
+	wrapLoopDescPattern   = regexp.MustCompile(`helpers\.WrapCommand(?:Raw)?\s*\(\s*\w+\s*,\s*(\w+)\s*,`)
+	loopStructPattern     = regexp.MustCompile(`\[\]struct\s*\{`)
+	loopTuplePattern      = regexp.MustCompile(`\{\s*"([a-z_]+)"\s*,\s*(\w+)\.(\w+)`)
+)
+
+// matchingBrace returns the index of the '}' closing the '{' at open, skipping
+// braces inside comments and string, rune and raw string literals, or -1 if
+// unbalanced.
+func matchingBrace(s string, open int) int {
+	depth := 0
+	for i := open; i < len(s); i++ {
+		if strings.HasPrefix(s[i:], "//") {
+			if nl := strings.IndexByte(s[i:], '\n'); nl >= 0 {
+				i += nl
+				continue
+			}
+			return -1
+		}
+		if strings.HasPrefix(s[i:], "/*") {
+			if end := strings.Index(s[i+2:], "*/"); end >= 0 {
+				i += end + 3
+				continue
+			}
+			return -1
+		}
+		switch c := s[i]; c {
+		case '"', '\'', '`':
+			for i++; i < len(s) && s[i] != c; i++ {
+				if s[i] == '\\' && c != '`' {
+					i++
+				}
+			}
+		case '{':
+			depth++
+		case '}':
+			depth--
+			if depth == 0 {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+// parseDescriptorBody reads Name, Aliases and Disableable from the body of a
+// CommandDescriptor literal.
+func parseDescriptorBody(body string) wrapDescriptor {
+	var d wrapDescriptor
+	if m := wrapDescNamePattern.FindStringSubmatch(body); m != nil {
+		d.name = m[1]
+	}
+	if m := wrapDescAliasPattern.FindStringSubmatch(body); m != nil {
+		for _, a := range quotedStringPattern.FindAllStringSubmatch(m[1], -1) {
+			d.aliases = append(d.aliases, a[1])
+		}
+	}
+	d.disableable = wrapDescDisablePattern.MatchString(body)
+	return d
+}
+
+// parseWrapCommands extracts the commands one file registers through
+// helpers.WrapCommand or WrapCommandRaw: with a named <x>Desc descriptor, an
+// inline helpers.CommandDescriptor literal, or a descriptor built in a loop
+// over a []struct{name, handler} literal. The handler may be wrapped in one
+// call such as pipelineHandler(...).
+func parseWrapCommands(content, fileModule string, moduleNames map[string]string) []Command {
+	var commands []Command
+	emit := func(d wrapDescriptor, moduleVar, handler string) {
+		if d.name == "" {
+			return
+		}
+		modName := fileModule
+		if name, ok := moduleNames[moduleVar]; ok {
+			modName = strings.ToLower(name)
+		}
+		names := []string{d.name}
+		var aliases []string
+		if len(d.aliases) > 0 {
+			aliases = append([]string{d.name}, d.aliases...)
+			names = aliases
+		}
+		for _, n := range names {
+			commands = append(commands, Command{
+				Name:        n,
+				Handler:     handler,
+				Module:      modName,
+				Disableable: d.disableable,
+				Aliases:     aliases,
+			})
+		}
+	}
+
+	descriptors := make(map[string]wrapDescriptor)
+	for _, loc := range wrapDescDeclPattern.FindAllStringSubmatchIndex(content, -1) {
+		open := loc[1] - 1
+		closeIdx := matchingBrace(content, open)
+		if closeIdx < 0 {
+			continue
+		}
+		descriptors[content[loc[2]:loc[3]]] = parseDescriptorBody(content[open+1 : closeIdx])
+	}
+
+	for _, m := range wrapNamedDescPattern.FindAllStringSubmatch(content, -1) {
+		if d, ok := descriptors[m[1]+"Desc"]; ok {
+			emit(d, m[2], m[3])
+		}
+	}
+
+	for _, loc := range wrapInlineDescPattern.FindAllStringIndex(content, -1) {
+		open := loc[1] - 1
+		closeIdx := matchingBrace(content, open)
+		if closeIdx < 0 {
+			continue
+		}
+		h := wrapHandlerAfterDesc.FindStringSubmatch(content[closeIdx+1:])
+		if h == nil {
+			continue
+		}
+		emit(parseDescriptorBody(content[open+1:closeIdx]), h[1], h[2])
+	}
+
+	for _, loc := range wrapLoopDescPattern.FindAllStringSubmatchIndex(content, -1) {
+		if strings.HasSuffix(content[loc[2]:loc[3]], "Desc") {
+			continue
+		}
+		literal, literalEnd, ok := precedingStructLiteral(content, loc[0])
+		if !ok {
+			continue
+		}
+		disableable := wrapDescDisablePattern.MatchString(content[literalEnd:loc[0]])
+		for _, t := range loopTuplePattern.FindAllStringSubmatch(literal, -1) {
+			emit(wrapDescriptor{name: t[1], disableable: disableable}, t[2], t[3])
+		}
+	}
+
+	return commands
+}
+
+// precedingStructLiteral finds the last []struct{...}{...} literal that starts
+// before pos and returns its value body and the index just past it.
+func precedingStructLiteral(content string, pos int) (string, int, bool) {
+	locs := loopStructPattern.FindAllStringIndex(content[:pos], -1)
+	if len(locs) == 0 {
+		return "", 0, false
+	}
+	typeClose := matchingBrace(content, locs[len(locs)-1][1]-1)
+	if typeClose < 0 {
+		return "", 0, false
+	}
+	open := typeClose + 1
+	for open < len(content) && (content[open] == ' ' || content[open] == '\t' || content[open] == '\n') {
+		open++
+	}
+	if open >= len(content) || content[open] != '{' {
+		return "", 0, false
+	}
+	valueClose := matchingBrace(content, open)
+	if valueClose < 0 || valueClose > pos {
+		return "", 0, false
+	}
+	return content[open+1 : valueClose], valueClose + 1, true
+}
+
+// parseLockTypes extracts lock types from locks.go by parsing the lockMap and restrMap
+func parseLockTypes(locksPath string) ([]LockType, error) {
+	data, err := os.ReadFile(filepath.Clean(locksPath))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %s: %w", locksPath, err)
+	}
+
+	content := string(data)
+	var lockTypes []LockType
+
+	// Regex patterns to extract map keys
+	// Matches: "key": value,
+	mapEntryPattern := regexp.MustCompile(`"(\w+)":\s*[^,}]+,?`)
+
+	// Find lockMap section
+	lockMapStart := strings.Index(content, "lockMap = map[string]filters.Message{")
+	lockMapEnd := -1
+	if lockMapStart != -1 {
+		depth := 0
+		for i := lockMapStart; i < len(content); i++ {
+			if content[i] == '{' {
+				depth++
+			} else if content[i] == '}' {
+				depth--
+				if depth == 0 {
+					lockMapEnd = i
+					break
+				}
+			}
+		}
+	}
+
+	// Extract permission locks from lockMap
+	if lockMapStart != -1 && lockMapEnd != -1 {
+		lockMapSection := content[lockMapStart:lockMapEnd]
+		matches := mapEntryPattern.FindAllStringSubmatch(lockMapSection, -1)
+		for _, match := range matches {
+			if len(match) >= 2 {
+				lockName := match[1]
+				description := getLockDescription(lockName, "permission")
+				lockTypes = append(lockTypes, LockType{
+					Name:        lockName,
+					Description: description,
+					Category:    "permission",
+				})
+			}
+		}
+	}
+
+	// Find restrMap section
+	restrMapStart := strings.Index(content, "restrMap = map[string]filters.Message{")
+	restrMapEnd := -1
+	if restrMapStart != -1 {
+		depth := 0
+		for i := restrMapStart; i < len(content); i++ {
+			if content[i] == '{' {
+				depth++
+			} else if content[i] == '}' {
+				depth--
+				if depth == 0 {
+					restrMapEnd = i
+					break
+				}
+			}
+		}
+	}
+
+	// Extract restriction locks from restrMap
+	if restrMapStart != -1 && restrMapEnd != -1 {
+		restrMapSection := content[restrMapStart:restrMapEnd]
+		matches := mapEntryPattern.FindAllStringSubmatch(restrMapSection, -1)
+		for _, match := range matches {
+			if len(match) >= 2 {
+				lockName := match[1]
+				description := getLockDescription(lockName, "restriction")
+				lockTypes = append(lockTypes, LockType{
+					Name:        lockName,
+					Description: description,
+					Category:    "restriction",
+				})
+			}
+		}
+	}
+
+	// Sort lock types: restrictions first, then permissions, alphabetically within each category
+	sort.Slice(lockTypes, func(i, j int) bool {
+		if lockTypes[i].Category != lockTypes[j].Category {
+			return lockTypes[i].Category == "restriction" // Restrictions come first
+		}
+		return lockTypes[i].Name < lockTypes[j].Name
+	})
+
+	return lockTypes, nil
+}
+
+// getLockDescription returns a human-readable description for a lock type
+func getLockDescription(lockName, category string) string {
+	// Descriptions based on the lock implementation in locks.go
+	descriptions := map[string]string{
+		// Permission locks (from lockMap)
+		"sticker":     "Blocks sticker messages",
+		"audio":       "Blocks audio file messages",
+		"voice":       "Blocks voice messages",
+		"document":    "Blocks document files (excludes GIFs/animations)",
+		"video":       "Blocks video messages",
+		"videonote":   "Blocks video note messages (round videos)",
+		"contact":     "Blocks contact card messages",
+		"photo":       "Blocks photo messages",
+		"gif":         "Blocks GIF/animation messages",
+		"url":         "Blocks messages containing URLs",
+		"bots":        "Prevents users who are neither admins nor approved from adding bots to the group",
+		"forward":     "Blocks forwarded messages",
+		"game":        "Blocks game messages",
+		"location":    "Blocks location/venue messages",
+		"rtl":         "Blocks message text and media captions containing Arabic-script characters (U+0600-U+06FF); other RTL scripts such as Hebrew are not checked",
+		"anonchannel": "Blocks messages from anonymous channels and linked channel posts",
+
+		// Restriction locks (from restrMap)
+		"messages": "Blocks all text, media, contacts, locations, games, stickers, and GIFs",
+		"comments": "Blocks messages from non-members (discussion comments)",
+		"media":    "Blocks all media files (audio, document, GIF, video, photo, video note, voice)",
+		"other":    "Blocks games, stickers, and GIFs",
+		"previews": "Blocks messages containing URLs, whether or not a preview is shown (same match as url)",
+		"all":      "Blocks all messages from users who are neither admins nor approved",
+	}
+
+	if desc, exists := descriptions[lockName]; exists {
+		return desc
+	}
+
+	return "No description available"
+}
+
+// parseCallbacks parses Go source files to extract callback handler registrations
+func parseCallbacks(modulesPath string) ([]Callback, error) {
+	var callbacks []Callback
+
+	// Regex pattern for callback extraction
+	// Matches: handlers.NewCallback(callbackquery.Prefix("prefix"), module.handler)
+	callbackPattern := regexp.MustCompile(`handlers\.NewCallback\s*\(\s*callbackquery\.Prefix\s*\(\s*"([^"]+)"\s*\)\s*,\s*(\w+)\.(\w+)\s*\)`)
+
+	// Module name pattern
+	moduleNamePattern := regexp.MustCompile(`(\w+)Module\s*=\s*moduleStruct\s*\{\s*moduleName:\s*"([^"]+)"`)
+
+	files, err := filepath.Glob(filepath.Join(modulesPath, "*.go"))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		data, err := os.ReadFile(filepath.Clean(file))
+		if err != nil {
+			log.Warnf("Could not read %s: %v", file, err)
+			continue
+		}
+
+		content := string(data)
+		fileName := filepath.Base(file)
+		moduleName := strings.TrimSuffix(fileName, ".go")
+
+		// Find module name from struct declaration
+		moduleMatches := moduleNamePattern.FindAllStringSubmatch(content, -1)
+		moduleNames := make(map[string]string)
+		for _, match := range moduleMatches {
+			if len(match) >= 3 {
+				moduleNames[match[1]+"Module"] = match[2]
+			}
+		}
+
+		// Find callback registrations
+		cbMatches := callbackPattern.FindAllStringSubmatch(content, -1)
+		for _, match := range cbMatches {
+			if len(match) >= 4 {
+				prefix := match[1]
+				moduleVar := match[2]
+				handler := match[3]
+
+				// Try to get module name from struct declaration
+				modName := moduleName
+				if name, ok := moduleNames[moduleVar]; ok {
+					modName = name
+				}
+
+				callbacks = append(callbacks, Callback{
+					Prefix:     prefix,
+					Handler:    handler,
+					Module:     modName,
+					SourceFile: fileName,
+				})
+			}
+		}
+	}
+
+	// Sort callbacks by module then prefix
+	sort.Slice(callbacks, func(i, j int) bool {
+		if callbacks[i].Module != callbacks[j].Module {
+			return callbacks[i].Module < callbacks[j].Module
+		}
+		return callbacks[i].Prefix < callbacks[j].Prefix
+	})
+
+	return callbacks, nil
+}
+
+// parseMessageWatchers parses Go source files to extract message handler registrations
+func parseMessageWatchers(modulesPath string) ([]MessageWatcher, error) {
+	var watchers []MessageWatcher
+
+	// Pattern 1: Single line with module.handler and literal group number
+	// e.g., dispatcher.AddHandlerToGroup(handlers.NewMessage(filter, module.handler), 5)
+	watcherPatternLiteral := regexp.MustCompile(
+		`dispatcher\.AddHandlerToGroup\s*\(\s*handlers\.NewMessage\s*\([^,]+,\s*(\w+)\.(\w+)\s*\)\s*,\s*(-?\d+)\s*\)`,
+	)
+
+	// Pattern 2: Module.handler with variable group reference
+	// e.g., dispatcher.AddHandlerToGroup(handlers.NewMessage(filter, module.handler), module.handlerGroup)
+	watcherPatternVar := regexp.MustCompile(
+		`dispatcher\.AddHandlerToGroup\s*\(\s*handlers\.NewMessage\s*\([^,]+,\s*(\w+)\.(\w+)\s*\)\s*,\s*(\w+)\.(\w+)\s*\)`,
+	)
+
+	// Pattern 3: Multi-line with anonymous function handler and literal group
+	// e.g., dispatcher.AddHandlerToGroup(\n\thandlers.NewMessage(..., func(...)...),\n\t-2,\n)
+	// We search for AddHandlerToGroup blocks and extract group numbers
+	watcherPatternMultiline := regexp.MustCompile(
+		`(?s)dispatcher\.AddHandlerToGroup\s*\(\s*handlers\.NewMessage\s*\([\s\S]*?\)\s*,\s*(-?\d+)\s*,?\s*\)`,
+	)
+
+	// Module name pattern
+	moduleNamePattern := regexp.MustCompile(`(\w+)Module\s*=\s*moduleStruct\s*\{\s*moduleName:\s*"([^"]+)"`)
+
+	// Handler group field pattern (to extract default handler group numbers)
+	handlerGroupPattern := regexp.MustCompile(`(\w+)Module\s*=\s*moduleStruct\s*\{[^}]*handlerGroup:\s*(-?\d+)`)
+
+	files, err := filepath.Glob(filepath.Join(modulesPath, "*.go"))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		data, err := os.ReadFile(filepath.Clean(file))
+		if err != nil {
+			log.Warnf("Could not read %s: %v", file, err)
+			continue
+		}
+
+		content := string(data)
+		fileName := filepath.Base(file)
+		moduleName := strings.TrimSuffix(fileName, ".go")
+
+		// Find module name from struct declaration
+		moduleMatches := moduleNamePattern.FindAllStringSubmatch(content, -1)
+		moduleNames := make(map[string]string)
+		for _, match := range moduleMatches {
+			if len(match) >= 3 {
+				moduleNames[match[1]+"Module"] = match[2]
+			}
+		}
+
+		// Extract handler group numbers from struct declarations
+		handlerGroups := make(map[string]int)
+		hgMatches := handlerGroupPattern.FindAllStringSubmatch(content, -1)
+		for _, match := range hgMatches {
+			if len(match) >= 3 {
+				groupNum, parseErr := strconv.Atoi(match[2])
+				if parseErr == nil {
+					handlerGroups[match[1]+"Module"] = groupNum
+				}
+			}
+		}
+
+		// Track found handlers to avoid duplicates
+		foundHandlers := make(map[string]bool)
+
+		// Pattern 1: Literal group number with named handler
+		watcherMatches := watcherPatternLiteral.FindAllStringSubmatch(content, -1)
+		for _, match := range watcherMatches {
+			if len(match) >= 4 {
+				moduleVar := match[1]
+				handler := match[2]
+				groupStr := match[3]
+
+				groupNum, parseErr := strconv.Atoi(groupStr)
+				if parseErr != nil {
+					log.Warnf("Could not parse handler group number '%s' in %s", groupStr, fileName)
+					continue
+				}
+
+				modName := moduleName
+				if name, ok := moduleNames[moduleVar]; ok {
+					modName = name
+				}
+
+				key := modName + "." + handler
+				if !foundHandlers[key] {
+					foundHandlers[key] = true
+					watchers = append(watchers, MessageWatcher{
+						Handler:      handler,
+						Module:       modName,
+						HandlerGroup: groupNum,
+						SourceFile:   fileName,
+					})
+				}
+			}
+		}
+
+		// Pattern 2: Variable group reference with named handler
+		varMatches := watcherPatternVar.FindAllStringSubmatch(content, -1)
+		for _, match := range varMatches {
+			if len(match) >= 5 {
+				moduleVar := match[1]
+				handler := match[2]
+				groupVar := match[3]
+				// match[4] is the field name like "handlerGroup"
+
+				modName := moduleName
+				if name, ok := moduleNames[moduleVar]; ok {
+					modName = name
+				}
+
+				// Try to resolve the group number from struct declaration
+				groupNum := 0
+				if g, ok := handlerGroups[groupVar]; ok {
+					groupNum = g
+				}
+
+				key := modName + "." + handler
+				if !foundHandlers[key] {
+					foundHandlers[key] = true
+					watchers = append(watchers, MessageWatcher{
+						Handler:      handler,
+						Module:       modName,
+						HandlerGroup: groupNum,
+						SourceFile:   fileName,
+					})
+				}
+			}
+		}
+
+		// Pattern 3: Multiline with anonymous function - extract group from block
+		multiMatches := watcherPatternMultiline.FindAllStringSubmatch(content, -1)
+		for _, match := range multiMatches {
+			if len(match) >= 2 {
+				groupStr := match[1]
+				groupNum, parseErr := strconv.Atoi(groupStr)
+				if parseErr != nil {
+					continue
+				}
+
+				// For anonymous handlers, use module name as handler description
+				modName := moduleName
+
+				// Try to find module handler in the match by looking for module.method pattern
+				handlerName := "anonymous"
+				handlerRe := regexp.MustCompile(`(\w+Module)\.(\w+)`)
+				if hMatch := handlerRe.FindStringSubmatch(match[0]); hMatch != nil {
+					if name, ok := moduleNames[hMatch[1]]; ok {
+						modName = name
+					}
+					handlerName = hMatch[2]
+				}
+
+				key := modName + "." + handlerName
+				if !foundHandlers[key] {
+					foundHandlers[key] = true
+					watchers = append(watchers, MessageWatcher{
+						Handler:      handlerName,
+						Module:       modName,
+						HandlerGroup: groupNum,
+						SourceFile:   fileName,
+					})
+				}
+			}
+		}
+	}
+
+	// Sort by handler group then module
+	sort.Slice(watchers, func(i, j int) bool {
+		if watchers[i].HandlerGroup != watchers[j].HandlerGroup {
+			return watchers[i].HandlerGroup < watchers[j].HandlerGroup
+		}
+		return watchers[i].Module < watchers[j].Module
+	})
+
+	return watchers, nil
+}

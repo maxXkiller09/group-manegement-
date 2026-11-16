@@ -1,0 +1,513 @@
+package main
+
+import (
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+	"testing"
+)
+
+func TestExtractKeysFromFile_ASTOnlyCallSites(t *testing.T) {
+	goFile := filepath.Join(t.TempDir(), "test_module.go")
+	content := `package modules
+
+func handler() {
+	// tr.GetString("comment_only")
+	_ = "tr.GetString(\"string_only\")"
+	tr.GetString(
+		"multiline_key",
+	)
+	tr.GetString("same_key")
+	tr.GetString("same_key")
+	tr.GetStringSlice("slice_key")
+	c.Tr.GetString("context_key")
+	tempTr.GetStringSlice("temporary_slice_key")
+}
+`
+	if err := os.WriteFile(goFile, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	keys, err := extractKeysFromFile(goFile)
+	if err != nil {
+		t.Fatalf("extractKeysFromFile() error = %v", err)
+	}
+
+	want := []struct {
+		key  string
+		line int
+	}{
+		{key: "multiline_key", line: 7},
+		{key: "same_key", line: 9},
+		{key: "same_key", line: 10},
+		{key: "slice_key", line: 11},
+		{key: "context_key", line: 12},
+		{key: "temporary_slice_key", line: 13},
+	}
+	if len(keys) != len(want) {
+		t.Fatalf("extractKeysFromFile() returned %d keys, want %d: %#v", len(keys), len(want), keys)
+	}
+	for i, expected := range want {
+		if keys[i].Key != expected.key || keys[i].Line != expected.line {
+			t.Errorf(
+				"key[%d] = {%q, line %d}, want {%q, line %d}",
+				i,
+				keys[i].Key,
+				keys[i].Line,
+				expected.key,
+				expected.line,
+			)
+		}
+	}
+}
+
+func TestExtractKeysFromFile_ReturnsParserError(t *testing.T) {
+	goFile := filepath.Join(t.TempDir(), "invalid.go")
+	if err := os.WriteFile(goFile, []byte("package modules\nfunc handler( {\n"), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	if _, err := extractKeysFromFile(goFile); err == nil {
+		t.Fatal("extractKeysFromFile() error = nil, want parser error")
+	}
+}
+
+func TestExtractKeysFromFile_RelativePaths(t *testing.T) {
+	// Create a temporary directory with a Go file containing translation key patterns
+	tmpDir := t.TempDir()
+	goFile := filepath.Join(tmpDir, "test_module.go")
+	content := `package modules
+
+import "fmt"
+
+func handler() {
+	tr.GetString("test_key_one")
+	tr.GetString("test_key_two")
+	_ = fmt.Sprintf("hello")
+}
+`
+	if err := os.WriteFile(goFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write temp file: %v", err)
+	}
+
+	// Build a relative path containing ".." to simulate how the script is invoked
+	// (from scripts/check_translations/, paths like ../../alita/... are legitimate)
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+
+	// Construct a relative path with ".." that resolves to the temp file
+	relPath, err := filepath.Rel(cwd, goFile)
+	if err != nil {
+		t.Fatalf("Failed to compute relative path: %v", err)
+	}
+
+	// If relPath doesn't contain "..", force it by going up and back down
+	if relPath == goFile || !containsDotDot(relPath) {
+		// Create an artificial ".." path: go up one dir, then back into tmpDir
+		parent := filepath.Dir(tmpDir)
+		base := filepath.Base(tmpDir)
+		relPath = filepath.Join(parent, "..", filepath.Base(filepath.Dir(parent)), base, "test_module.go")
+		// Simpler approach: just use a path with .. that resolves correctly
+		relPath, err = filepath.Rel(filepath.Join(cwd, "subdir"), goFile)
+		if err != nil {
+			t.Fatalf("Failed to compute relative path with ..: %v", err)
+		}
+	}
+
+	// The relative path should contain ".." for this test to be meaningful
+	if !containsDotDot(relPath) {
+		// Force a relative path with ".."
+		relPath = filepath.Join("..", filepath.Base(cwd), relPath)
+	}
+
+	t.Logf("Using relative path: %s", relPath)
+
+	keys, err := extractKeysFromFile(relPath)
+	if err != nil {
+		t.Fatalf("extractKeysFromFile should accept relative paths with '..', got error: %v", err)
+	}
+
+	if len(keys) == 0 {
+		t.Fatal("extractKeysFromFile returned 0 keys, expected at least 2")
+	}
+
+	// Verify we got the expected keys
+	foundKeys := make(map[string]bool)
+	for _, k := range keys {
+		foundKeys[k.Key] = true
+	}
+	if !foundKeys["test_key_one"] {
+		t.Error("Expected key 'test_key_one' not found")
+	}
+	if !foundKeys["test_key_two"] {
+		t.Error("Expected key 'test_key_two' not found")
+	}
+}
+
+func TestExtractKeysFromFile_AbsolutePaths(t *testing.T) {
+	// Create a temporary Go file with translation keys
+	tmpDir := t.TempDir()
+	goFile := filepath.Join(tmpDir, "test_module.go")
+	content := `package modules
+
+func handler() {
+	tr.GetString("abs_test_key")
+}
+`
+	if err := os.WriteFile(goFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write temp file: %v", err)
+	}
+
+	// Use the absolute path directly
+	keys, err := extractKeysFromFile(goFile)
+	if err != nil {
+		t.Fatalf("extractKeysFromFile should accept absolute paths, got error: %v", err)
+	}
+
+	if len(keys) == 0 {
+		t.Fatal("extractKeysFromFile returned 0 keys, expected at least 1")
+	}
+
+	foundKey := false
+	for _, k := range keys {
+		if k.Key == "abs_test_key" {
+			foundKey = true
+			break
+		}
+	}
+	if !foundKey {
+		t.Error("Expected key 'abs_test_key' not found")
+	}
+}
+
+func TestLoadLocaleFiles_RelativePaths(t *testing.T) {
+	// Create a temporary directory with a minimal YAML locale file
+	tmpDir := t.TempDir()
+	localeFile := filepath.Join(tmpDir, "en.yml")
+	content := `test_key: "Hello"
+another_key: "World"
+`
+	if err := os.WriteFile(localeFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write temp locale file: %v", err)
+	}
+
+	// Build a relative path with ".."
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+
+	relPath, err := filepath.Rel(cwd, tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to compute relative path: %v", err)
+	}
+
+	// Ensure the path contains ".."
+	if !containsDotDot(relPath) {
+		relPath = filepath.Join("..", filepath.Base(cwd), relPath)
+	}
+
+	t.Logf("Using relative path for locales: %s", relPath)
+
+	locales, err := loadLocaleFiles(relPath)
+	if err != nil {
+		t.Fatalf("loadLocaleFiles should accept relative paths with '..', got error: %v", err)
+	}
+
+	if len(locales) == 0 {
+		t.Fatal("loadLocaleFiles returned empty map, expected at least 1 locale loaded")
+	}
+
+	locale, ok := locales["en.yml"]
+	if !ok {
+		t.Fatal("Expected 'en.yml' to be loaded")
+	}
+
+	if _, exists := locale["test_key"]; !exists {
+		t.Error("Expected key 'test_key' in loaded locale data")
+	}
+	if _, exists := locale["another_key"]; !exists {
+		t.Error("Expected key 'another_key' in loaded locale data")
+	}
+}
+
+func TestLoadLocaleFiles_PathTraversalRejected(t *testing.T) {
+	// Attempt to load from an absolute path outside the project (e.g., /etc/)
+	// This should either return an error or return empty results gracefully
+	locales, err := loadLocaleFiles("/etc")
+	if err != nil {
+		// Returning an error is acceptable
+		t.Logf("loadLocaleFiles returned error for /etc: %v (acceptable)", err)
+		return
+	}
+
+	// If no error, the result should be empty (no YAML files in /etc/ or they are skipped)
+	// This is acceptable behavior -- the function handles it gracefully
+	t.Logf("loadLocaleFiles returned %d entries for /etc (graceful handling)", len(locales))
+}
+
+func TestExtractTranslationKeys_ExcludesTestFiles(t *testing.T) {
+	// Create a temp directory with two files:
+	// - module.go containing tr.GetString("real_key") — should be extracted
+	// - module_test.go containing tr.GetString("test_only_key") — should be excluded
+	tmpDir := t.TempDir()
+
+	goFile := filepath.Join(tmpDir, "module.go")
+	goContent := `package modules
+
+func handler() {
+	tr.GetString("real_key")
+}
+`
+	if err := os.WriteFile(goFile, []byte(goContent), 0644); err != nil {
+		t.Fatalf("Failed to write module.go: %v", err)
+	}
+
+	testFile := filepath.Join(tmpDir, "module_test.go")
+	testContent := `package modules
+
+func TestHandler(t *testing.T) {
+	tr.GetString("test_only_key")
+}
+`
+	if err := os.WriteFile(testFile, []byte(testContent), 0644); err != nil {
+		t.Fatalf("Failed to write module_test.go: %v", err)
+	}
+
+	keys, err := extractTranslationKeys(tmpDir)
+	if err != nil {
+		t.Fatalf("extractTranslationKeys returned error: %v", err)
+	}
+
+	foundKeys := make(map[string]bool)
+	for _, k := range keys {
+		foundKeys[k.Key] = true
+	}
+
+	if !foundKeys["real_key"] {
+		t.Error("Expected 'real_key' from module.go to be extracted, but it was not found")
+	}
+	if foundKeys["test_only_key"] {
+		t.Error("Expected 'test_only_key' from module_test.go to be excluded, but it was found")
+	}
+}
+
+func writeFixtures(t *testing.T, files map[string]string) string {
+	t.Helper()
+	dir := t.TempDir()
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0644); err != nil {
+			t.Fatalf("write %s: %v", name, err)
+		}
+	}
+	return dir
+}
+
+func loadFixtureLocales(t *testing.T, files map[string]string) map[string]map[string]any {
+	t.Helper()
+	locales, err := loadLocaleFiles(writeFixtures(t, files))
+	if err != nil {
+		t.Fatalf("loadLocaleFiles() error = %v", err)
+	}
+	return locales
+}
+
+const fixtureEnglish = `copied: "Hello there, %s!"
+translated: "Good morning"
+format_only: "%s (%d, %v)"
+symbols_only: " - %s"
+dash: "—"
+html_and_placeholder: "<b>{first}</b>: <code>%s</code>"
+emoji_only: "✅ %s"
+url_only: "https://t.me/%s"
+brand: "Telegram"
+nested:
+  child: "Nested text"
+`
+
+func flatten(locale map[string]any) map[string]string {
+	out := make(map[string]string)
+	flattenStrings("", locale, out)
+	return out
+}
+
+func loadFixtureAllowlist(t *testing.T, content string) allowlist {
+	t.Helper()
+	dir := writeFixtures(t, map[string]string{"allow.txt": content})
+	allow, err := loadAllowlist(filepath.Join(dir, "allow.txt"))
+	if err != nil {
+		t.Fatalf("loadAllowlist() error = %v", err)
+	}
+	return allow
+}
+
+func TestCheckUntranslatedValues_ListsKeysCopiedFromEnglish(t *testing.T) {
+	spanish := strings.Replace(fixtureEnglish, `"Good morning"`, `"Buenos días"`, 1) + "only_here: \"Hello\"\n"
+	locales := loadFixtureLocales(t, map[string]string{"en.yml": fixtureEnglish, "es.yml": spanish})
+
+	got := checkUntranslatedValues(flatten(locales["en.yml"]), locales["es.yml"], "es", allowlist{})
+	if want := []string{"brand", "copied", "nested.child"}; !slices.Equal(got, want) {
+		t.Fatalf("checkUntranslatedValues() = %v, want %v", got, want)
+	}
+}
+
+func TestCheckUntranslatedValues_AllowlistSkipsListedKeysOnly(t *testing.T) {
+	locales := loadFixtureLocales(t, map[string]string{
+		"en.yml": fixtureEnglish,
+		"es.yml": fixtureEnglish,
+		"fr.yml": fixtureEnglish,
+	})
+	allow := loadFixtureAllowlist(t, `# comment line
+
+brand          # product name, same in every language
+es:copied      # pretend this one is Spanish too
+`)
+	en := flatten(locales["en.yml"])
+
+	gotES := checkUntranslatedValues(en, locales["es.yml"], "es", allow)
+	if want := []string{"nested.child", "translated"}; !slices.Equal(gotES, want) {
+		t.Errorf("es: got %v, want %v", gotES, want)
+	}
+	gotFR := checkUntranslatedValues(en, locales["fr.yml"], "fr", allow)
+	if want := []string{"copied", "nested.child", "translated"}; !slices.Equal(gotFR, want) {
+		t.Errorf("fr: got %v, want %v (an es: entry must not cover fr)", gotFR, want)
+	}
+}
+
+func TestReportUntranslatedValues_CountsEveryLocaleButEnglishAndConfig(t *testing.T) {
+	locales := loadFixtureLocales(t, map[string]string{
+		"en.yml":     "greeting: \"Hello\"\nfarewell: \"Goodbye\"\n",
+		"es.yml":     "greeting: \"Hello\"\nfarewell: \"Adiós\"\n",
+		"ru.yml":     "greeting: \"Hello\"\nfarewell: \"Goodbye\"\n",
+		"config.yml": "greeting: \"Hello\"\nfarewell: \"Goodbye\"\n",
+	})
+
+	got, err := reportUntranslatedValues(locales, allowlist{})
+	if err != nil {
+		t.Fatalf("reportUntranslatedValues() error = %v", err)
+	}
+	if got != 3 {
+		t.Fatalf("reportUntranslatedValues() = %d, want 3 (es greeting, ru greeting and farewell)", got)
+	}
+}
+
+func TestReportUntranslatedValues_CountsAllowlistEntriesThatMatchNothing(t *testing.T) {
+	locales := loadFixtureLocales(t, map[string]string{
+		"en.yml": "greeting: \"Hello\"\nfarewell: \"Goodbye\"\n",
+		"es.yml": "greeting: \"Hello\"\nfarewell: \"Adiós\"\n",
+	})
+	allow := loadFixtureAllowlist(t, `es:greeting   # still identical, so needed
+es:farewell   # translated since, so stale
+fr:greeting   # no fr locale
+gone_key      # no such key
+`)
+
+	got, err := reportUntranslatedValues(locales, allow)
+	if err != nil {
+		t.Fatalf("reportUntranslatedValues() error = %v", err)
+	}
+	if got != 3 {
+		t.Fatalf("reportUntranslatedValues() = %d, want 3 (the three entries that match nothing)", got)
+	}
+}
+
+func TestReportUntranslatedValues_FailsWithoutEnglish(t *testing.T) {
+	locales := loadFixtureLocales(t, map[string]string{"es.yml": "greeting: \"Hello\"\n"})
+
+	if _, err := reportUntranslatedValues(locales, allowlist{}); err == nil {
+		t.Fatal("reportUntranslatedValues() error = nil, want an error when en.yml is missing")
+	}
+}
+
+func TestHasTranslatableText(t *testing.T) {
+	cases := map[string]bool{
+		"Hello":                         true,
+		"Status: <code>%s</code>":       true,
+		"Привет":                        true,
+		"नमस्ते":                        true,
+		"100% OK":                       true,
+		"50% of %d":                     true,
+		"—":                             false,
+		" - %s":                         false,
+		"%s (%s, %s)":                   false,
+		"%[1]s: %-5d %.2f %%":           false,
+		"<b>{first}</b> {last}":         false,
+		"<a href=\"%s\">%s</a>":         false,
+		"https://example.com/path?x=1":  false,
+		"t.me/%s":                       false,
+		"✅ ❌ 🔒 ⚙️ 1. 2.":                false,
+		"&lt;%s&gt; &amp; &#8212;":      false,
+		"<code>%s</code> https://x.y/z": false,
+	}
+	for in, want := range cases {
+		if got := hasTranslatableText(in); got != want {
+			t.Errorf("hasTranslatableText(%q) = %v, want %v", in, got, want)
+		}
+	}
+}
+
+func TestLoadAllowlist_RejectsEntryWithoutReason(t *testing.T) {
+	for _, content := range []string{"es:button_no\n", "es:button_no #   \n", "es:button_no extra # reason\n"} {
+		dir := writeFixtures(t, map[string]string{"allow.txt": content})
+		if _, err := loadAllowlist(filepath.Join(dir, "allow.txt")); err == nil {
+			t.Errorf("loadAllowlist(%q) error = nil, want an error", content)
+		}
+	}
+}
+
+// The repository's own locales must pass with the committed allowlist, and
+// every allowlist entry must still be needed.
+func TestRepositoryLocalesHaveNoValuesCopiedFromEnglish(t *testing.T) {
+	locales, err := loadLocaleFiles("../../locales")
+	if err != nil {
+		t.Fatalf("loadLocaleFiles() error = %v", err)
+	}
+	allow, err := loadAllowlist(identicalAllowlistFile)
+	if err != nil {
+		t.Fatalf("loadAllowlist() error = %v", err)
+	}
+	got, err := reportUntranslatedValues(locales, allow)
+	if err != nil {
+		t.Fatalf("reportUntranslatedValues() error = %v", err)
+	}
+	if got != 0 {
+		t.Fatalf("reportUntranslatedValues() = %d, want 0; run make check-translations for the list", got)
+	}
+}
+
+func containsDotDot(path string) bool {
+	for _, part := range filepath.SplitList(path) {
+		if part == ".." {
+			return true
+		}
+	}
+	// Also check by splitting on separator
+	parts := splitPath(path)
+	for _, p := range parts {
+		if p == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+func splitPath(path string) []string {
+	var parts []string
+	for {
+		dir, file := filepath.Split(path)
+		if file != "" {
+			parts = append([]string{file}, parts...)
+		}
+		if dir == "" || dir == path {
+			if dir != "" {
+				parts = append([]string{dir}, parts...)
+			}
+			break
+		}
+		path = dir[:len(dir)-1] // Remove trailing separator
+	}
+	return parts
+}

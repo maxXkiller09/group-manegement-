@@ -1,0 +1,3147 @@
+# French locale for NexGuard Robot
+# Language metadata
+language_flag: 🇫🇷
+language_name: Français
+
+# Admin module strings
+admin_adminlist: "Administrateurs de <b>%s</b> :"
+admin_anon_admin_already_disabled: Le mode AnonAdmin est déjà <b>désactivé</b> pour %s
+admin_anon_admin_already_enabled: Le mode AnonAdmin est déjà <b>activé</b> pour %s
+admin_anon_admin_disabled: "Le mode AnonAdmin est actuellement <b>désactivé</b> pour %s.\n\nCela nécessite que les administrateurs anonymes appuient sur un bouton pour confirmer leurs permissions."
+admin_anon_admin_disabled_now: "Le mode AnonAdmin est maintenant <b>désactivé</b> pour %s.\n\nDésormais, les administrateurs anonymes devront appuyer sur un bouton pour confirmer leurs permissions."
+admin_anon_admin_enabled: "Le mode AnonAdmin est actuellement <b>activé</b> pour %s.\n\nCela permet à tous les administrateurs anonymes d'effectuer des actions d'administration sans restriction."
+admin_anon_admin_enabled_now: "Le mode AnonAdmin est maintenant <b>activé</b> pour %s.\n\nDésormais, les administrateurs anonymes peuvent exécuter des commandes d'administration sans confirmer avec un bouton."
+admin_anon_admin_invalid_arg: "Argument invalide, je comprends uniquement <code>on</code>, <code>off</code>, <code>yes</code>, <code>no</code>"
+admin_demote_not_admin: "Cette personne n'est pas administrateur, comment suis-je censé la rétrograder ?"
+admin_demote_is_bot_itself: Je ne vais pas me rétrograder moi-même.
+admin_demote_is_owner: Cette personne a créé ce chat, comment pourrais-je la rétrograder ?
+admin_demote_success_demote: "%s rétrogradés avec succès !"
+admin_errors_err_cannot_demote: "Échec de la rétrogradation ; il se peut que je ne sois pas administrateur, ou qu'ils aient été promus par un autre administrateur."
+admin_errors_err_cannot_promote: "Échec de la promotion ; il se peut que je ne sois pas administrateur, ou qu'ils aient été promus par un autre administrateur."
+admin_errors_err_set_title: "Échec de la définition du titre d'administrateur personnalisé ; le titre peut être incorrect ou contenir des emojis."
+admin_errors_title_empty: Vous devez me donner un titre d'administrateur à définir.
+admin_errors_admin_cache_failed: "J'ai du mal à accéder à la liste des administrateurs. Veuillez réessayer plus tard."
+admin_help_msg: "Facilitez la promotion et la rétrogradation des utilisateurs avec le module admin !\n\n*Commandes Utilisateur :*\n× /adminlist : Lister les administrateurs du chat actuel.\n\n*Commandes Admin :*\n× /promote `<réponse/nom d'utilisateur/mention/id utilisateur>` `[titre]` : Promouvoir un utilisateur, avec en option un titre d'administrateur personnalisé (16 caractères max.).\n× /demote `<réponse/nom d'utilisateur/mention/id utilisateur>` : Rétrograder un utilisateur.\n× /title `<réponse/nom d'utilisateur/mention/id utilisateur>` `<titre personnalisé>` : Définir un titre personnalisé pour l'utilisateur\n× /setgtitle <titre> : Changer le titre du groupe.\n× /setgpic : Répondez à une photo pour la définir comme image du groupe.\n× /setgdesc [texte] : Changer la description du groupe.\n× /invitelink : Obtenir le lien d'invitation du chat.\n× /anonadmin `<on/off>` : on permet aux administrateurs anonymes d'agir sans confirmation ; off (par défaut) les oblige à confirmer avec un bouton (propriétaire du groupe uniquement).\n× /admincache : Recharger la liste des administrateurs.\n× /clearadmincache : Vider la liste des administrateurs en cache.\n× /timezone `[nom]` : Afficher ou définir le fuseau horaire du chat, sous forme de nom IANA comme Asia/Kolkata (UTC par défaut).\n× /ephemeral `<on/off>` : on affiche ce que je vous enverrais sinon en privé (règles privées, notes privées, le bouton de /help) uniquement au membre qui l'a demandé, dans le groupe ; off (par défaut) garde le bouton vers le privé. Je dois être administrateur."
+admin_promote_admin_title_truncated: Titre d'administrateur tronqué à 16 caractères depuis %d
+admin_promote_is_admin: "Cette personne est déjà administrateur, comment suis-je censé la promouvoir ?"
+admin_promote_is_bot_itself: Si seulement je pouvais me faire ça à moi-même ;_;
+admin_promote_is_owner: "Cette personne a créé ce chat, comment suis-je censé la promouvoir ?"
+admin_promote_success_promote: "%s promu avec succès !"
+admin_title_is_admin: "Cette personne n'est pas administrateur, je ne peux donc pas lui définir de titre d'administrateur personnalisé. Promouvez-la d'abord."
+admin_title_is_bot_itself: Si seulement je pouvais me faire ça à moi-même ;_;
+admin_title_is_owner: "Cette personne a créé ce chat, comment suis-je censé lui définir un titre d'administrateur ?"
+admin_title_success_set: "Titre d'administrateur de %s défini avec succès à <b>%s</b>"
+admin_title_truncated: "\nNote : Titre d'administrateur tronqué à 16 caractères depuis %d"
+admin_cache_cleared: Cache des administrateurs effacé avec succès.
+admin_no_visible_admins: "\nAucun administrateur visible (tous sont des bots ou anonymes)."
+admin_anon_admin_db_error: Échec de la mise à jour du paramètre d'administrateur anonyme. Veuillez réessayer.
+admin_need_admin: Vous devez être administrateur pour faire cela !
+admin_adminlist_note_cached: "\n\nNote : Ces valeurs sont en cache et peuvent ne pas être à jour"
+admin_adminlist_note_fresh: "\n\nNote : Ces valeurs sont à jour"
+admin_invitelink_public: "Voici le lien d'invitation de ce chat : %s"
+admin_invitelink_private: "Voici le lien d'invitation de ce chat : %s"
+admin_extended_docs: |
+  <b>Support des Administrateurs Anonymes</b>
+
+  La commande <code>/anonadmin</code> permet aux propriétaires de groupe de basculer la reconnaissance des administrateurs anonymes :
+  <code>/anonadmin on</code> - Faire confiance aux administrateurs anonymes sans vérification
+  <code>/anonadmin off</code> - Exiger une vérification par bouton (par défaut)
+
+  Lorsque c'est désactivé (par défaut), le bot demande une vérification par bouton avant d'exécuter les actions d'administration des comptes anonymes.
+
+  <b>Comment fonctionne la vérification des administrateurs anonymes :</b>
+  1. Le bot détecte que l'expéditeur est GroupAnonymousBot
+  2. Le message original est mis en cache avec un TTL de 20 secondes
+  3. Un bouton "Cliquez pour prouver que vous êtes admin" est envoyé dans le chat
+  4. L'utilisateur qui clique est vérifié comme admin, la commande est exécutée
+  5. Le bouton expire après 20 secondes s'il n'est pas vérifié
+
+  <b>Commandes supportées :</b>
+  Admin : /promote, /demote, /title, /setgtitle, /setgpic, /setgdesc
+  Bannissements : /ban, /dban, /sban, /tban, /unban, /baninfo, /banlist, /kick, /dkick, /skick, /restrict, /unrestrict
+  Mutes : /mute, /smute, /dmute, /tmute, /unmute
+  Épingles : /pin, /unpin, /permapin, /unpinall
+  Purges : /purge, /del, /purgefrom, /purgeto
+  Avertissements : /warn, /swarn, /dwarn
+
+admin_notes_docs: |
+  <b>Notes de sécurité</b>
+  • Toutes les entrées contrôlées par l'utilisateur sont échappées en HTML pour prévenir les attaques par injection
+  • Les changements de permissions d'administration s'exécutent avec une gestion d'erreurs appropriée et une récupération en cas de panique
+
+# Common error messages used across modules
+error_generic: "Une erreur s'est produite. Veuillez réessayer plus tard."
+common_anonymous_user_error: Cette commande ne peut pas être utilisée sur un utilisateur anonyme.
+common_cannot_identify_user: Impossible d'identifier l'utilisateur. Cette commande ne peut pas être utilisée par les chaînes.
+command_help_example: "Exemple : {example}"
+common_no_user_specified: Je ne sais pas de qui vous parlez, vous allez devoir spécifier un utilisateur... !
+common_user_not_in_chat: Cet utilisateur n'est pas dans ce chat, comment puis-je le restreindre ?
+common_cannot_target_admin: "Je ne peux pas effectuer cette action sur les administrateurs du groupe."
+common_cannot_target_self: "Je ne peux pas effectuer cette action sur moi-même."
+common_no_reply_to_message: "Vous devez répondre au message d'un utilisateur pour effectuer cette action."
+
+# Time units for duration formatting
+common_time_minute: "minute"
+common_time_minutes: "minutes"
+common_time_hour: "heure"
+common_time_hours: "heures"
+common_time_day: "jour"
+common_time_days: "jours"
+common_time_week: "semaine"
+common_time_weeks: "semaines"
+
+# Common/Shared strings
+common_yes: "Oui"
+common_no: "Non"
+common_back: "Retour"
+common_back_arrow: "« Retour"
+common_back_arrow_alt: "⬅ Retour"
+common_done: "Terminé ✅"
+common_continue: "✅ Continuer ✅"
+common_home: "Accueil"
+common_formatting_button: "Formatage"
+common_rules_button_emoji: "Règles 📝"
+
+# Language module strings
+language_current_user: "Votre langue actuelle est %s\nChoisissez une langue dans le clavier ci-dessous."
+language_current_group: "La langue actuelle de ce groupe est %s\nChoisissez une langue dans le clavier ci-dessous."
+language_changed_user: "Votre langue a été changée en %s"
+language_changed_group: "La langue de ce groupe a été changée en %s"
+language_help_translate: "Aidez-nous à traduire 🌎"
+language_invalid_selection: "Sélection de langue invalide."
+
+# Common button texts
+button_yes: "Oui"
+button_no: "Non"
+button_back: "Retour"
+button_unmute_admins: "Réactiver la voix (Admins uniquement)"
+button_formatting: "Formatage"
+button_click_me: "Cliquez-moi !"
+button_ban: "Bannir"
+button_kick: "Expulser"
+button_mute: "Rendre muet"
+button_unban: "Débannir"
+button_unmute: "Réactiver la voix"
+button_rules_default: "Règles"
+
+# Bans module strings
+bans_ban_ban_reason: <b>Raison :</b> %s
+bans_ban_dban_no_reply: Vous devez répondre à un message pour le supprimer et bannir l'utilisateur !
+bans_ban_is_admin: Pourquoi bannirais-je un admin ? Ça semble être une idée plutôt stupide.
+bans_ban_is_bot_itself: Vous pensez vraiment que je vais me bannir moi-même ?
+bans_ban_normal_ban: "Un autre mord la poussière... !
+
+  %s banni."
+bans_ban_tban: "%s banni pour %s"
+bans_help_msg:
+  "Parfois les utilisateurs peuvent être agaçants et vous pourriez vouloir
+  les supprimer de votre chat, ce module vous aide exactement à gérer cela !
+
+  Bannir/expulser des utilisateurs de votre chat, et les débannir plus tard s'ils se comportent bien.
+
+
+  *Commandes Utilisateur :*
+
+  × /kickme : expulse l'utilisateur qui a émis la commande.
+
+  × /banme : bannit l'utilisateur qui a émis la commande.
+
+
+  *Commandes de Bannissement* (Admin uniquement) :
+
+  × /ban <pseudo> : bannit un utilisateur. (via le pseudo, ou en réponse)
+
+  × /sban <pseudo> : bannit un utilisateur silencieusement, n'envoie pas de message au groupe et
+  supprime également votre commande. (via le pseudo, ou en réponse)
+
+  × /kick <pseudo> : expulse un utilisateur. (via le pseudo, ou en réponse)
+
+  × /skick <pseudo> : expulse un utilisateur silencieusement et supprime votre commande.
+
+  × /dkick : expulse un utilisateur et supprime le message auquel vous avez répondu. (en réponse uniquement)
+
+  × /dban : bannit un utilisateur et supprime le message auquel vous avez répondu. (en réponse uniquement)
+
+  × /tban <pseudo> x(m/h/d/w) : bannit un utilisateur pour une durée `x`. (via le pseudo, ou en réponse).
+  m = minutes, h = heures, d = jours, w = semaines.
+
+  × /unban <pseudo> : débannit un utilisateur. (via le pseudo, ou en réponse)
+
+  × /unbanall : confirmation réservée au propriétaire pour débannir les utilisateurs connus.
+
+  × /baninfo <pseudo> : affiche le bannissement que j'ai enregistré pour un utilisateur : qui l'a banni, quand, pourquoi, ce qui l'a déclenché et jusqu'à quand. (via le pseudo, ou en réponse)
+
+  × /banlist [recherche] : liste les bannissements que j'ai enregistrés et qui sont toujours en vigueur, du plus récent au plus ancien, 10 par page. Une recherche ne garde que les utilisateurs dont l'ID, le pseudo ou le nom correspond.
+
+
+  *Commandes de Restriction :* (Admin uniquement)
+
+  × /restrict : Affiche un clavier en ligne pour choisir parmi expulser, bannir et rendre muet
+
+  × /unrestrict : Affiche un clavier en ligne pour choisir parmi réactiver la voix et débannir."
+bans_kick_cannot_kick_admin:
+  Pourquoi expulserais-je un admin ? Ça semble être une idée plutôt
+  stupide.
+bans_kick_is_bot_itself: Pourquoi m'expulserais-je moi-même ?
+bans_kick_kicked_reason: <b>Raison :</b> %s
+bans_kick_kicked_user: "%s expulsé avec succès."
+bans_kick_user_not_in_chat:
+  Cet utilisateur n'est pas dans ce chat, comment suis-je censé
+  le restreindre ?
+bans_kickme_is_admin: Vous êtes admin, et vous êtes coincé ici avec tout le monde !
+bans_kickme_ok_out: Comme vous le souhaitez, dehors !
+bans_unban_is_bot_itself: Pourquoi me dé-restreindre moi-même quand je suis déjà là ?
+bans_unban_unbanned_user: "Donnons-lui une autre chance.
+
+  %s débanni !"
+bans_dkick_no_reply: Répondez au message d'un utilisateur pour le supprimer et l'expulser !
+bans_anonymous_ban_user: "Utilisateur banni : %s"
+bans_anonymous_ban_reply_only: Vous pouvez uniquement bannir un utilisateur anonyme en répondant à son message.
+bans_anonymous_unban_user: "Utilisateur débanni : %s"
+bans_anonymous_unban_reply_only: Vous pouvez uniquement débannir un utilisateur anonyme en répondant à son message.
+bans_unban_button: Débannir (Admin uniquement)
+bans_restrict_question: Comment puis-je restreindre cet utilisateur ?
+bans_restrict_admin_error: Pourquoi restreindrais-je un admin ? Ça semble être une idée plutôt stupide.
+bans_restrict_self_error: Pourquoi me restreindrais-je moi-même ?
+bans_restrict_kicked: "L'admin %s a expulsé %s de ce chat !"
+bans_restrict_muted: "L'admin %s a rendu muet %s dans ce chat !"
+bans_restrict_banned: "L'admin %s a banni %s de ce chat !"
+bans_unrestrict_question: Comment puis-je lever la restriction de cet utilisateur ?
+bans_unrestrict_admin_error: Pourquoi expulserais-je un admin ? Ça semble être une idée plutôt stupide.
+bans_unrestrict_self_error: Non toi
+bans_unrestrict_unmuted: "Voix réactivée par %s !"
+bans_unrestrict_unbanned: "Débanni par %s !"
+bans_invalid_callback_data: "Données de rappel invalides."
+bans_invalid_user_id: "ID utilisateur invalide."
+bans_cannot_identify_user: "Impossible d'identifier l'utilisateur à partir du message cité."
+bans_anonymous_ban_only_error: Cette commande ne peut pas être utilisée sur un utilisateur anonyme, ces utilisateurs peuvent uniquement être bannis/débannis.
+
+# Mutes module strings
+mutes_help_msg:
+  "Parfois les utilisateurs peuvent être agaçants et vous pourriez vouloir les empêcher
+  d'envoyer des messages dans le chat, ce module est là pour vous aider, vous pouvez utiliser ce module
+  pour rendre muets les membres de votre groupe.
+
+
+  *Commandes de Mute :* (Admin uniquement)
+
+  × /mute <pseudo> : rend muet un utilisateur, (via le pseudo, ou en réponse)
+
+  × /smute <pseudo> : rend muet un utilisateur silencieusement, n'envoie pas de message au groupe,
+  et supprime également votre commande. (via le pseudo, ou en réponse)
+
+  × /dmute [raison] : rend muet l'auteur du message auquel vous répondez et supprime ce message. (en réponse uniquement)
+
+  × /tmute <pseudo> x(m/h/d/w) : rend muet un utilisateur pour une durée `x`. (via le pseudo, ou en réponse).
+  m = minutes, h = heures, d = jours, w = semaines.
+
+  × /unmute <pseudo> : réactive la voix d'un utilisateur. (via le pseudo, ou en réponse)"
+mutes_tmute_message: "Chut...\n%s rendu muet pour %s"
+mutes_mute_message: "Chut...\n%s rendu muet."
+mutes_reason_suffix: "\n<b>Raison : </b>%s"
+mutes_unmute_button: Réactiver la voix (Admin uniquement)
+mutes_mute_admin_error: Pourquoi rendrais-je un admin muet ? Ça semble être une idée plutôt stupide.
+mutes_restrict_self_error: Pourquoi me restreindrais-je moi-même ?
+mutes_unmute_message: "D'accord !\nJe vais permettre à %s de parler à nouveau."
+mutes_extended_docs: |
+  <b>Format de temps pour les mutes temporaires :</b>
+  • <code>m</code> = minutes (ex., <code>30m</code>)
+  • <code>h</code> = heures (ex., <code>2h</code>)
+  • <code>d</code> = jours (ex., <code>1d</code>)
+  • <code>w</code> = semaines (ex., <code>1w</code>)
+
+  <b>Variantes de Mute :</b>
+  • <code>/mute</code> - Mute standard avec raison optionnelle
+  • <code>/smute</code> - Mute silencieux (supprime votre message de commande)
+  • <code>/dmute</code> - Mute avec suppression (rend muet l'utilisateur et supprime son message)
+  • <code>/tmute</code> - Mute temporaire avec durée spécifiée
+
+  <b>Permissions requises :</b>
+  <b>Commandes réservées aux admins.</b> Les utilisateurs exécutant ces commandes doivent avoir :
+  • Le statut d'admin dans le chat
+  • La permission de restreindre les membres
+  • La permission de supprimer des messages (pour <code>/smute</code> et <code>/dmute</code>)
+
+  Le bot doit également avoir les privilèges d'admin avec la permission de restreindre les membres, ainsi que la permission de supprimer des messages pour <code>/smute</code> et <code>/dmute</code>.
+
+# Warns module strings
+warns_help_msg:
+  "Gardez vos membres sous contrôle avec les avertissements ; empêchons-les de
+  déraper !
+
+  Si vous cherchez des avertissements automatisés, consultez le module liste noire !
+
+
+  *Commandes Utilisateur :*
+
+  - /warns [utilisateur] : Voir vos avertissements ou ceux d'un autre utilisateur.
+
+
+  *Commandes Admin :*
+
+  - /warn <raison> : Avertir un utilisateur.
+
+  - /dwarn <raison> : Avertir un utilisateur en réponse, et supprimer son message.
+
+  - /swarn <raison> : Avertir un utilisateur et supprimer votre commande ; l'avertissement est quand même publié.
+
+  - /rmwarn : Supprimer le dernier avertissement d'un utilisateur.
+
+  - /resetwarns : Remettre à zéro tous les avertissements d'un utilisateur.
+
+  - /resetallwarns : Supprimer tous les avertissements du chat. Tous les utilisateurs reviennent à 0 avertissement. (créateur uniquement)
+
+  - /warnings : Obtenir les paramètres d'avertissement du chat.
+
+  - /setwarnmode <ban/kick/mute/tban/tmute> [time] : Définir le mode d'avertissement du chat.
+
+  - /setwarntime <time/off> : Définir combien de temps un avertissement compte, ex. 30d ; off les garde pour toujours. Les avertissements donnés avant que le bot n'enregistre leur heure n'expirent jamais ; /resetwarns les supprime.
+
+  - /setwarnlimit <nombre> : Définir le nombre d'avertissements avant sanction.
+
+
+  *Exemples*
+
+  - Avertir un utilisateur.
+
+  -> `/warn @user Pour avoir désobéi aux règles`"
+users_help_msg:
+  "Suivi automatique des utilisateurs et des chats en arrière-plan. Ce module n'a aucune commande
+  visible pour l'utilisateur — il enregistre silencieusement chaque expéditeur de message et chat dans lequel le bot est actif.
+
+  *Ce qu'il suit:*
+
+  × IDs d'utilisateur, noms d'utilisateur et noms affichés de chaque expéditeur de message.
+
+  × IDs de chat et noms de chaque groupe où le bot est présent.
+
+  × IDs de canal, noms et noms d'utilisateur des canaux liés.
+
+  *Limitation de débit:*
+
+  × Les fiches des utilisateurs, chats et canaux sont actualisées au plus une fois par heure, ou immédiatement quand un nom, un nom d'utilisateur ou le titre du chat change.
+
+  D'autres modules, comme /info, dépendent des données collectées par ce module."
+warns_specify_action: "Vous devez spécifier une action à effectuer en cas de trop d'avertissements. Modes actuels : ban/kick/mute/tban/tmute"
+warns_mode_updated_ban: "Mode d'avertissement mis à jour : ban"
+warns_mode_updated_kick: "Mode d'avertissement mis à jour : kick"
+warns_mode_updated_mute: "Mode d'avertissement mis à jour : mute"
+warns_mode_updated_tban: "Mode d'avertissement mis à jour : tban pour %s"
+warns_mode_updated_tmute: "Mode d'avertissement mis à jour : tmute pour %s"
+warns_mode_unknown: "Type inconnu '%s'. Veuillez utiliser : ban/kick/mute/tban/tmute"
+warns_admin_warning_error: Je ne vais pas avertir un admin !
+warns_limit_kicked: "Ça fait %d/%d avertissements ; Donc %s a été expulsé !"
+warns_limit_muted: "Ça fait %d/%d avertissements ; Donc %s a été rendu muet !"
+warns_limit_banned: "Ça fait %d/%d avertissements ; Donc %s a été banni !"
+warns_limit_tbanned: "Ça fait %d/%d avertissements ; Donc %s a été banni pour %s !"
+warns_limit_tmuted: "Ça fait %d/%d avertissements ; Donc %s a été rendu muet pour %s !"
+warns_remove_button: ❌ Supprimer l'avertissement
+warns_user_warning: "L'utilisateur %s a %d/%d avertissements ; attention !"
+warns_warning_reason: "\n<b>Raison</b> :\n%s"
+warns_settings_display: "Le groupe a les paramètres suivants :\n<b>Limite d'avertissements :</b> <code>%d</code>\n<b>Mode d'avertissement :</b> <code>%s</code>\n<b>Expiration des avertissements :</b> <code>%s</code>"
+warns_user_warnings_list: "Cet utilisateur a %d/%d avertissements, pour les raisons suivantes :"
+warns_user_warnings_no_reasons: "L'utilisateur a %d/%d avertissements, mais aucune raison pour aucun d'entre eux."
+# Reason (issuer, time) of one warn in a warns list.
+warns_entry_meta: "%s (%s, %s)"
+warns_issuer_anonymous: "admin anonyme"
+warns_issuer_auto: "automatique"
+warns_issuer_unknown: "inconnu"
+warns_expiry_set: "Les avertissements expirent désormais après <code>%s</code>."
+warns_expiry_off: "Les avertissements n'expirent plus."
+warns_expiry_current: "Les avertissements expirent après <code>%s</code>."
+warns_expiry_current_off: "Les avertissements n'expirent jamais. Définissez une durée avec <code>/setwarntime 30d</code>."
+warns_expiry_never: "jamais"
+warns_user_no_warnings: Cet utilisateur n'a aucun avertissement !
+warns_removed_by: "Avertissement supprimé par %s."
+warns_no_warns_to_remove: L'utilisateur n'a déjà aucun avertissement !
+warns_limit_set_help: "Veuillez spécifier combien d'avertissements un utilisateur doit recevoir avant d'être sanctionné. Ex. <code>/setwarnlimit 5</code>"
+warns_invalid_number: "%s n'est pas un entier valide."
+warns_limit_range_error: La limite d'avertissements doit être définie entre 1 et 100.
+warns_limit_updated: "Les paramètres de limite d'avertissements de ce chat ont été mis à jour à %d."
+warns_reset_success: Les avertissements ont été réinitialisés !
+warns_no_users_warned: Aucun utilisateur n'est averti dans ce chat !
+warns_reset_all_confirm: Êtes-vous sûr de vouloir supprimer tous les avertissements de tous les utilisateurs de ce chat ?
+warns_reset_all_success: Tous les avertissements de tous les utilisateurs de ce chat ont été supprimés !
+warns_reset_all_cancelled: Suppression de tous les avertissements de tous les utilisateurs de ce chat annulée !
+warns_reset_all_final: Tous les avertissements de tous les utilisateurs de ce chat ont été supprimés.
+warns_extended_docs: |
+  <b>Paramètres par défaut :</b>
+  • <b>Limite d'avertissements par défaut :</b> 3 avertissements
+  • <b>Mode d'avertissement par défaut :</b> mute
+  • <b>Expiration par défaut :</b> désactivée (les avertissements n'expirent jamais)
+
+  <b>Modes d'avertissement disponibles :</b>
+  • <code>ban</code> - Bannir définitivement l'utilisateur du chat
+  • <code>kick</code> - Expulser l'utilisateur (il peut revenir)
+  • <code>mute</code> - Rendre muet l'utilisateur (ne peut plus envoyer de messages)
+  • <code>tban</code> - Bannir l'utilisateur pour la durée donnée avec le mode, ex. <code>/setwarnmode tban 1d</code>
+  • <code>tmute</code> - Rendre muet l'utilisateur pour la durée donnée avec le mode, ex. <code>/setwarnmode tmute 2h</code>
+
+  <b>Avertissements qui suppriment des messages :</b>
+  • <code>/swarn</code> - Supprimer votre commande ; l'avertissement est quand même publié
+  • <code>/dwarn</code> - Supprimer le message de l'utilisateur et l'avertir
+
+warns_permissions_docs: |
+  <b>Permissions requises :</b>
+  • <code>/warn</code> : Bot admin + Utilisateur admin avec restriction
+  • <code>/dwarn</code>, <code>/swarn</code> : Bot admin + Utilisateur admin, tous deux avec les droits de restreindre et de supprimer des messages
+  • <code>/rmwarn</code>, <code>/unwarn</code> : Bot admin + Utilisateur admin
+  • <code>/resetwarn</code>, <code>/resetwarns</code> : Bot admin + Utilisateur admin
+  • <code>/resetallwarns</code> : Propriétaire du chat uniquement
+  • <code>/setwarnmode</code>, <code>/setwarnlimit</code>, <code>/setwarntime</code> : Bot admin + Utilisateur admin
+  • <code>/warnings</code> : Bot admin + Utilisateur admin
+  • <code>/warns</code> : Tout utilisateur (désactivable)
+
+warns_notes_docs: |
+  <b>Notes :</b>
+  • Quand un utilisateur atteint la limite d'avertissements, l'action configurée (ban/kick/mute/tban/tmute) est appliquée automatiquement
+  • Les raisons d'avertissement sont stockées et affichées lors de la vérification des avertissements d'un utilisateur
+  • La commande <code>/warns</code> est la seule commande de ce module qui peut être désactivée par les admins
+  • Les publications de chaînes anonymes ne peuvent pas être averties
+  • Les admins ne peuvent pas être avertis
+
+# Blacklists module strings
+blacklists_bl_watcher_banned_user: "%s banni à cause de %s"
+blacklists_bl_watcher_kicked_user: "%s expulsé à cause de %s"
+blacklists_bl_watcher_muted_user: "%s rendu muet à cause de %s"
+blacklists_bl_watcher_tbanned_user: "%s banni pour %s à cause de %s"
+blacklists_bl_watcher_tmuted_user: "%s rendu muet pour %s à cause de %s"
+blacklists_blacklist_added_bl: "Ces mots ont été ajoutés à la liste noire :"
+blacklists_blacklist_already_blacklisted: "Ces mots sont déjà sur la liste noire :"
+blacklists_blacklist_give_bl_word: Veuillez me donner un mot à ajouter à la liste noire !
+blacklists_blacklist_word_too_long: "Ces mots sont trop longs (max 100 caractères) : %s"
+blacklists_help_msg: "*Commandes Utilisateur :*
+
+  × /blacklists : Vérifier tous les mots sur liste noire dans le chat.
+
+
+  *Commandes Admin :*
+
+  × /addblacklist `<déclencheur>` : Ajoute le mot à la liste noire du chat actuel.
+
+  × /rmblacklist `<déclencheur>` : Supprime le mot de la liste noire du chat actuel.
+
+  × /blaction `<mute/kick/ban/warn/none/tban/tmute> [durée]` : Définit l'action lorsqu'un mot de la liste noire
+  est détecté. La durée est obligatoire pour tban/tmute, par exemple `/blaction tban 1d` ou `/blaction tmute 2h`.
+
+  × /blacklistaction : Identique à ci-dessus
+
+
+  *Propriétaire uniquement :*
+
+  × /remallbl : Supprime tous les mots de la liste noire du chat
+
+
+  *Note :*
+
+  Le mode par défaut pour la liste noire est *warn*, ce qui supprimera le message et avertira
+  l'utilisateur."
+blacklists_ls_bl_list_bl: "Ces mots sont sur la liste noire de ce chat :"
+blacklists_ls_bl_no_blacklisted: Il n'y a pas de mots sur la liste noire dans ce chat.
+blacklists_rm_all_bl_ask:
+  "Êtes-vous sûr de vouloir supprimer tous les mots de la liste noire de
+  ce chat ?"
+blacklists_rm_all_bl_button_handler_no:
+  "Suppression de toutes les listes noires de ce chat annulée
+  ❌"
+blacklists_rm_all_bl_button_handler_yes: Tous les mots de la liste noire ont été supprimés de ce chat ✅
+blacklists_set_bl_action_changed_mode: "Mode de liste noire changé avec succès : *%s*"
+blist_action_tban: "Mode de liste noire changé : tban pendant %s"
+blist_action_tmute: "Mode de liste noire changé : tmute pendant %s"
+blacklists_set_bl_action_choose_correct_option: "Choisissez mute/kick/ban/warn/none, ou tban/tmute avec une durée (par exemple tban 1d ou tmute 2h)."
+blacklists_set_bl_action_current_mode:
+  "Le mode de liste noire actuel pour ce chat est :
+  %s"
+blacklists_unblacklist_give_bl_word: Veuillez me donner un mot à retirer de la liste noire !
+blacklists_unblacklist_no_removed_bl:
+  "Aucun des mots donnés n'était sur la liste noire
+  et ne peut être supprimé !"
+blacklists_unblacklist_removed_bl:
+  "'%s' supprimé avec succès de la liste
+  noire !"
+
+# Captcha module strings
+captcha_help_msg:
+  "Protégez votre groupe des bots et spammeurs avec la vérification CAPTCHA !
+
+
+  Obligez les nouveaux membres à prouver qu'ils sont humains en résolvant un simple défi avant de
+  pouvoir envoyer des messages.
+
+
+  *Types de Captcha :*
+
+  × Math : Résoudre des problèmes arithmétiques simples
+
+  × Text : Identifier du texte affiché dans une image
+
+
+  *Commandes Admin :*
+
+  × /captcha `<on/off>` : Activer ou désactiver la vérification captcha
+
+  × /captchajoin `<on/off>` : Vérifier les demandes d'adhésion en privé (désactivé par défaut ; sans argument, affiche l'état).
+  Indépendant de /captcha, avec un délai maximal de 5 minutes.
+
+  × /captchamode `<math/text>` : Définir le type de captcha (problèmes mathématiques ou reconnaissance de texte)
+
+  × /captchatime `<1-10>` : Définir le délai en minutes (défaut : 2)
+
+  × /captchaaction `<kick/ban/mute>` : Définir l'action en cas d'échec de vérification (défaut :
+  kick)
+
+  × /captchamaxattempts `<1-10>` : Définir le nombre maximum de tentatives de vérification (défaut : 3)
+
+  × /captchapending `<@user/user_id>` : Afficher les messages enregistrés d'un utilisateur en attente.
+
+  × /captchaclear `<@user/user_id>` : Effacer les messages enregistrés d'un utilisateur en attente.
+
+
+  Lorsque c'est activé, les nouveaux membres sont automatiquement rendus muets jusqu'à ce qu'ils complètent le captcha.
+
+  S'ils échouent ou dépassent le délai, l'action configurée est appliquée."
+captcha_enable_failed: Échec de l'activation du captcha. Veuillez réessayer.
+captcha_disable_failed: Échec de la désactivation du captcha. Veuillez réessayer.
+captcha_usage: Veuillez utiliser <code>/captcha on</code> ou <code>/captcha off</code>
+captcha_mode_specify: "Veuillez spécifier un mode : <code>math</code> ou <code>text</code>"
+captcha_mode_invalid: Mode invalide. Utilisez <code>math</code> ou <code>text</code>
+captcha_mode_failed: Échec de la définition du mode captcha. Veuillez réessayer.
+captcha_timeout_specify: Veuillez spécifier un délai en minutes (1-10)
+captcha_timeout_invalid: Délai invalide. Veuillez utiliser un nombre entre 1 et 10.
+captcha_timeout_failed: Échec de la définition du délai. Veuillez réessayer.
+captcha_action_specify: "Veuillez spécifier une action : <code>kick</code>, <code>ban</code> ou <code>mute</code>"
+captcha_action_invalid: Action invalide. Utilisez <code>kick</code>, <code>ban</code> ou <code>mute</code>
+captcha_action_failed: Échec de la définition de l'action d'échec. Veuillez réessayer.
+captcha_welcome_math_image: |
+  👋 Bienvenue %s !
+
+  Veuillez résoudre le problème affiché dans l'image et sélectionner la bonne réponse :
+
+  ⏱ Vous avez <b>%d minutes</b> pour répondre.
+captcha_welcome_text_image: |
+  👋 Bienvenue %s !
+
+  Veuillez sélectionner le texte affiché dans l'image pour vérifier que vous êtes humain :
+
+  ⏱ Vous avez <b>%d minutes</b> pour répondre.
+captcha_welcome_math_text: |
+  👋 Bienvenue %s !
+
+  Veuillez résoudre ce problème mathématique pour vérifier que vous êtes humain :
+
+  <b>%s = ?</b>
+
+  ⏱ Vous avez <b>%d minutes</b> pour répondre.
+captcha_failed_verify: Échec de la vérification. Veuillez contacter un administrateur.
+captcha_wait_refresh: Veuillez attendre quelques secondes avant de demander une nouvelle image.
+captcha_failed_generate: Échec de la génération d'une nouvelle image, réessayez.
+captcha_failed_send: Échec de l'envoi de la nouvelle image captcha.
+captcha_invalid_data: Données captcha invalides
+captcha_invalid_attempt: ID de tentative invalide
+captcha_invalid_user: ID utilisateur invalide
+captcha_error_processing: Erreur lors du traitement de la réponse
+captcha_invalid_refresh: Données d'actualisation invalides
+captcha_max_attempts_current: "Nombre maximum de tentatives de vérification actuel : <b>%d</b>"
+captcha_max_attempts_invalid: "Valeur invalide. Veuillez spécifier un nombre entre 1 et 10."
+captcha_max_attempts_set: "Nombre maximum de tentatives de vérification défini à <b>%d</b>"
+captcha_enabled_success: "✅ La vérification captcha a été <b>activée</b>. Les nouveaux membres devront compléter un captcha pour rejoindre."
+captcha_disabled_success: "❌ La vérification captcha a été <b>désactivée</b>."
+captcha_join_enable_button: "🛡 Activer le captcha"
+captcha_join_enabled: "✅ Le captcha est activé : les nouveaux membres doivent le résoudre avant de pouvoir écrire. Désactivez-le avec /captcha off."
+captcha_join_already_enabled: "Le captcha est déjà activé."
+captcha_timeout_set_success: "✅ Délai captcha défini à <b>%d minutes</b>"
+captcha_action_set_success: "✅ Action d'échec captcha définie à <b>%s</b>"
+captcha_refresh_button: "🔄 Nouvelle Image"
+captcha_verified_success_msg: "✅ Vérifié avec succès !"
+captcha_wrong_answer_final: "❌ Mauvaise réponse ! Vous avez été %s."
+captcha_wrong_answer_remaining: "❌ Mauvaise réponse ! %d tentatives restantes."
+captcha_action_kicked: "expulsé"
+captcha_action_banned: "banni"
+captcha_action_muted: "rendu muet pendant 24 heures"
+captcha_refresh_success: "🔄 Nouveau captcha envoyé !"
+captcha_timeout_failure_kicked: "❌ %s n'a pas complété la vérification captcha et a été expulsé."
+captcha_timeout_failure_banned: "❌ %s n'a pas complété la vérification captcha et a été banni."
+captcha_timeout_failure_muted: "❌ %s n'a pas complété la vérification captcha et a été rendu muet."
+captcha_timeout_stored_note: "📝 %d message(s) ont été tentés mais supprimés en raison de la vérification incomplète."
+captcha_stored_messages_summary: "📝 %s a essayé d'envoyer %d message(s) (%s) avant la vérification"
+captcha_pending_usage: "Utilisation : <code>/captchapending @user</code> ou <code>/captchapending user_id</code>"
+captcha_no_pending_messages: "Aucun message en attente trouvé pour cet utilisateur."
+captcha_clear_usage: "Utilisation : <code>/captchaclear @user</code> ou <code>/captchaclear user_id</code>"
+captcha_clear_failed: "Échec de la suppression des messages stockés. Veuillez réessayer."
+captcha_clear_success: "✅ Tous les messages stockés pour l'utilisateur %d ont été supprimés"
+captcha_bot_cannot_restrict: "⚠️ Le captcha est activé, mais je ne peux pas rendre muets les nouveaux membres : ils reçoivent donc le message de bienvenue sans captcha. Un administrateur doit m'accorder le droit <b>Bannir des utilisateurs</b>."
+captcha_invalid_mode_error: "mode captcha invalide : doit être 'math' ou 'text'"
+captcha_timeout_range_error: "le délai doit être entre 1 et 10 minutes"
+captcha_invalid_action_error: "action d'échec invalide : doit être 'kick', 'ban' ou 'mute'"
+captcha_status_usage: "Utilisez <code>/captcha on</code> ou <code>/captcha off</code> pour changer le statut."
+captcha_not_for_you: "Ce captcha n'est pas pour vous !"
+captcha_expired_or_not_found: "Captcha expiré ou introuvable"
+captcha_attempt_not_valid: "Cette tentative de captcha n'est plus valide."
+captcha_refresh_limit_reached: "Limite d'actualisation atteinte pour ce captcha."
+captcha_internal_update_error: "Erreur interne lors de la mise à jour du captcha."
+captcha_internal_error: "Une erreur interne s'est produite lors de la mise à jour des paramètres du captcha. Veuillez réessayer."
+captcha_settings_header: "<b>Paramètres Captcha :</b>"
+captcha_settings_status: "Statut : <code>%s</code>"
+captcha_settings_mode: "Mode : <code>%s</code>"
+captcha_settings_timeout: "Délai : <code>%d minutes</code>"
+captcha_settings_failure_action: "Action d'échec : <code>%s</code>"
+captcha_settings_max_attempts: "Tentatives max : <code>%d</code>"
+captcha_settings_join_requests: "Demandes d'adhésion en privé : <code>{status}</code>"
+captcha_join_requests_current: "Le captcha privé pour les demandes d'adhésion est <b>{status}</b>."
+captcha_join_requests_enabled: "Le captcha privé pour les demandes d'adhésion est activé. Une réponse correcte approuve la demande même si /autoapprove est désactivé."
+captcha_join_requests_disabled: "Le captcha privé pour les demandes d'adhésion est désactivé. Les demandes suivent le fonctionnement habituel : approbation automatique ou boutons pour les administrateurs."
+captcha_join_requests_usage: "Utilisez <code>/captchajoin on</code> ou <code>/captchajoin off</code>. Utilisez <code>/captchajoin</code> pour afficher l'état actuel."
+captcha_join_request_prompt: "Pour rejoindre <b>{group}</b>, résolvez ce captcha :\n\nDélai : <b>{timeout} minutes</b>. Tentatives autorisées : <b>{attempts}</b>."
+captcha_join_request_approved: "Votre demande pour rejoindre <b>{group}</b> a été approuvée."
+captcha_join_request_declined: "Votre demande pour rejoindre <b>{group}</b> a été refusée après trop de réponses incorrectes."
+captcha_join_request_declined_alert: "Votre demande d'adhésion a été refusée après trop de réponses incorrectes."
+captcha_join_request_timeout: "Votre demande pour rejoindre <b>{group}</b> a été refusée car le délai du captcha a expiré."
+captcha_join_request_wrong: "Réponse incorrecte. Tentatives restantes : {remaining}."
+captcha_join_request_expired: "Ce captcha de demande d'adhésion a expiré ou la demande a déjà été traitée."
+captcha_join_request_wrong_user: "Ce captcha de demande d'adhésion ne vous est pas destiné."
+captcha_status_enabled: "activé"
+captcha_status_disabled: "désactivé"
+captcha_mode_math_desc: "problèmes mathématiques"
+captcha_mode_text_desc: "reconnaissance de texte à partir d'images"
+captcha_mode_set_formatted: "✅ Mode captcha défini à <b>%s</b> (%s)"
+captcha_welcome_text_detailed: "👋 Bienvenue %s !\n\nVeuillez sélectionner le texte affiché dans l'image pour vérifier que vous êtes humain :\n\n⏱ Vous avez <b>%d minutes</b> pour répondre."
+captcha_welcome_math_detailed: "👋 Bienvenue %s !\n\nVeuillez résoudre le problème affiché dans l'image et sélectionner la bonne réponse :\n\n⏱ Vous avez <b>%d minutes</b> pour répondre."
+captcha_pending_messages_header: "📋 <b>Messages en attente de l'utilisateur %d :</b>\n\n"
+captcha_pending_message_type: "%d. Type : %s\n"
+captcha_pending_message_caption: "   Légende : %s\n"
+captcha_pending_message_content: "   Contenu : %s\n"
+captcha_pending_message_time: "   Heure : %s\n\n"
+
+# Greetings module strings
+greetings_help_msg:
+  "Accueillez les nouveaux membres dans vos groupes ou dites au revoir après leur départ !
+
+
+  *Commandes Admin :*
+
+  × /setwelcome `<réponse/texte>` : Définit le texte de bienvenue pour le groupe.
+
+  × /welcome `<yes/no/on/off/noformat>` : Sans argument, affiche les paramètres de bienvenue et un aperçu du message de bienvenue. on/off active ou désactive la bienvenue ; noformat affiche le message tel qu'il a été saisi : codes de formatage, codes des boutons et variables, sans aucun rendu.
+
+  × /resetwelcome : Réinitialise le message de bienvenue par défaut.
+
+  × /setgoodbye `<réponse/texte>` : Définit le texte d'au revoir pour le groupe.
+
+  × /goodbye `<yes/no/on/off/noformat>` : Sans argument, affiche les paramètres d'au revoir et un aperçu du message d'au revoir. on/off active ou désactive l'au revoir ; noformat affiche le message tel qu'il a été saisi : codes de formatage, codes des boutons et variables, sans aucun rendu.
+
+  × /resetgoodbye : Réinitialise le message d'au revoir par défaut.
+
+  × /cleanservice `<yes/no/on/off>` : Supprime les messages de service d'arrivée et de départ, comme la notification 'x a rejoint le groupe'.
+
+  × /cleanwelcome `<yes/no/on/off>` : Supprime l'ancien message de bienvenue à chaque fois qu'un nouveau
+  membre rejoint.
+
+  × /cleangoodbye `<yes/no/on/off>` : Supprime l'ancien message d'au revoir à chaque fois qu'un membre part.
+
+  × /autoapprove `<yes/no/on/off>` : Approuve automatiquement les demandes d'adhésion."
+greetings_welcome_status: |
+  J'accueille actuellement les utilisateurs : <code>%s</code>
+  Je supprime actuellement les anciens messages de bienvenue : <code>%s</code>
+  Je supprime actuellement les messages de service : <code>%s</code>
+  Le message de bienvenue actuel est :
+greetings_welcome_enabled: "J'accueillerai les utilisateurs à partir de maintenant."
+greetings_welcome_disabled: "Je n'accueillerai plus les utilisateurs."
+greetings_welcome_invalid_option: "Je comprends uniquement 'on/yes' ou 'off/no' !"
+greetings_welcome_set_success: "Message de bienvenue personnalisé défini avec succès !"
+greetings_welcome_reset_success: "Message de bienvenue réinitialisé par défaut avec succès !"
+greetings_goodbye_status: |
+  Je dis au revoir aux utilisateurs : <code>%s</code>
+  Je supprime actuellement les anciens messages d'au revoir : <code>%s</code>
+  Je supprime actuellement les messages de service : <code>%s</code>
+  Le message d'au revoir actuel est :
+greetings_goodbye_set_success: "Message d'au revoir personnalisé défini avec succès !"
+greetings_clean_welcome_invalid_option: "Je comprends uniquement 'on/yes' ou 'off/no' !"
+greetings_clean_goodbye_invalid_option: "Je comprends uniquement 'on/yes' ou 'off/no' !"
+greetings_clean_service_disable: "Je ne supprimerai pas les messages d'arrivée."
+greetings_clean_service_enable: "J'essaierai de supprimer les messages d'arrivée !"
+greetings_clean_service_invalid_option: "Je comprends uniquement 'on/yes' ou 'off/no' !"
+greetings_captcha_verified_success: "✅ %s a été vérifié et peut maintenant discuter !"
+greetings_join_request_new: "Un nouvel utilisateur a demandé à rejoindre le chat !"
+greetings_join_request_approve_btn: "✅ Approuver"
+greetings_join_request_decline_btn: "❌ Refuser"
+greetings_join_request_ban_btn: "✅ Bannir"
+greetings_join_request_accepted: "%s accepté dans le chat ✅"
+greetings_join_request_declined: "Demande de %s de rejoindre le chat refusée ❌"
+greetings_join_request_banned: "✅ Banni avec succès ! %s"
+greetings_join_request_already_handled: "La demande d'adhésion de %s a déjà été traitée ou retirée."
+greetings_auto_approve_enabled: "J'approuve automatiquement les nouvelles demandes de rejointe maintenant."
+greetings_auto_approve_disabled: "Je n'approuve pas automatiquement les nouvelles demandes de rejointe actuellement."
+greetings_auto_approve_disable: "Je n'approuverai pas automatiquement les nouvelles demandes de rejointe !"
+greetings_auto_approve_enable: "J'essaierai d'approuver automatiquement les nouvelles demandes de rejointe !"
+greetings_auto_approve_invalid_option: "Je comprends uniquement 'on/yes' ou 'off/no' !"
+greetings_goodbye_enable: "Je dirai au revoir aux utilisateurs à partir de maintenant."
+greetings_goodbye_disable: "Je ne dirai plus au revoir aux utilisateurs."
+greetings_goodbye_invalid: "Je comprends uniquement 'on/yes' ou 'off/no' !"
+greetings_goodbye_reset: "Message d'au revoir réinitialisé par défaut avec succès !"
+greetings_clean_welcome_should: "Je devrais supprimer les messages de bienvenue vieux de jusqu'à deux jours."
+greetings_clean_welcome_not: "Je ne supprime actuellement pas les anciens messages de bienvenue !"
+greetings_clean_welcome_disable: "Je ne supprimerai pas les anciens messages de bienvenue !"
+greetings_clean_welcome_enable: "J'essaierai de supprimer les anciens messages de bienvenue !"
+greetings_clean_goodbye_should: "Je devrais supprimer les messages d'au revoir vieux de jusqu'à deux jours."
+greetings_clean_goodbye_not: "Je ne supprime actuellement pas les anciens messages d'au revoir !"
+greetings_clean_goodbye_disable: "Je ne supprimerai pas les anciens messages d'au revoir !"
+greetings_clean_goodbye_enable: "J'essaierai de supprimer les anciens messages d'au revoir !"
+greetings_clean_service_should: "Je devrais supprimer les messages 'utilisateur a rejoint le chat' maintenant."
+greetings_clean_service_not: "Je ne supprime actuellement pas les messages d'arrivée."
+
+# Filters module strings
+filters_help_msg:
+  "Les filtres ne sont pas sensibles à la casse ; chaque fois que quelqu'un dit vos mots
+  déclencheurs, NexGuard répondra autre chose ! Cela peut être utilisé pour créer vos propres commandes,
+  si désiré.
+
+
+  Commandes :
+
+  - /filter <déclencheur> <réponse> : Chaque fois que quelqu'un dit le déclencheur, le bot répondra
+  avec la phrase. Pour les filtres à plusieurs mots, mettez le déclencheur entre guillemets.
+
+  - /filters : Lister tous les filtres du chat.
+
+  - /stop <déclencheur> : Arrêter le bot de répondre au déclencheur.
+
+  - /stopall : Arrêter TOUS les filtres du chat actuel. Cette action ne peut pas être annulée.
+
+
+  Exemples :
+
+  - Définir un filtre :
+
+  -> /filter bonjour Bonjour ! Comment allez-vous ?
+
+  - Définir un filtre à plusieurs mots :
+
+  -> /filter \"bonjour ami\" Salut ! Ça faisait longtemps !
+
+  - Pour sauvegarder un fichier, image, gif ou tout autre pièce jointe, répondez simplement au fichier
+  avec :
+
+  -> /filter déclencheur"
+filters_invalid: Filtre invalide !
+filters_limit_exceeded: |
+  Limite de filtres dépassée, un groupe ne peut avoir que 150 filtres maximum !
+  Cette limitation est due au fait que le bot fonctionne gratuitement sans aucun don des utilisateurs.
+filters_keyword_required: "Veuillez me donner un mot-clé auquel répondre !"
+filters_keyword_too_long: "Le mot-clé du filtre est trop long ! Maximum 100 caractères autorisés."
+filters_overwrite_confirm: "Le filtre existe déjà !\nVoulez-vous l'écraser ?"
+filters_added_success: "Réponse ajoutée pour le mot filtre <code>%s</code>"
+filters_remove_keyword_required: "Veuillez me donner un mot filtre à supprimer !"
+filters_not_exists: "Le filtre n'existe pas !"
+filters_removed_success: "Ok !\nJe ne répondrai plus à <code>%s</code>"
+filters_none_in_chat: "Il n'y a pas de filtres dans ce chat !"
+filters_current_in_chat: "Voici les filtres actuels dans ce chat :"
+filters_clear_all_confirm: "Êtes-vous sûr de vouloir supprimer tous les filtres de ce chat ?"
+filters_clear_all_success: "Tous les filtres ont été supprimés de ce chat ✅"
+filters_clear_all_failed: "Échec de la suppression de tous les filtres de ce chat ❌"
+filters_clear_all_cancelled: "Suppression de tous les filtres de ce chat annulée ❌"
+filters_overwrite_success: "Le filtre a été écrasé avec succès ✅"
+filters_overwrite_cancelled: "Écrasement du filtre annulé ❌"
+filters_overwrite_expired: "⏰ Confirmation expirée ! Veuillez réessayer."
+
+# Notes module strings
+notes_help_msg: "Sauvegardez des données pour les futurs utilisateurs avec les notes !
+
+  Les notes sont géniales pour sauvegarder des informations aléatoires ; un numéro de téléphone, un gif sympa,
+  une image drôle - n'importe quoi !
+
+  *Commandes Utilisateur :*
+
+  - /get <nom_note> : Obtenir une note.
+
+  - #nom_note : Identique à /get.
+
+  - /notes : Lister toutes les notes du chat actuel.
+
+  - /saved : Identique à /notes.
+
+  Commandes Admin :
+
+  - /save /addnote <nom_note> <texte_note> : Sauvegarder une nouvelle note appelée \"word\". Répondre à un message
+  sauvegardera ce message. Fonctionne même avec les médias !
+
+  - /clear /rmnote <nom_note> : Supprimer la note associée.
+
+  - /clearall : Supprimer TOUTES les notes d'un chat (propriétaire du chat uniquement). Cela ne peut pas être annulé.
+
+  - /privatenotes /privnote <on/off> : Si les notes doivent être envoyées en MP ou non. Enverra un message avec un
+  bouton sur lequel les utilisateurs peuvent cliquer pour obtenir la note en MP. Sans argument, affiche le paramètre actuel."
+notes_invalid: Note invalide !
+notes_save_success: "Note <b>%s</b> sauvegardée !\nObtenez-la avec <code>#%s</code> ou <code>/get %s</code>."
+notes_save_failed: "Échec de la sauvegarde de la note. Veuillez réessayer plus tard."
+notes_keyword_required: "Veuillez me donner un mot-clé auquel répondre !"
+notes_overwrite_confirm: "La note existe déjà !\nVoulez-vous l'écraser ?"
+notes_remove_keyword_required: "Veuillez me donner un mot-clé à supprimer !"
+notes_not_exists: "La note n'existe pas !"
+notes_removed_success: "Note <b>%s</b> supprimée."
+notes_private_enabled: "Notes privées activées.\nLes utilisateurs recevront les notes en message privé."
+notes_private_disabled: "Notes privées désactivées.\nToutes les notes seront envoyées dans le chat du groupe."
+notes_private_invalid_option: "Je comprends uniquement une option parmi <on/off/yes/no>"
+notes_private_status_on: "Les notes privées sont actuellement activées !"
+notes_private_status_off: "Les notes privées sont actuellement désactivées !"
+notes_none_in_chat: "Il n'y a pas de notes dans ce chat !"
+notes_list_for_chat: "Voici les notes actuelles dans <b>%s</b> :"
+notes_check_button: "Cliquez sur le bouton ci-dessous pour obtenir les notes !"
+notes_current_in_chat: "Voici les notes actuelles dans ce chat :\n"
+notes_get_instruction: "\nVous pouvez obtenir une note avec <code>#nom_note</code> ou <code>/get nom_note</code>"
+notes_clear_all_confirm: "Êtes-vous sûr de vouloir supprimer toutes les notes de ce chat ?"
+notes_creator_only: "Seul le créateur du chat peut utiliser cette commande."
+notes_overwrite_cancelled: "Écrasement de la note annulé ❌"
+notes_overwrite_success: "La note a été écrasée avec succès ✅"
+notes_clear_all_success: "Toutes les notes ont été supprimées de ce chat ✅"
+notes_clear_all_cancelled: "Suppression de toutes les notes de ce chat annulée ❌"
+notes_parsing_error: "Il y a une erreur d'analyse de la note, veuillez le signaler dans le chat de support."
+notes_admin_only: "Cette note ne peut être consultée que par un admin !"
+notes_click_for_private: "Cliquez sur le bouton ci-dessous pour obtenir la note *%s*"
+notes_get_insufficient_args: "Pas assez d'arguments."
+notes_does_not_exist: "La note n'existe pas !"
+notes_parsing_error_support: "Il y a une erreur d'analyse de la note, veuillez le signaler au chat de support."
+notes_admin_only_access: "Cette note ne peut être consultée que par un admin !"
+notes_private_conflict_warning: "\n\n<b>Note :</b> Cette note sera envoyée selon le paramètre par défaut des notes de groupe, car elle a à la fois <code>{private}</code> et <code>{noprivate}</code>."
+
+# Rules module strings
+rules_help_msg:
+  "Chaque chat fonctionne avec des règles différentes ; ce module vous aidera à rendre
+  ces règles plus claires !
+
+  *Commandes Utilisateur* :
+
+  × /rules : Vérifier les règles du chat actuel.
+
+  *Commandes Admin* :
+
+  × /setrules `<texte>` : Définir les règles pour ce chat.
+
+  × /privaterules `<yes/no/on/off>` : Activer/désactiver si les règles doivent être envoyées
+  en privé.
+
+  × /resetrules : Réinitialiser les règles du chat par défaut
+
+  × /rulesbtn `<texte personnalisé>` : Définit le texte du bouton des règles.
+
+  × /resetrulesbutton : Réinitialiser le texte du bouton des règles par défaut.
+
+  × /resetrulesbtn : Identique à ci-dessus."
+rules_not_set: Ce chat n'a pas de règles définies !
+rules_for_chat: "Règles pour <b>%s</b> :\n\n%s"
+rules_need_text: "Vous devez me donner des règles à définir !\nRépondez à un message pour les fournir avec la commande."
+rules_cleared_successfully: Règles supprimées avec succès !
+rules_private_pm_usage: L'utilisation de /rules enverra les règles en MP à l'utilisateur.
+rules_private_group_usage: Toutes les commandes /rules enverront les règles à %s.
+rules_private_current_pm: L'utilisation de /rules enverra les règles en MP à l'utilisateur.
+rules_private_current_group: Toutes les commandes /rules enverront les règles à %s.
+rules_for_chat_header: "Les règles pour <b>%s</b> sont :"
+rules_no_rules_set: Ce chat ne semble pas avoir de règles définies... Je ne prendrais pas cela comme une invitation cependant.
+rules_click_for_rules: Cliquez sur le bouton pour voir les règles du chat !
+rules_set_successfully: Règles définies avec succès pour ce groupe !
+rules_button_too_long: Le nom du bouton personnalisé que vous avez entré est trop long. Veuillez entrer un texte de 30 caractères maximum.
+rules_button_set_successfully: "Bouton des règles défini avec succès à : <b>%s</b>"
+rules_button_not_set: "Vous n'avez pas encore défini de bouton de règles personnalisé. Le texte par défaut \"%s\" sera utilisé."
+rules_button_current: "Le bouton des règles est actuellement défini au texte suivant :\n%s"
+rules_button_cleared: Texte du bouton des règles personnalisé supprimé avec succès !
+
+# Connections module strings
+connections_allow_connect_currently_off:
+  "Les connexions utilisateur sont actuellement <b>désactivées</b>.
+
+  Les utilisateurs ne peuvent pas connecter ce chat à leurs MP !"
+connections_allow_connect_currently_on:
+  "Les connexions utilisateur sont actuellement <b>activées</b>.
+
+  Les utilisateurs peuvent connecter ce chat à leurs MP !"
+connections_allow_connect_turned_off:
+  "Connexions utilisateur <b>désactivées</b> pour ce
+  chat !
+
+  Les utilisateurs ne peuvent pas connecter ce chat à leurs MP !"
+connections_allow_connect_turned_on:
+  "Connexions utilisateur <b>activées</b> pour ce chat !
+
+  Les utilisateurs peuvent maintenant connecter ce chat à leurs MP !"
+connections_connect_connected: Vous êtes maintenant connecté à <b>%s</b> !
+connections_connect_not_member: "Vous devez être membre de ce chat pour vous y connecter."
+connections_connect_connection_disabled:
+  "Les connexions utilisateur sont actuellement <b>désactivées</b>
+  pour ce chat.
+
+  Veuillez demander aux admins d'autoriser si vous souhaitez vous connecter !"
+connections_connect_tap_btn_connect:
+  "Veuillez appuyer sur le bouton ci-dessous pour connecter ce
+  chat à votre MP."
+connections_connected: Vous êtes actuellement connecté à <b>%s</b> !
+connections_connections_btns_admin_conn_cmds: Commandes Admin disponibles
+connections_connections_btns_user_conn_cmds: Commandes Utilisateur disponibles
+connections_disconnect_disconnected:
+  "Déconnecté avec succès du chat
+  connecté."
+connections_disconnect_need_pm:
+  "Vous devez m'envoyer ceci en MP pour vous déconnecter
+  du chat !"
+connections_help_msg:
+  "Ce module vous permet de vous connecter à la base de données d'un chat et
+  d'y ajouter des choses sans que le chat le sache ! Pour des raisons évidentes, vous devez
+  être admin pour ajouter des choses ; mais tout membre peut voir vos données. (les utilisateurs bannis/expulsés
+  ne peuvent pas !)
+
+
+  *Commandes* :
+
+  × /connect `<chatid>` : Se connecter au chat spécifié, vous permettant de voir/modifier
+  le contenu.
+
+  × /disconnect : Se déconnecter du chat actuel.
+
+  × /reconnect : Se reconnecter au chat précédemment connecté
+
+  × /connection : Voir les informations sur le chat actuellement connecté.
+
+  × /settings : Choisissez un groupe où vous êtes administrateur et voyez tous ses paramètres ; les valeurs différentes de celles par défaut sont marquées d'un •. Seuls les groupes où vous avez écrit depuis mon arrivée sont listés ; pour les autres, utilisez /connect `<chatid>` ou envoyez /settings dans le groupe.
+
+
+  *Commandes Admin :*
+
+  × /allowconnect <yes/no> : Autoriser les utilisateurs à se connecter aux chats ou non.
+
+  Une fois connectés, les administrateurs peuvent aussi utiliser /captcha, /antiraid, /aispam, /anonadmin, /addreaction, /allowconnect et /lang group en privé.
+
+  En privé, /rules, /notes, /filters et de nombreuses commandes de réglages, comme /lock, /setflood, /setwelcome et /setwarnlimit, prennent le groupe comme premier argument : son ID, son @username ou le titre d'un groupe où vous êtes administrateur. Les titres ne sont cherchés que parmi le groupe connecté et les 50 groupes les plus récemment actifs où vous avez écrit ; désignez tout autre groupe par son @username ou son ID.
+
+  En privé, le propriétaire d'un groupe peut aussi utiliser /clearall, /stopall, /remallbl, /unapproveall, /resetallwarns et /unbanall, et ses administrateurs /privnote : nommez d'abord le groupe (son titre, son @username ou son ID) ou connectez-vous à lui. La confirmation agit sur ce groupe et seul son propriétaire peut l'utiliser.
+
+  En privé, les administrateurs d'un groupe peuvent aussi utiliser /adminlist, /invitelink, /setgtitle, /setgdesc, /timezone, /admincache et /clearadmincache : nommez d'abord le groupe (son titre, son @username ou son ID) ou connectez-vous à lui. Il faut les mêmes droits que dans le groupe, et la réponse arrive en privé.
+
+  En privé, les administrateurs d'un groupe peuvent aussi utiliser /ban, /sban, /tban, /unban, /baninfo, /banlist, /kick, /skick, /restrict, /unrestrict, /mute, /smute, /tmute, /unmute, /warn, /swarn, /rmwarn et /resetwarns : nommez d'abord le groupe (son titre, son @username ou son ID), puis l'utilisateur (@username, ID ou mention), ou connectez-vous au groupe. Une fois connecté, seul un @username ou un ID choisit un autre groupe. Il faut les mêmes droits que dans le groupe ; répondre à un message en privé ne désigne pas l'utilisateur, et la réponse et les boutons arrivent en privé.
+
+  En privé, les membres d'un groupe peuvent aussi voir les avertissements d'un utilisateur dans ce groupe avec /warns si le groupe autorise ses membres à s'y connecter (/allowconnect ; sinon, seuls ses administrateurs le peuvent), et ses administrateurs les réglages d'avertissement du groupe avec /warnings : nommez d'abord le groupe (son @username ou son ID ; ses administrateurs peuvent aussi utiliser son titre), puis, pour /warns, l'utilisateur, ou connectez-vous au groupe. La réponse arrive en privé.
+
+
+  Vous pouvez obtenir l'id du chat en utilisant la commande /id dans votre chat. Ne soyez pas surpris
+  si l'id est négatif ; tous les super groupes ont des ids négatifs."
+connections_is_user_connected_bot_not_admin: Je ne suis pas admin dans ce chat !
+connections_is_user_connected_need_group:
+  "Cette commande est faite pour être utilisée dans les chats de groupe,
+  pas en MP !"
+connections_is_user_connected_user_not_admin: Vous devez être admin pour faire cela.
+connections_not_connected: Vous n'êtes connecté à aucun chat.
+connections_pm_group_plain_text: "Je ne peux pas lire un groupe dans un message mis en forme. Envoyez <code>/%s</code> avec le groupe en texte brut."
+connections_pm_group_duplicate: "Plusieurs de vos groupes s'appellent <code>%s</code>. Indiquez celui que vous voulez par son @username ou son ID :"
+connections_pm_group_too_many: "Trop de groupes s'appellent <code>%s</code> pour les vérifier tous. Indiquez celui que vous voulez par son @username ou son ID (envoyez /id dans le groupe)."
+connections_pm_group_not_found: "Je n'ai pas trouvé le groupe <code>%s</code>. Indiquez le titre d'un groupe dont vous êtes admin, son @username ou son ID (envoyez /id dans le groupe)."
+connections_pm_group_pick: "En privé, indiquez d'abord le groupe : le titre d'un groupe dont vous êtes admin (entre guillemets s'il contient des espaces), son @username ou son ID."
+connections_pm_group_your_groups: "Vos groupes :"
+connections_pm_group_confirm_target: "Groupe : {title} ({id})"
+connections_stale_connection: "Votre connexion est obsolète - je ne peux plus accéder à ce chat. Veuillez utiliser /connect pour vous reconnecter à un chat valide."
+connections_reconnect_need_pm: Vous devez être en MP avec moi pour vous reconnecter à un chat !
+connections_reconnect_no_last_chat: Vous n'avez pas de dernier chat auquel vous reconnecter !
+connections_reconnect_reconnected: Vous êtes maintenant reconnecté à <b>%s</b> !!
+connections_invalid_option: "Veuillez me donner une option valide parmi &lt;yes/on/no/off&gt;"
+connections_button_connect: "Se connecter au chat"
+
+# Disabling module strings
+disabling_help_msg:
+  "Ce module vous permet de désactiver certaines commandes couramment utilisées,
+  afin que personne ne puisse les utiliser. Il vous permettra également de les supprimer automatiquement, empêchant les gens
+  de faire du texte bleu.
+
+
+  *Commandes Utilisateur* :
+
+  × /disableable : Lister toutes les commandes désactivables.
+
+  × /disabled : Lister les commandes désactivées dans ce chat.
+
+
+  *Commandes Admin* :
+
+  × /disable `<nom_commande>` : Empêcher les utilisateurs d'utiliser nom_commande dans ce groupe.
+
+  × /enable `<nom_commande>` : Autoriser de nouveau les utilisateurs à utiliser nom_commande dans ce groupe.
+
+  × /disabledel `<yes/no/on/off>` : Supprimer les commandes désactivées lorsqu'utilisées par des non-admins.
+
+
+  Note :
+
+  Lors de la désactivation d'une commande, elle n'est désactivée que pour les non-admins. Tous les admins
+  peuvent toujours utiliser ces commandes.
+
+  Les commandes désactivées sont toujours accessibles via la fonction /connect. Si vous souhaitez
+  voir cela également désactivé, faites-le moi savoir dans le chat de support."
+devs_help_msg:
+  "Commandes de gestion du bot et de diagnostic réservées au propriétaire du bot et
+  aux développeurs de confiance. Ces commandes ne sont pas affichées aux utilisateurs normaux.
+
+  *Commandes d'équipe:*
+
+  × /teamusers: Lister tous les membres de l'équipe.
+
+  *Commandes du propriétaire:*
+
+  × /addsudo: Accorder les permissions sudo à un utilisateur.
+
+  × /adddev: Accorder les permissions de développeur à un utilisateur.
+
+  × /remsudo: Révoquer les permissions sudo d'un utilisateur.
+
+  × /remdev: Révoquer les permissions de développeur d'un utilisateur.
+
+  *Commandes de diagnostic:*
+
+  × /stats: Afficher les statistiques du bot et les informations système.
+
+  × /chatinfo: Afficher des informations détaillées sur un chat.
+
+  × /chatlist: Générer et envoyer une liste de tous les chats actifs.
+
+  × /leavechat: Forcer le bot à quitter un chat spécifié."
+disabling_disabled_successfully: "L'utilisation des commandes suivantes a été désactivée dans ce chat :%s"
+disabling_unknown_command: "Commande inconnue à désactiver :\n-%s\nVérifiez /disableable !"
+disabling_no_command_specified: Vous n'avez pas spécifié de commande à désactiver.
+disabling_disableable_commands: "Les commandes suivantes peuvent être désactivées :"
+disabling_no_disabled_commands: Il n'y a pas de commandes désactivées dans ce chat.
+disabling_disabled_commands: "Les commandes suivantes sont désactivées dans ce chat :"
+disabling_delete_enabled: Les messages de commandes désactivées seront maintenant supprimés.
+disabling_delete_disabled: Les messages de commandes désactivées ne seront plus supprimés.
+disabling_delete_current_enabled: La suppression des commandes désactivées est *activée*, les commandes désactivées des utilisateurs seront supprimées !
+disabling_delete_current_disabled: La suppression des commandes désactivées est *désactivée*, les commandes désactivées des utilisateurs ne seront *pas* supprimées !
+disabling_enabled_successfully: "L'utilisation des commandes suivantes a été réactivée dans ce chat :%s"
+disabling_unknown_reenable: "Commande inconnue à réactiver :\n-%s\nVérifiez /disableable !"
+disabling_no_command_reenable: Vous n'avez pas spécifié de commande à réactiver.
+disabling_invalid_option: "Je comprends uniquement une option parmi : `yes`/`no`/`on`/`off`"
+
+# Locks module strings
+locks_help_msg: "*Admin uniquement* :
+
+  × /lock `<type> [type ...]` : Verrouiller un ou plusieurs types de verrou (voir /locktypes).
+
+  × /unlock `<type> [type ...]` : Déverrouiller un ou plusieurs types de verrou.
+
+  × /locks : Voir les permissions du chat.
+
+  × /nightmode `<début> <fin> <types|all>` : Applique aussi ces types de verrou chaque jour du début à la fin (HH:MM sur 24 heures, dans le fuseau horaire du chat, voir /timezone ; la plage peut passer minuit). `/nightmode off` le désactive ; /nightmode seul l'affiche.
+
+
+  *Commandes Utilisateur :*
+
+  × /locktypes : Vérifier les types de verrous disponibles !
+
+
+  Les verrous peuvent être utilisés pour restreindre les utilisateurs d'un groupe.
+
+  Verrouiller les URLs supprimera automatiquement tous les messages avec des URLs, verrouiller les stickers supprimera
+  tous les stickers, etc.
+
+  Verrouiller les bots empêchera les utilisateurs qui ne sont ni admins ni approuvés d'ajouter des bots au chat.
+
+
+  **Exemple :**
+
+  `/lock media` : cela verrouille tous les messages média dans le chat."
+locks_locktypes_header: "Verrous :\n - "
+locks_what_to_lock: Que voulez-vous verrouiller ? Vérifiez /locktypes pour les options disponibles.
+locks_invalid_lock_type: "<code>%s</code> n'est pas un type de verrou correct, vérifiez /locktypes."
+locks_locked_successfully: "Les éléments suivants ont été verrouillés dans ce groupe :\n - %s"
+locks_unlocked_successfully: "Les éléments suivants ont été déverrouillés dans ce groupe :\n - %s"
+locks_lock_failed: "Échec du verrouillage : %s. Veuillez réessayer plus tard."
+locks_unlock_failed: "Échec du déverrouillage : %s. Veuillez réessayer plus tard."
+locks_what_to_unlock: Que voulez-vous déverrouiller ? Vérifiez /locktypes pour les options disponibles.
+locks_current_locks_header: "Voici les verrous dans ce chat :"
+locks_bot_lock_no_permission: Je vois un bot, et on m'a dit de l'empêcher de rejoindre... mais je ne suis pas admin !
+locks_bot_lock_no_ban_permission: Je vois un bot, et on m'a dit de l'empêcher de rejoindre... mais je n'ai pas la permission de le bannir !
+locks_bot_only_admins: Seuls les admins et les utilisateurs approuvés sont autorisés à ajouter des bots à ce chat !
+nightmode_status_on: "Le mode nuit est activé : chaque jour de <b>{start}</b> à <b>{end}</b> (heure de {timezone}), ces verrous s'appliquent aussi : <code>{types}</code>."
+nightmode_now_active: "Il est {time} là-bas, le mode nuit est donc en vigueur."
+nightmode_now_inactive: "Il est {time} là-bas, le mode nuit n'est donc pas en vigueur."
+nightmode_status_off: "Le mode nuit est désactivé. Activez-le avec <code>/nightmode 23:00 07:00 media,url</code> ; les heures suivent le fuseau horaire de ce chat (voir /timezone)."
+nightmode_disabled: "Mode nuit désactivé. Les verrous posés avec /lock restent inchangés."
+nightmode_invalid_time: "<code>{input}</code> n'est pas une heure. Utilisez le format 24 heures HH:MM, par exemple <code>23:00</code>."
+nightmode_same_times: "L'heure de début et l'heure de fin doivent être différentes."
+nightmode_no_types: "Indiquez une heure de début, une heure de fin et les types de verrou à appliquer la nuit, par exemple <code>media,url</code> ou <code>all</code> (voir /locktypes)."
+nightmode_invalid_type: "<code>{type}</code> n'est pas un type de verrou que le mode nuit peut appliquer. Voir /locktypes ; <code>bots</code> ne peut pas être verrouillé la nuit."
+
+# Utils chat status strings
+
+# Chat status permission strings
+chat_status_change_info_button_error: "Vous n'avez pas les permissions pour modifier les informations !!"
+chat_status_change_info_cmd_error: "Vous n'avez pas la permission de modifier les informations dans ce groupe !"
+chat_status_restrict_button_error: "Vous n'avez pas les permissions pour restreindre les membres !!"
+chat_status_restrict_cmd_error: "Vous n'avez pas la permission de restreindre les utilisateurs dans ce groupe !"
+chat_status_bot_restrict_error: "Je n'ai pas les permissions pour restreindre les membres !!"
+chat_status_bot_restrict_group_error: "Je ne peux pas restreindre des personnes ici ! Assurez-vous que je suis admin et que je peux restreindre d'autres membres."
+chat_status_promote_button_error: "Vous n'avez pas les permissions pour promouvoir/rétrograder des membres !!"
+chat_status_promote_cmd_error: "Vous ne pouvez pas promouvoir/rétrograder des personnes ici ! Assurez-vous d'avoir les droits appropriés !"
+chat_status_bot_promote_error: "Je ne peux pas promouvoir/rétrograder des personnes ici ! Assurez-vous que je suis admin et que je peux nommer de nouveaux admins."
+chat_status_pin_user_error: "Vous ne pouvez pas épingler de messages ici ! Assurez-vous que vous êtes admin et que vous pouvez épingler des messages."
+chat_status_pin_bot_error: "Je ne peux pas épingler de messages ici ! Assurez-vous que je suis admin et que je peux épingler des messages."
+chat_status_invite_link_bot_error: "Je n'ai pas accès aux liens d'invitation ! Assurez-vous que je suis admin et que je peux inviter des utilisateurs."
+chat_status_invite_link_user_error: "Vous n'avez pas accès aux liens d'invitation ; vous devez être admin pour obtenir cela !"
+chat_status_delete_button_error: "Vous n'avez pas les permissions pour supprimer des messages !!"
+chat_status_delete_cmd_error: "Vous n'avez pas les permissions pour supprimer des messages !"
+chat_status_bot_delete_error: "Je n'ai pas les permissions pour supprimer des messages !"
+chat_status_bot_not_admin: "Je ne suis pas admin !"
+chat_status_user_admin_button_error: "Vous devez être admin pour faire cela !"
+chat_status_user_admin_cmd_error: "Seuls les admins peuvent exécuter cette commande !"
+chat_status_owner_button_error: "Vous devez être le créateur du groupe pour faire cela !"
+chat_status_owner_cmd_error: "Seul le créateur du groupe peut faire cela !"
+chat_status_pm_only_error: "Cette commande est faite pour le MP, pas pour les chats de groupe !"
+chat_status_group_only_error: "Cette commande est faite pour être utilisée dans les chats de groupe, pas en MP !"
+chat_status_anon_confirm: "Il semble que vous soyez anonyme. Appuyez sur ce bouton pour confirmer votre identité."
+chat_status_anon_prove_admin: "Cliquez pour prouver que vous êtes admin"
+
+# Extraction module strings
+extraction_chat_not_found: "échec de la connexion au chat : échec de l'obtention du chat : impossible de getChat : Bad Request : chat introuvable"
+extraction_need_chat_id: "J'ai besoin d'un ID de chat pour me connecter !"
+extraction_user_not_found: "Impossible de trouver un utilisateur avec ce nom ; êtes-vous sûr que je l'ai déjà vu ?"
+extraction_invalid_time_amount: "Quantité de temps invalide spécifiée."
+extraction_time_limit_exceeded: "Impossible de définir un temps supérieur à 1 an !"
+extraction_no_time_specified: "Veuillez spécifier une durée (ex. 1m, 1h, 1d, 1w)."
+extraction_invalid_time_type: "Type de temps invalide spécifié. Attendu m, h, d ou w obtenu : %s"
+extraction_invalid_time_format: "Format de temps invalide spécifié."
+
+# Help module strings
+help_about: "@%s est l'un des gestionnaires de groupe les plus rapides et les plus complets.
+
+
+  
+
+
+  NexGuard est en ligne depuis 2020 et a servi des milliers de groupes avec des centaines
+  de milliers d'utilisateurs !
+
+
+  <b>Pourquoi NexGuard :</b>
+
+  - Simple : Utilisation facile et compatible avec de nombreuses commandes de bot.
+
+  - Complet : De nombreuses fonctionnalités que d'autres bots de gestion de groupe n'ont pas.
+
+  - Rapide : Devinez quoi ? Il n'est pas fait en Python, nous utilisons Go
+  comme langage de programmation principal.
+
+
+  <b>Version actuelle :</b> %s"
+help_configuration_step-1: "Bienvenue dans la configuration d'NexGuard
+
+
+  La première chose à faire est d'ajouter NexGuard 🛡️ à votre groupe ! Pour ce faire, appuyez sur le
+  bouton ci-dessous et sélectionnez votre groupe, puis appuyez sur Terminé pour continuer le tutoriel."
+help_configuration_step-2: "Ok, bien joué !
+
+
+  Maintenant, pour que je fonctionne correctement, vous devez me faire Admin de votre Groupe !
+
+  Pour ce faire, suivez ces étapes simples :
+
+  ▫️ Allez dans votre groupe
+
+  ▫️ Appuyez sur le nom du groupe
+
+  ▫️ Appuyez sur Modifier
+
+  ▫️ Appuyez sur Administrateur
+
+  ▫️ Appuyez sur Ajouter un administrateur
+
+  ▫️ Appuyez sur la loupe
+
+  ▫️ Recherchez @%s
+
+  ▫️ Confirmez"
+help_configuration_step-3: "Excellent !
+
+
+  Maintenant le Bot est prêt à l'emploi !
+
+  Toutes les commandes commencent par /
+
+
+  Si vous rencontrez des difficultés pour me configurer dans votre groupe, n'hésitez pas
+  à venir sur NexGuard support.
+
+  Nous serons ravis de vous aider."
+help_donatetext: "Vous voulez faire un don ? Incroyable !
+
+  Quand vous faites un don, tous les fonds vont vers mon développement, ce qui me rend rapide et
+  réactif.
+
+  Votre don pourrait aussi me permettre d'obtenir une ou deux nouvelles fonctionnalités, que je n'étais pas en mesure d'avoir
+  en raison des limitations du serveur.
+
+  Tous les fonds seront utilisés pour mes services tels que la base de données, le stockage et l'hébergement !
+
+  Vous pouvez faire un don en contactant mon propriétaire ici : NexGuard team"
+help_pm_questions: "Salut :) Envoyez-moi un MP si vous avez des questions sur mon utilisation !"
+help_config_private_only: La configuration ne fonctionne qu'en privé
+help_info_about_header: "Info & À propos\n\nVoici quelques FAQ sur NexGuard."
+help_news_channel_text: ""
+help_all_commands_usage: "Toutes les commandes commencent par /"
+help_button_about_me: "À propos de moi 👨‍💻"
+help_button_news_channel: ""
+help_button_support_group: ""
+help_button_configuration: "Configuration ⚙️"
+help_button_about: "À propos ✨"
+help_button_add_to_chat: "➕ Ajoute-moi au chat !"
+help_button_add_alita: "➕ Ajouter NexGuard au chat !"
+help_button_share: "📤 Partager"
+help_share_text: "NexGuard Robot — un bot libre et open source pour gérer les groupes Telegram."
+help_about_panel_hint: "\n\n📊 Admins : ouvrez le tableau de bord à tout moment depuis le bouton de menu à côté du champ de message."
+help_button_commands_help: "📚 Commandes & Aide"
+help_button_language: "Langue 🌏"
+help_click_button_info: "Cliquez sur le bouton ci-dessous pour obtenir des infos sur moi !"
+help_click_here: "Cliquez ici pour de l'aide !"
+help_contact_pm: "Contactez-moi en MP pour de l'aide !"
+help_contact_pm_module: "Contactez-moi en MP pour de l'aide sur <code>{module}</code> !"
+help_markdown_help_button: "Aide Markdown"
+help_markdown_formatting_button: "Formatage Markdown"
+help_fillings_button: "Remplissages"
+help_random_content_button: "Contenu aléatoire"
+help_bot_intro: "Salut ! Je m'appelle NexGuard 🛡️.\nJe suis là pour vous aider à gérer vos groupes !\nTapez /help pour en savoir plus sur comment m'utiliser au maximum.\n\nSmart Protection. Better Communities."
+help_pm_intro: |
+  Salut %s !
+  Je m'appelle NexGuard 🛡️.
+
+  Je suis un bot de gestion de groupe, là pour vous aider à naviguer et maintenir l'ordre dans vos groupes !
+  J'ai plein de fonctionnalités pratiques, comme le contrôle du flood, un système d'avertissements, un système de notes, et même des réponses prédéfinies sur certains mots-clés.
+
+  Commandes utiles :
+  - /start : Me démarre ! Vous avez probablement déjà utilisé cette commande.
+  - /help : Envoie ce message ; je vous en dirai plus sur moi-même !
+  - /donate : Vous donne des infos sur comment me soutenir ainsi que mon créateur.
+
+  Si vous avez des bugs ou des questions sur comment m'utiliser, consultez mon <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">site web</a>, ou rendez-vous sur NexGuard support.
+
+# Misc module strings
+misc_help_msg:
+  "× /info : Obtenez vos informations utilisateur, peut être utilisé en réponse ou en passant
+  un ID utilisateur ou un nom d'utilisateur.
+
+  × /id [utilisateur] : Obtenez votre ID, et celui du groupe si la commande est utilisée dans un groupe. Indiquez un nom d'utilisateur ou un ID utilisateur, ou répondez à un message, pour obtenir l'ID de cet utilisateur (une réponse affiche aussi les ID de l'origine du transfert, du GIF et du sticker).
+
+  × /ping : Pingez le serveur Telegram !
+
+  × /tr <code langue> <texte> : Traduisez le texte. Répondez à un message avec /tr [code langue] pour le traduire (en anglais si aucun code n'est donné).
+
+  × /removebotkeyboard : Supprime le clavier de bot bloqué de votre chat.
+
+  × /stat : Obtient le nombre total de messages dans le chat.
+
+  × /tell <texte> : (admin, groupes uniquement) Répondez à un message pour que le bot envoie <texte> en réponse à celui-ci ; votre message de commande est supprimé.
+
+  × /stickerid : Répondez à un sticker pour obtenir son ID de fichier.
+
+  × /zombies : Expulse les comptes supprimés connus du bot (admin).
+
+  × /github <utilisateur|utilisateur/dépôt> : Rechercher un utilisateur ou dépôt GitHub.
+
+  × /wiki <recherche> : Rechercher sur Wikipédia en anglais.
+
+  × /ud <terme> : Rechercher dans Urban Dictionary.
+
+  × /referral : Créez des liens d’invitation suivis et consultez les statistiques (admin, groupes uniquement).
+
+  × /runs : Une répartie aléatoire.
+  Utilisez les commandes du module pour gérer votre communauté."
+misc_translation_error: Erreur lors de la demande de traduction !
+misc_reply_to_someone: Répondez à quelqu'un.
+misc_provide_content: Fournissez du contenu pour répondre !
+misc_user_not_found: Impossible de trouver des informations sur cet utilisateur.
+misc_user_link: "Lien utilisateur : %s"
+misc_pinging: "<code>Ping en cours</code>"
+misc_ping_result: "🏓 <b>Pong !</b>\n\n<b>RTT de l’API</b> (getMe) : <code>%dms</code>\n<b>Envoi du message</b> : <code>%dms</code>\n<b>Surcoût</b> : <code>%dms</code>"
+misc_thread_id: "ID du fil : <code>%d</code>"
+misc_chat_id: "<b>ID du chat :</b> <code>%d</code>"
+misc_user_id: "<b>ID de %s :</b> <code>%d</code>"
+misc_forwarded_from_user: "<b>Transféré de l'ID de %s :</b> <code>%d</code>"
+misc_forwarded_from_chat: "<b>Transféré du chat %s ID :</b> <code>%d</code>"
+misc_gif_id: "<b>ID du GIF :</b> <code>%s</code>"
+misc_sticker_id: "<b>ID du sticker :</b> <code>%s</code>"
+misc_user_id_is: "L'ID de %s est <code>%d</code>"
+misc_your_id_private: "Votre ID est <code>%d</code>"
+misc_your_id_group: "Votre ID est <code>%d</code>\nL'ID de ce groupe est <code>%d</code>"
+misc_need_text_and_lang: J'ai besoin de texte et d'un code de langue pour traduire.
+misc_no_text_to_translate: Le message en réponse ne contient pas de texte à traduire.
+misc_provide_text_translate: Veuillez fournir du texte à traduire.
+misc_removing_keyboard: Suppression du clavier de bot bloqué...
+misc_total_messages: "Total des messages dans %s : %d"
+misc_channel_info_header: "<b>Info de la chaîne :</b>\n\nID : <code>%d</code>\n\nNom de la chaîne : %s"
+misc_username: "Nom d'utilisateur : @%s"
+misc_channel_link: "Lien de la chaîne : @%s"
+misc_user_info_header: "<b>Info utilisateur :</b>\n\nID : <code>%d</code>\n\nNom : %s"
+misc_owner_info: C'est mon propriétaire !
+misc_dev_info: C'est l'un de mes utilisateurs développeurs !
+misc_translate_read_error: Erreur de lecture
+misc_translate_result: "<b>Langue détectée :</b> <code>%s</code>\n\n<b>Traduction :</b> <code>%s</code>"
+
+# Pins module strings
+pins_help_msg:
+  "Toutes les commandes liées aux épingles peuvent être trouvées ici ; gardez votre chat à
+  jour sur les dernières actualités avec un simple message épinglé !
+
+
+  *Commandes Utilisateur :*
+
+  × /pinned : Obtenez le message épinglé actuel.
+
+
+  *Commandes Admin :*
+
+  × /pin : Épinglez le message auquel vous avez répondu. Ajoutez 'loud', 'notify' ou 'violent' pour envoyer une notification
+  aux membres du groupe.
+
+  × /pinned : Obtenez le dernier message épinglé dans le chat actuel.
+
+  × /permapin <texte> : Épinglez un message personnalisé via le bot. Ce message peut contenir
+  du markdown, des boutons et toutes les autres fonctionnalités cool.
+
+  × /unpin : Désépinglez le message épinglé actuel. Si utilisé en réponse, désépinglez le message
+  auquel vous avez répondu.
+
+  × /unpinall : Désépinglez tous les messages épinglés.
+
+  × /antichannelpin <yes/no/on/off> : Ne laissez pas Telegram épingler automatiquement les chaînes liées.
+  Si aucun argument n'est donné, affiche le paramètre actuel.
+
+  × /cleanlinked <yes/no/on/off> : Supprimez les messages envoyés par la chaîne liée."
+pins_unpinned_message: Message désépinglé.
+pins_unpinned_last: Dernier message épinglé désépinglé.
+pins_unpin_all_confirm: Êtes-vous sûr de vouloir désépingler tous les messages épinglés ?
+pins_unpin_all_success: Tous les messages épinglés de ce chat ont été désépinglés !
+pins_unpin_all_cancelled: Opération de désépinglage annulée !
+pins_permapin_reply_or_text: Veuillez répondre à un message ou donner du texte à épingler.
+pins_permapin_unsupported: Permapin non supporté pour ce type de données !
+pins_pinned_message: J'ai épinglé <a href='%s'>ce message</a>
+pins_reply_to_pin: Répondez à un message pour l'épingler
+pins_pinned_message_loud: J'ai épinglé <a href='%s'>ce message</a> avec notification !
+pins_antichannelpin_enabled: <b>Activé</b> les anti-épingles de chaîne. Les épingles automatiques d'une chaîne seront maintenant remplacés par l'épingle précédent.
+pins_antichannelpin_disabled: <b>Désactivé</b> les anti-épingles de chaîne. Les épingles automatiques d'une chaîne ne seront pas supprimés.
+pins_antichannelpin_current_enabled: Les anti-épingles de chaîne sont actuellement <b>actives</b> dans %s. Toutes les publications de chaîne qui sont auto-épinglées par Telegram seront remplacées par l'épingle précédent.
+pins_antichannelpin_current_disabled: Les anti-épingles de chaîne sont actuellement <b>désactivées</b> dans %s.
+pins_cleanlinked_enabled: <b>Activé</b> la suppression des publications de chaîne liée. Les messages envoyés par la chaîne liée seront supprimés.
+pins_cleanlinked_disabled: <b>Désactivé</b> la suppression des publications de chaîne liée.
+pins_cleanlinked_current_enabled: La suppression des publications de chaîne liée est actuellement <b>activée</b> dans %s. Les messages envoyés par la chaîne liée seront supprimés.
+pins_cleanlinked_current_disabled: La suppression des publications de chaîne liée est actuellement <b>désactivée</b> dans %s.
+pins_no_pinned_message: Aucun message n'a été épinglé dans ce chat !
+pins_here_is_pinned: <a href='%s'>Voici</a> le message épinglé.
+pins_pinned_message_button: Message épinglé
+pins_input_not_recognized: "Votre entrée n'a pas été reconnue comme l'une des suivantes : yes/no/on/off"
+
+# Purges module strings
+purges_help_msg: "*Admin uniquement :*
+
+  - /purge <raison> : supprime tous les messages entre celui-ci et le message auquel vous avez répondu. La raison est facultative et s'affiche dans la confirmation.
+
+  - /del : supprime le message auquel vous avez répondu.
+
+  - /purgefrom : marque le message auquel vous avez répondu comme début de la plage à supprimer (utilisez ensuite /purgeto).
+
+  - /purgeto <raison> : supprime tous les messages depuis la marque /purgefrom jusqu'au message auquel vous avez répondu. La raison est facultative et s'affiche dans la confirmation.
+
+
+  *Exemples* :
+
+  - Supprimer tous les messages depuis le message auquel vous avez répondu jusqu'à maintenant.
+
+  -> `/purge`"
+purges_cannot_delete_old: Vous ne pouvez pas supprimer des messages de plus de deux jours. Veuillez choisir un message plus récent.
+purges_purged_messages: "%d messages supprimés."
+purges_purged_with_reason: "%d messages supprimés.\n*Raison* :\n%s"
+purges_reply_to_purge: Répondez à un message pour sélectionner où commencer la suppression.
+purges_reply_to_delete: Répondez à un message pour le supprimer !
+purges_message_marked: Ce message est déjà marqué pour la suppression !
+purges_mark_already_active: "Un autre message est déjà marqué pour la suppression dans ce chat. Utilisez /purgeto pour terminer cette suppression ou attendez que la marque expire."
+purges_marked_for_deletion: Message marqué pour suppression. Répondez à un autre message avec /purgeto pour supprimer tous les messages entre les deux ; dans les 30s !
+purges_reply_to_purgefrom: Répondez à un message pour sélectionner où commencer la suppression.
+purges_need_purgefrom: Vous ne pouvez utiliser cette commande qu'après avoir utilisé la commande /purgefrom !
+purges_use_del_single: Utilisez la commande /del pour supprimer un seul message !
+purges_reply_to_purgeto: Répondez à un message pour me montrer jusqu'où supprimer.
+purges_limit_exceeded: "Impossible de supprimer plus de %d messages à la fois ! Veuillez sélectionner une plage plus petite."
+
+# Reports module strings
+reports_help_msg:
+  "Nous sommes tous occupés et n'avons pas le temps de surveiller nos groupes
+  24h/24. Mais comment réagir si quelqu'un spamme dans votre groupe ?
+
+
+  × /report `<raison>` : Répondez à un message pour le signaler aux admins.
+
+  - @admin / @admins : Pareil que /report mais sans commande.
+
+
+  *Admins uniquement :*
+
+  × /reports `<on/off/yes/no/true/false>` : Modifie le paramètre de signalement, ou affiche l'état actuel.
+
+  - En MP, bascule votre statut personnel. Nécessite une connexion active via /connect à un groupe où vous et le bot êtes administrateurs.
+
+  - Dans un groupe, bascule le statut du groupe.
+
+  × /reports `block` (uniquement en réponse) : Bloque un utilisateur pour /report ou @admin.
+
+  × /reports `unblock` (uniquement en réponse) : Débloque un utilisateur pour /report ou @admin.
+
+  × /reports `showblocklist` : Affiche tous les utilisateurs bloqués qui ne peuvent pas utiliser /report ou
+  @admin.
+
+  × /reports `mute <N>` / `mute off` : Rend muet un utilisateur dès que N (2-20) membres différents ont des signalements ouverts contre lui, jusqu'à la décision d'un admin et pour 24 heures au maximum. Désactivé par défaut ; ne s'applique jamais aux admins ni aux utilisateurs approuvés.
+
+
+  Pour signaler un utilisateur, répondez simplement à son message avec @admin ou /report ; NexGuard
+  répondra alors avec un message indiquant que les admins ont été notifiés.
+
+  Vous DEVEZ répondre à un message pour signaler un utilisateur ; vous ne pouvez pas utiliser @admin
+  pour taguer les admins sans raison !
+
+
+  *NOTE :* Aucun de ces deux ne se déclenchera s'il est utilisé par des admins."
+reports_reply_to_report: Vous devez répondre à un message pour le signaler.
+reports_expose_yourself: Vous devez d'abord vous exposer !
+reports_reply_to_block: Vous devez répondre à un utilisateur pour le bloquer.
+reports_reply_to_unblock: Vous devez répondre à un utilisateur pour le débloquer.
+reports_cannot_report_channel: "Vous ne pouvez pas signaler une publication de chaîne."
+reports_cannot_report_self: "Vous ne pouvez pas signaler votre propre message !"
+reports_special_account: "C'est un compte spécial de Telegram !"
+reports_admin_report: "Vous êtes admin, à qui vais-je signaler vos problèmes ?"
+reports_why_report_myself: "Pourquoi me signalerais-je moi-même ?"
+reports_why_report_admin: "Pourquoi signalerais-je un admin ?"
+reports_turned_on_personal: "Signalement activé ! Vous serez notifié chaque fois que quelqu'un signale quelque chose dans les groupes où vous êtes admin."
+reports_turned_on_group: "Les utilisateurs pourront maintenant signaler des messages."
+reports_turned_off_personal: "Signalement désactivé ! Vous ne serez plus notifié quand quelqu'un signale quelque chose dans les groupes où vous êtes admin."
+reports_turned_off_group: "Les utilisateurs ne pourront plus signaler via @admin ou /report."
+reports_group_only: "Cette commande ne peut être utilisée que dans un groupe !"
+reports_user_blocked: "Utilisateur %s bloqué du signalement."
+reports_user_unblocked: "Utilisateur %s débloqué du signalement."
+reports_no_blocked_users: "Aucun utilisateur n'est actuellement bloqué de l'utilisation des commandes de signalement !"
+reports_user_kicked: "Utilisateur expulsé !"
+reports_user_banned: "Utilisateur banni !"
+reports_message_deleted: "Message supprimé !"
+reports_button_message: "➡ Message"
+reports_button_kick: "⚠ Expulser"
+reports_button_ban: "⛔️ Bannir"
+reports_button_delete: "❎ Supprimer le message"
+reports_button_resolved: "✔️ Marquer comme résolu"
+reports_blocked_users_header: "Utilisateurs bloqués de l'utilisation des commandes de signalement :"
+reports_invalid_input: "Votre entrée n'a pas été reconnue comme l'une des suivantes : <code>&lt;yes/on/true/no/off/false&gt; ou &lt;block/unblock/showblocklist&gt;</code>"
+reports_preference_enabled_private: "Votre préférence actuelle est activée. Vous serez notifié chaque fois que quelqu'un signale quelque chose dans les groupes où vous êtes admin."
+reports_preference_disabled_private: "Vous n'avez pas activé les signalements. Vous ne serez pas notifié."
+reports_status_enabled_group: "Les signalements sont actuellement activés dans ce chat.\nLes utilisateurs peuvent utiliser la commande /report, ou mentionner @admin, pour taguer tous les admins."
+reports_status_disabled_group: "Les signalements sont actuellement désactivés dans ce chat."
+reports_change_settings_hint: "\n\nPour modifier ce paramètre, essayez cette commande à nouveau, avec l'un des arguments suivants : yes/no/on/off/true/false"
+reports_success_kick: "✅ Expulsé avec succès"
+reports_success_ban: "✅ Banni avec succès"
+reports_success_delete: "✅ Supprimé avec succès"
+reports_resolved_success: "✅ Signalement résolu"
+reports_action_by: "Action effectuée par %s"
+reports_resolved_by: "<b>Résolu par :</b> %s"
+reports_message_template: "<b>⚠️ Signalement :</b>\n<b> • Signalé par :</b> %s\n<b> • Utilisateur signalé :</b> %s\n<b>Statut :</b> <i>En attente...</i>"
+reports_invalid_action: "Action invalide."
+reports_button_mute: "🔇 Rendre muet"
+reports_button_dismiss: "✔️ Ignorer"
+reports_success_mute: "✅ Rendu muet avec succès"
+reports_already_handled: "Ce signalement a déjà été traité."
+reports_already_reviewed: "Les admins ont déjà examiné votre signalement de ce message."
+reports_expired: "Ce signalement a expiré."
+reports_action_failed: "Impossible d’effectuer cette action. Réessayez."
+reports_sent_to_admins: "Signalé aux administrateurs."
+reports_automute_status_on: "Mise en sourdine automatique : activée. Un utilisateur est rendu muet jusqu'à 24 heures dès que {count} membres différents ont des signalements ouverts contre lui."
+reports_automute_status_off: "Mise en sourdine automatique : désactivée."
+reports_automute_enabled: "Mise en sourdine automatique activée. Dès que {count} membres différents ont des signalements ouverts contre un utilisateur, il est rendu muet jusqu'à la décision d'un admin, pour 24 heures au maximum."
+reports_automute_disabled: "Mise en sourdine automatique désactivée. Les signalements ne rendront plus personne muet."
+reports_automute_usage: "Utilisation : <code>/reports mute &lt;N&gt;</code> avec N entre {min} et {max}, ou <code>/reports mute off</code>."
+reports_automute_applied: "{user} a été rendu muet jusqu'à ce qu'un admin examine les signalements le concernant (24 heures au maximum)."
+
+# Mute module strings (additional)
+mute_reply_to_dmute: Vous devez répondre à un message pour le supprimer et rendre l'utilisateur muet !
+
+# Bot updates module strings
+bot_updates_creators_plug: ""
+bot_updates_make_me_admin: "\n\nFaites-moi administrateur pour profiter de toutes mes fonctionnalités !"
+bot_updates_need_admin: Vous devez être admin pour faire cela !
+bot_updates_need_supergroup: "Désolé, mais pour utiliser toutes mes fonctionnalités, vous devez convertir ce groupe en supergroupe."
+bot_updates_thanks_for_adding: "Merci de m'avoir ajouté à votre groupe !"
+bot_updates_button_expired: "Ce bouton a expiré. Veuillez utiliser la commande à nouveau."
+bot_updates_convert_instruction: "Après avoir converti ce groupe en supergroupe, vous pouvez m'ajouter à nouveau pour m'utiliser.\n"
+bot_updates_convert_howto: "Pour convertir ce groupe en supergroupe, veuillez suivre les instructions ici :\n"
+
+# Devs module strings
+devs_specify_chat: "Vous devez spécifier l'ID d'un chat."
+devs_chat_info: "<b>Nom :</b> %s\n<b>ID du chat</b> : %d\n<b>Nombre d'utilisateurs :</b> %d\n<b>Lien :</b> %s"
+devs_getting_chat_list: Obtention de la liste des chats où je suis...
+devs_chat_list_caption: Voici la liste des chats dans ma base de données !
+devs_left_chat: D'accord, j'ai quitté le chat !
+devs_user_already_sudo: L'utilisateur est déjà Sudo !
+devs_added_to_sudo: "%s ajouté à la liste Sudo !"
+devs_user_already_dev: L'utilisateur est déjà Dev !
+devs_added_to_dev: "%s ajouté à la liste Dev !"
+devs_user_not_sudo: L'utilisateur n'est pas Sudo !
+devs_removed_from_sudo: "%s retiré de la liste Sudo !"
+devs_user_not_dev: L'utilisateur n'est pas Dev !
+devs_removed_from_dev: "%s retiré de la liste Dev !"
+devs_no_team_users: Aucun utilisateur n'a été ajouté à l'équipe !
+devs_dev_users_header: "<b>Utilisateurs Dev :</b>"
+devs_sudo_users_header: "<b>Utilisateurs Sudo :</b>"
+devs_no_users: "Aucun utilisateur"
+devs_fetching_stats: "<code>Récupération des statistiques du bot...</code>"
+devs_failed_to_add_sudo: "Échec de l'ajout de l'utilisateur à la liste Sudo. Veuillez réessayer."
+devs_failed_to_add_dev: "Échec de l'ajout de l'utilisateur à la liste Dev. Veuillez réessayer."
+devs_failed_to_remove_sudo: "Échec de la suppression de l'utilisateur de la liste Sudo. Veuillez réessayer."
+devs_failed_to_remove_dev: "Échec de la suppression de l'utilisateur de la liste Dev. Veuillez réessayer."
+
+# Database default strings
+db_warn_no_reason: "Aucune raison"
+
+# Helpers utility strings
+helpers_admin_commands: "Commandes Admin"
+helpers_user_commands: "Commandes Utilisateur"
+helpers_person_no_name: "PersonneSansNom"
+content_need_filter_content: "Vous devez donner du contenu au filtre !"
+content_need_note_content: "Vous devez donner du contenu à la note !"
+content_invalid_message: "Message invalide: le message est nil"
+content_need_welcome_content: "Vous devez me donner du contenu pour souhaiter la bienvenue aux utilisateurs !"
+content_need_goodbye_content: "Vous devez me donner du contenu pour dire au revoir aux utilisateurs !"
+content_text_too_long: "Votre texte de message fait %d caractères. La longueur maximale pour le texte est de 4096 ; veuillez le réduire. Notez que les caractères markdown peuvent prendre plus d'espace que prévu."
+content_caption_too_long: "Votre légende de message fait %d caractères. La longueur maximale de la légende est de 1024 ; veuillez la réduire. Notez que les caractères markdown peuvent prendre plus d'espace que prévu."
+helpers_module_help_header: "Voici l'aide pour le module *%s* :\n\n"
+helpers_invalid_deep_link: "Lien profond invalide ou mal formé. Veuillez vérifier l'URL et réessayer."
+helpers_chat_not_found: "Impossible de trouver ce chat. Il n'existe peut-être plus ou je n'y ai pas accès."
+helpers_back_button: "« Retour"
+helpers_note_not_exist: "Cette note n'existe pas !"
+helpers_note_admin_only: "Cette note ne peut être consultée que par un administrateur !"
+helpers_connected_to_chat: "Vous avez été connecté à %s !"
+helpers_notes_current_header: "Voici les notes actuelles dans ce chat :\n"
+
+
+# Formatting strings
+format_user_info: "Utilisateur : %s"
+format_user_id: "ID utilisateur : %d"
+
+# Formatting module additional strings
+formatting_press_button: "Appuyez sur le bouton ci-dessous pour obtenir l'aide Markdown !"
+formatting_large_options: "NexGuard supporte un grand nombre d'options de formatage pour rendre vos messages plus expressifs. Jetez un œil !"
+
+# Languages help module strings
+help_help_msg:
+  "Le point d'entrée principal et le système de navigation d'NexGuard Robot.
+
+  *Commandes de navigation:*
+
+  × /start: Afficher le message de bienvenue avec le menu de navigation.
+
+  × /help: Afficher le menu d'aide avec la liste des modules; utilisez /help <module> pour plus de détails.
+
+  × /about: Afficher les informations du bot, la version et les liens utiles.
+
+  × /donate: Afficher les informations de don pour soutenir le projet.
+
+  × /extend: Envoyer toutes les commandes de tous les modules en une seule liste ; dans les groupes, envoie un bouton pour la recevoir en MP."
+languages_help_msg: "Vous n'arrivez pas à changer la langue du bot ?
+
+  Changez facilement en utilisant ce module !
+
+
+  Tapez simplement /lang et utilisez le clavier en ligne pour choisir une langue pour vous ou votre
+  groupe.
+
+  En privé, un administrateur connecté à un groupe peut utiliser /lang group pour changer la langue de ce groupe.
+
+
+  × /lang: Changer la langue du bot pour vous ou le groupe.
+
+
+  Vous pouvez contribuer aux traductions via le dépôt NexGuard."
+
+# Antiflood module help message
+antiflood_help_msg:
+  "Vous savez comment parfois, des gens rejoignent, envoient 100 messages, et ruinent
+  votre chat ? Avec antiflood, ça n'arrive plus !
+
+
+  Antiflood vous permet d'agir sur les utilisateurs qui envoient plus de x messages sans pause de plus de 60 secondes entre eux (les messages des autres membres ne remettent pas le compteur à zéro). Actions : ban/kick/mute/tban/tmute
+
+
+  *Commandes Utilisateur* :
+
+  × /flood : Obtenir les paramètres antiflood actuels.
+
+
+  *Commandes Admin* :
+
+  × /setflood `<nombre/off/no>` : Définir le nombre de messages après lequel agir
+  sur un utilisateur. Mettez '0', 'off', ou 'no' pour désactiver.
+
+  × /setfloodmode `<ban/kick/mute/tban/tmute> [durée]` : Choisir l'action contre un utilisateur qui
+  floode. La durée est obligatoire pour tban/tmute, par exemple `/setfloodmode tban 1d` ou `/setfloodmode tmute 10m`.
+
+  × /delflood `<yes/no/on/off>` : Si vous voulez que le bot supprime les messages floodés par l'utilisateur."
+
+antiflood_notes_docs: |
+  <b>Comportement par défaut</b>
+  Antiflood est <b>désactivé par défaut</b>. Vous devez l'activer explicitement en utilisant <code>/setflood &lt;nombre&gt;</code>.
+
+# AI spam filter module strings
+aispam_help_msg: |
+  <b>🤖 Filtre anti-spam par IA</b>
+
+  Un filtre optionnel qui évalue chaque message de ce chat avec un modèle d'IA et supprime ceux qu'il juge manifestement indésirables.
+
+  Rien d'autre ne se produit : ni avertissement, ni silence, ni réponse, ni notification. Un message dont le modèle est sûr qu'il s'agit de spam est supprimé discrètement, et l'expéditeur n'est jamais prévenu.
+
+  Les messages écrits en anglais agissent à partir de 80% de confiance, et ceux dans toute autre langue à partir de 90%, car le modèle est optimisé pour l'anglais.
+
+
+  <b>Commandes d'administration :</b>
+
+  × /aispam : Indique si le filtre est actif et exactement ce qui est envoyé au modèle.
+
+  × /aispam <code><on/off></code> : Active ou désactive le filtre pour ce chat.
+
+
+  Le filtre est désactivé dans tous les chats tant qu'un administrateur ne l'active pas, et nécessite que l'opérateur du bot ait configuré une clé d'API.
+aispam_status_enabled: "Le filtre anti-spam par IA est <b>activé</b> dans ce chat."
+aispam_status_disabled: "Le filtre anti-spam par IA est <b>désactivé</b> dans ce chat. Activez-le avec <code>/aispam on</code>."
+aispam_status_key_missing: "⚠️ Indisponible : l'opérateur du bot n'a pas configuré de clé d'API, aucun message n'est donc analysé."
+aispam_status_globally_disabled: "⚠️ Indisponible : l'opérateur du bot a désactivé le filtre anti-spam par IA globalement, aucun message n'est donc analysé."
+aispam_data_notice: |
+  <b>Ce qui est envoyé pour chaque message analysé :</b>
+  • Le titre, la description, les règles et la langue du chat
+  • Le profil de l'expéditeur : jours depuis la première fois que le bot l'a vu, messages de la dernière heure, nombre d'avertissements
+  • Le texte ou la légende du message, les domaines vers lesquels il renvoie, et s'il s'agit d'un transfert ou d'une réponse
+  • Les quelques messages les plus récents de l'expéditeur dans ce chat
+
+
+  Aucun nom, nom d'utilisateur, identifiant, numéro de téléphone ni message provenant d'autres chats n'est envoyé.
+aispam_enabled_success: "✅ Le filtre anti-spam par IA est maintenant <b>activé</b>. Les messages dont le modèle est sûr qu'il s'agit de spam seront supprimés."
+aispam_disabled_success: "❌ Le filtre anti-spam par IA est maintenant <b>désactivé</b>."
+aispam_no_key: "❌ Je ne peux pas activer le filtre anti-spam par IA : l'opérateur du bot n'a pas configuré de clé d'API. Rien n'a changé."
+aispam_globally_disabled: "❌ Je ne peux pas activer le filtre anti-spam par IA : l'opérateur du bot l'a désactivé globalement. Rien n'a changé."
+aispam_invalid_option: "Je ne comprends qu'une option parmi : <code>on</code>/<code>off</code>/<code>yes</code>/<code>no</code>/<code>true</code>/<code>false</code>/<code>enable</code>/<code>disable</code>"
+aispam_breaker_notice: "⚠️ Les analyses anti-spam par IA sont en pause dans ce chat pendant quelques minutes après des échecs répétés du fournisseur d'IA. Elles reprennent d'elles-mêmes et le filtre reste activé."
+
+# Spam database join check strings
+spamdb_help_msg: |
+  <b>🛡 Base anti-spam</b>
+
+  Une vérification facultative qui recherche chaque nouveau membre dans des bases anti-spam à son arrivée et agit sur ceux qui y figurent. CAS (cas.chat) est consultée par défaut ; lols.bot et le réseau Shared bans du bot peuvent être ajoutés.
+
+  Les admins, les utilisateurs approuvés et les bots ne sont jamais vérifiés. Si une base est injoignable, le membre est admis. Chaque action est signalée uniquement dans le canal de logs, jamais dans le groupe.
+
+
+  *Commandes admin :*
+
+  × /spamdb : Indique si la vérification est activée, quelles bases elle consulte et ce qu'elle fait.
+
+  × /spamdb `<on/off>` : Active ou désactive la vérification dans ce chat.
+
+  × /spamdb db `<cas/lols/shared>` `<on/off>` : Choisit les bases. CAS est activée par défaut, et au moins une doit rester activée. lols.bot liste les comptes plus agressivement, attendez-vous donc à plus de faux positifs. Shared bans est désactivée par défaut, nécessite le réseau de réputation partagée de l'opérateur et liste les utilisateurs que plusieurs chats ont retirés récemment.
+
+  × /spamdb action `<ban/mute/log>` : Choisit ce qui arrive à un membre listé. Par défaut ban ; log se contente de le signaler.
+
+
+  La vérification est désactivée dans tous les chats tant qu'un admin ne l'active pas. Une fois activée, l'ID Telegram de chaque nouveau membre est envoyé à chaque base externe choisie (cas.chat, lols.bot). Shared bans reste dans le bot et n'envoie rien.
+spamdb_status_enabled: "La vérification anti-spam à l'arrivée est <b>activée</b> dans ce chat. Les membres listés reçoivent : <code>{action}</code>."
+spamdb_status_disabled: "La vérification anti-spam à l'arrivée est <b>désactivée</b> dans ce chat. Activez-la avec <code>/spamdb on</code>."
+spamdb_status_databases: "<b>Bases :</b> {databases}. Modifiez-les avec <code>/spamdb db</code>."
+spamdb_status_db_on: "{database} (activée)"
+spamdb_status_db_off: "{database} (désactivée)"
+spamdb_status_db_on_inactive: "{database} (activée, mais inactive : l'opérateur du bot a désactivé le réseau de bannissements partagés)"
+spamdb_status_globally_disabled: "⚠️ Indisponible : l'opérateur du bot a désactivé la vérification de la base anti-spam, aucun membre n'est donc vérifié."
+spamdb_data_notice: "<b>Ce qui est envoyé :</b> l'ID Telegram de chaque nouveau membre, à {services}. Rien d'autre ne quitte le bot."
+spamdb_shared_data_notice: "<b>Shared bans</b> est calculé à partir des événements de modération de ce bot ; rien concernant ce chat ou ses membres n'est envoyé pour cela."
+spamdb_enabled_success: "✅ La vérification anti-spam à l'arrivée est maintenant <b>activée</b>. Les nouveaux membres sont recherchés dans les bases choisies à leur arrivée."
+spamdb_disabled_success: "❌ La vérification anti-spam à l'arrivée est maintenant <b>désactivée</b>."
+spamdb_globally_disabled: "❌ Je ne peux pas activer la vérification anti-spam : l'opérateur du bot l'a désactivée. Rien n'a changé."
+spamdb_db_shared_disabled: "❌ Je ne peux pas activer Shared bans : l'opérateur du bot n'a pas activé le réseau de réputation partagée. Rien n'a changé."
+spamdb_invalid_option: "Je ne comprends qu'une option parmi : <code>on</code>/<code>off</code>/<code>yes</code>/<code>no</code>/<code>action</code>/<code>db</code>"
+spamdb_invalid_action: "Choisissez une action parmi : <code>ban</code>/<code>mute</code>/<code>log</code>. Exemple : <code>/spamdb action mute</code>"
+spamdb_action_success: "✅ Les membres listés recevront désormais : <code>{action}</code>."
+spamdb_db_usage: "Indiquez une base et <code>on</code>/<code>off</code> : <code>cas</code> (CAS, activée par défaut), <code>lols</code> (lols.bot) ou <code>shared</code> (Shared bans, désactivée par défaut). Exemple : <code>/spamdb db lols on</code>"
+spamdb_db_enabled: "✅ Les nouveaux membres seront désormais recherchés dans {database}."
+spamdb_db_disabled: "❌ Les nouveaux membres ne seront plus recherchés dans {database}."
+spamdb_db_last: "❌ {database} est la seule base restante, elle reste donc activée. Activez d'abord une autre base, ou désactivez la vérification avec <code>/spamdb off</code>."
+
+# Spam filter strings
+spamfilter_help_msg: |
+  <b>🧹 Filtre anti-spam</b>
+
+  Un filtre facultatif qui apprend du spam supprimé par vos administrateurs. Répondez /spam à un message de spam pour le supprimer, bannir son auteur et enregistrer le texte comme exemple de spam de ce chat. Filtre activé, un nouveau message très proche d'un exemple est repéré, même avec un lien changé, des emojis ajoutés ou des lettres d'apparence semblable.
+
+  Un texte compte aussi dans tous les chats qui utilisent le filtre dès que deux chats sans lien (propriétaires différents, aucun administrateur commun) l'ont signalé.
+
+  L'activation du filtre ouvre une période d'essai de 7 jours : les correspondances sont seulement signalées dans le canal de journal, chacune avec un bouton Pas du spam, et rien n'est supprimé. Les administrateurs, les utilisateurs approuvés et les membres en train de résoudre un captcha ne sont jamais vérifiés.
+
+
+  <b>Commandes d'administration :</b>
+
+  × /spam : Répondez à un message pour le supprimer, bannir son auteur et enregistrer le texte comme exemple de spam.
+
+  × /spamfilter <code>on/off/dryrun</code> : Active le filtre (les correspondances sont supprimées après l'essai de 7 jours), le désactive, ou le laisse en essai seulement (les correspondances sont signalées, jamais supprimées). Sans option, affiche l'état du filtre.
+  Utilisez /spamfilter threshold <code>0.5-1</code> pour fixer à quel point un message doit ressembler à un exemple : 0.85 par défaut ; plus bas repère davantage et se trompe davantage.
+
+  × /spamsamples : Liste les exemples de spam les plus récents avec leur ID.
+
+  × /forgetspam <code>ID</code> : Supprime un exemple de spam.
+
+
+  Les exemples sont gardés 90 jours, 200 au plus par chat. Débannir un utilisateur banni avec /spam, ou appuyer sur Pas du spam dans le canal de journal, marque le texte comme légitime dans ce chat.
+spamfilter_spam_no_reply: "Répondez /spam au message de spam pour le supprimer, bannir son auteur et l'enregistrer comme exemple."
+spamfilter_spam_banned: "🧹 Spam supprimé et {user} banni."
+spamfilter_spam_saved: "Enregistré comme exemple de spam <code>#{id}</code>."
+spamfilter_spam_too_short: "Le message était trop court pour servir d'exemple."
+spamfilter_usage: "Choisissez <code>on</code>, <code>off</code> ou <code>dryrun</code>, ou réglez la similarité avec <code>/spamfilter threshold 0.85</code>."
+spamfilter_threshold_invalid: "Le seuil doit être un nombre entre <code>0.5</code> et <code>1</code>, par exemple <code>/spamfilter threshold 0.85</code>."
+spamfilter_status_off: "Le filtre anti-spam est <b>désactivé</b> dans ce chat. Essayez-le avec <code>/spamfilter dryrun</code>."
+spamfilter_status_dryrun: "Le filtre anti-spam est <b>en essai</b> : les correspondances sont signalées dans le canal de journal et jamais supprimées."
+spamfilter_status_on_pending: "Le filtre anti-spam est <b>activé</b>, en essai jusqu'au {date} : d'ici là, les correspondances sont seulement signalées dans le canal de journal."
+spamfilter_status_on: "Le filtre anti-spam est <b>activé</b> : les correspondances sont supprimées et signalées dans le canal de journal."
+spamfilter_status_threshold: "<b>Seuil :</b> {threshold}"
+spamfilter_status_samples: "<b>Exemples :</b> {spam} de spam, {ham} légitimes. Listez-les avec <code>/spamsamples</code>."
+spamfilter_status_no_log: "⚠️ Ce chat n'a pas de canal de journal, vous ne verrez donc pas ce que le filtre repère. Définissez-en un avec <code>/setlog</code>."
+spamfilter_samples_empty: "Ce chat n'a encore aucun exemple de spam ({ham} légitimes). Répondez <code>/spam</code> à un message de spam pour en ajouter un."
+spamfilter_samples_header: "<b>Exemples de spam</b> : {spam} de spam, {ham} légitimes. Les plus récents d'abord :"
+spamfilter_samples_footer: "Supprimez-en un avec <code>/forgetspam ID</code>."
+spamfilter_forget_usage: "Indiquez l'ID d'un exemple de <code>/spamsamples</code>."
+spamfilter_forget_done: "🗑 Exemple de spam <code>#{id}</code> supprimé."
+spamfilter_forget_not_found: "Ce chat n'a pas d'exemple <code>#{id}</code>."
+spamfilter_not_spam_button: "✅ Pas du spam"
+spamfilter_not_spam_invalid: "Ce bouton ne fonctionne plus."
+spamfilter_not_spam_failed: "Une erreur s'est produite ; rien n'a été modifié."
+spamfilter_not_spam_done: "Marqué comme légitime."
+spamdb_db_lols_warning: "⚠️ lols.bot liste les comptes plus agressivement que CAS, attendez-vous donc à plus de faux positifs. Envisagez <code>/spamdb action log</code> tant que vous ne lui faites pas confiance. L'ID Telegram de chaque nouveau membre est désormais envoyé à lols.bot."
+spamdb_db_enabled_idle: "✅ {database} est sélectionnée, mais rien n'est recherché tant que la vérification est désactivée. Consultez son état avec <code>/spamdb</code>."
+spamdb_db_lols_warning_idle: "⚠️ lols.bot liste les comptes plus agressivement que CAS, attendez-vous donc à plus de faux positifs. Envisagez <code>/spamdb action log</code> tant que vous ne lui faites pas confiance. Une fois la vérification active, l'ID Telegram de chaque nouveau membre sera envoyé à lols.bot."
+
+# New-member probation strings
+probation_help_msg: |
+  <b>🕑 Période d'essai</b>
+
+  Une période d'essai facultative pour les nouveaux membres : celui qui arrive après qu'un admin l'a activée ne peut pas publier de liens ni de transferts (ni, si vous le choisissez, de médias) avant d'avoir envoyé quelques vrais messages ou qu'un délai fixé soit écoulé. Ses messages bloqués sont supprimés ; il n'est pas rendu muet.
+
+  Les membres présents avant l'activation ne sont jamais en période d'essai. Les admins, les utilisateurs approuvés et les bots sont ignorés.
+
+
+  *Commandes admin :*
+
+  × /probation: Affiche les réglages de la période d'essai.
+
+  × /probation `<on/off>`: Active ou désactive la période d'essai pour les membres qui arrivent à partir de maintenant.
+
+  × /probation time `<durée>`: Durée de la période d'essai, de 1h à 30d. Par défaut 24h.
+
+  × /probation messages `<nombre>`: Nombre de messages qui mettent fin à la période d'essai plus tôt, de 1 à 100. Par défaut 5.
+
+  × /probation minlen `<nombre>`: Le message le plus court, en caractères, qui compte. Par défaut 20. Un message répété compte une fois.
+
+  × /probation block `<links,forwards,media>`: Ce qui est supprimé pendant la période d'essai. Par défaut, les liens et les transferts.
+
+  × /probation notice `<on/off>`: Prévient le membre une fois, dans le groupe, de la raison de la suppression d'un message. Désactivé par défaut.
+
+
+  La période d'essai est désactivée dans tous les chats jusqu'à ce qu'un admin l'active. Les messages ne sont comptés que si le bot dispose de Redis ; sans lui, la période se termine à la fin de son délai. Le bot a besoin du droit de supprimer des messages.
+probation_usage: "Utilisez <code>/probation on</code>/<code>off</code>, <code>/probation time 24h</code>, <code>/probation messages 5</code>, <code>/probation minlen 20</code>, <code>/probation block links,forwards</code> ou <code>/probation notice on</code>/<code>off</code>."
+probation_status_on: "La période d'essai des nouveaux membres est <b>activée</b> dans ce chat."
+probation_status_off: "La période d'essai des nouveaux membres est <b>désactivée</b> dans ce chat. Activez-la avec <code>/probation on</code>."
+probation_status_details: "Les membres qui arrivent ne peuvent pas publier de <b>{blocked}</b> pendant <b>{time}</b>, ou jusqu'à ce qu'ils envoient <b>{messages}</b> messages différents d'au moins <b>{minlen}</b> caractères."
+probation_status_notice_on: "<b>Avis :</b> activé. Le membre est prévenu une fois, dans le groupe, de la raison de la suppression d'un message."
+probation_status_notice_off: "<b>Avis :</b> désactivé. Les messages sont supprimés sans prévenir. Activez-le avec <code>/probation notice on</code>."
+probation_status_no_redis: "⚠️ Le bot n'a pas de Redis, donc les messages ne sont pas comptés : la période d'essai ne se termine qu'à la fin de son délai."
+probation_status_no_delete: "⚠️ Je ne peux pas supprimer de messages dans ce chat, donc la période d'essai ne fait rien tant que je n'ai pas ce droit."
+probation_enabled_success: "✅ La période d'essai des nouveaux membres est maintenant <b>activée</b>. Les membres qui arrivent à partir de maintenant sont en période d'essai ; les membres actuels ne le sont pas."
+probation_disabled_success: "❌ La période d'essai des nouveaux membres est maintenant <b>désactivée</b>."
+probation_time_success: "✅ La période d'essai dure maintenant <b>{time}</b>."
+probation_messages_success: "✅ La période d'essai se termine maintenant après <b>{messages}</b> messages."
+probation_minlen_success: "✅ Les messages comptent maintenant à partir de <b>{minlen}</b> caractères."
+probation_block_success: "✅ Pendant la période d'essai, je supprime maintenant : <b>{blocked}</b>."
+probation_notice_on_success: "✅ Un membre en période d'essai sera prévenu une fois de la raison de la suppression d'un message."
+probation_notice_off_success: "❌ Les messages des membres en période d'essai sont maintenant supprimés sans avis."
+probation_invalid_time: "Indiquez une durée de 1h à 30d. Exemple : <code>/probation time 12h</code>"
+probation_invalid_messages: "Indiquez un nombre de messages de 1 à 100. Exemple : <code>/probation messages 5</code>"
+probation_invalid_minlen: "Indiquez une longueur de 1 à 500 caractères. Exemple : <code>/probation minlen 20</code>"
+probation_invalid_block: "Choisissez au moins l'un de <code>links</code>, <code>forwards</code> et <code>media</code>. Exemple : <code>/probation block links,forwards</code>"
+probation_notice: "{user}, les nouveaux membres ne peuvent pas encore publier de {blocked}, j'ai donc supprimé votre message. Cela prend fin après quelques messages ou un certain temps."
+probation_block_links: "liens"
+probation_block_forwards: "transferts"
+probation_block_media: "médias"
+
+# Weekly digest strings
+digest_help_msg: |
+  <b>📊 Résumé hebdomadaire</b>
+
+  Le bot compte chaque jour les messages, les arrivées et les départs dans ce chat, en UTC, et conserve les totaux pendant un an. Les admins peuvent activer un résumé hebdomadaire qui publie les totaux de la semaine précédente, avec l'évolution par rapport à la semaine d'avant, chaque lundi après 00:00 UTC. Il part dans le canal de journal si ce chat en a un, sinon dans le groupe.
+
+  *Commandes d'admin :*
+
+  × /digest : affiche si le résumé est actif et où il part.
+  × /digest on : active le résumé hebdomadaire.
+  × /digest off : désactive le résumé hebdomadaire.
+  × /digest here : envoie le résumé dans ce groupe.
+  × /digest log : envoie le résumé dans le canal de journal (nécessite un canal de journal).
+  × /digest now : prévisualise la semaine en cours avec le même rendu que le résumé.
+
+  Les compteurs sont conservés par chat et n'incluent jamais le texte des messages.
+digest_globally_disabled: "❌ L'opérateur du bot a désactivé le résumé."
+digest_usage: "Utilisez <code>/digest</code>, <code>/digest on</code>, <code>/digest off</code>, <code>/digest here</code>, <code>/digest log</code> ou <code>/digest now</code>."
+digest_status_title: "<b>📊 Résumé hebdomadaire</b>"
+digest_status_enabled: "État : <b>activé</b>"
+digest_status_disabled: "État : <b>désactivé</b>"
+digest_destination_log: "le canal de journal"
+digest_destination_group: "ce groupe"
+digest_status_destination_default: "Destination : <b>{destination}</b> (par défaut)"
+digest_status_destination_set: "Destination : <b>{destination}</b> (choisie par un admin)"
+digest_status_hint: "Utilisez <code>/digest on</code>, <code>/digest off</code>, <code>/digest here</code>, <code>/digest log</code> ou <code>/digest now</code>."
+digest_log_unavailable: "❌ Ce chat n'a pas de canal de journal, le résumé ne peut donc pas y aller. Configurez-en un avec <code>/setlog</code> ou utilisez <code>/digest here</code>."
+digest_message_title: "<b>📊 Résumé hebdomadaire</b>"
+digest_message_period: "<b>Semaine du {date}</b> (UTC)"
+digest_message_messages: "Messages : <b>{count}</b> — {change}"
+digest_message_joins: "Arrivées : <b>{count}</b> — {change}"
+digest_message_leaves: "Départs : <b>{count}</b> — {change}"
+digest_message_moderation: "Actions de modération : <b>{count}</b> — {change}"
+digest_message_top_action: "Action la plus fréquente : <b>{action}</b>"
+digest_message_empty: "😴 <b>Aucune activité enregistrée</b>\nAucun message, aucune arrivée, aucun départ et aucune action de modération sur cette période."
+digest_action_ban: "bannissements"
+digest_action_kick: "expulsions"
+digest_action_mute: "silenciations"
+digest_action_unban: "débannissements"
+digest_change_up: "▲ {percent} % par rapport à la semaine d'avant"
+digest_change_down: "▼ {percent} % par rapport à la semaine d'avant"
+digest_change_same: "aucun changement par rapport à la semaine d'avant"
+digest_change_new: "nouveau"
+digest_change_none: "—"
+digest_dashboard_button: "📊 Ouvrir le tableau de bord"
+# Recurring messages strings
+recurring_help_msg: |
+  <b>🔁 Messages récurrents</b>
+
+  Les admins peuvent faire publier un message par le bot dans ce chat de façon répétée, par exemple un rappel des règles chaque jour. Le contenu fonctionne comme une note : texte avec mise en forme, boutons et remplissages comme le nom du chat, ou le message auquel vous répondez, médias compris. Les heures sont en UTC. Un chat peut avoir jusqu'à 5 messages récurrents, et l'intervalle minimal est de 1 heure.
+
+  *Commandes d'admin :*
+
+  × /recurring add `<intervalle>` `<réponse/texte>` : publie le texte, ou le message auquel vous répondez, à chaque intervalle (par exemple 6h, 1d ou 1w) dans le sujet où la commande est envoyée.
+  Les options se placent entre l'intervalle et le texte : `start=HH:MM` publie d'abord à cette heure (UTC), puis à chaque intervalle ; `end=AAAA-MM-JJ` s'arrête après ce jour (`end=AAAA-MM-JJTHH:MM` à cette heure) ; `delete=on` supprime la publication précédente quand la suivante part ; `topic=ID` publie dans ce sujet.
+  × /recurring list : liste les messages récurrents de ce chat avec leurs ID.
+  × /recurring rm `<id>` : supprime un message récurrent.
+
+  Un message que le bot ne peut plus publier (il a été retiré ou le sujet n'existe plus) est arrêté et reste dans la liste jusqu'à sa suppression. Si le bot ne peut pas écrire dans le chat, il saute les publications jusqu'à ce qu'il le puisse à nouveau.
+recurring_usage: "Utilisez <code>/recurring add &lt;intervalle&gt; &lt;texte&gt;</code>, <code>/recurring list</code> ou <code>/recurring rm &lt;id&gt;</code>."
+recurring_interval_too_short: "❌ L'intervalle doit être d'au moins 1 heure."
+recurring_invalid_option: "❌ Je n'ai pas pu lire l'option <code>{option}</code>. Utilisez <code>start=HH:MM</code>, <code>end=AAAA-MM-JJ</code>, <code>delete=on</code> ou <code>topic=ID</code>."
+recurring_need_content: "❌ Donnez-moi quelque chose à publier : du texte après l'intervalle, ou répondez à un message."
+recurring_end_before_start: "❌ L'heure de fin est avant la première publication."
+recurring_limit_reached: "❌ Ce chat a déjà {max} messages récurrents, le maximum autorisé. Supprimez-en d'abord un avec <code>/recurring rm &lt;id&gt;</code>."
+recurring_added: "✅ Message récurrent <b>#{id}</b> enregistré."
+recurring_list_title: "<b>🔁 Messages récurrents</b> ({count}/{max})"
+recurring_list_item: "<b>#{id}</b> · intervalle {interval} · prochain {next} UTC"
+recurring_list_item_until: "jusqu'au {end} UTC"
+recurring_list_item_topic: "sujet {topic}"
+recurring_list_item_delete_previous: "remplace la publication précédente"
+recurring_list_item_stopped: "⏸ arrêté"
+recurring_list_media: "📎 média"
+recurring_list_empty: "Ce chat n'a aucun message récurrent. Ajoutez-en un avec <code>/recurring add &lt;intervalle&gt; &lt;texte&gt;</code>."
+recurring_list_hint: "Supprimez-en un avec <code>/recurring rm &lt;id&gt;</code>."
+recurring_not_found: "❌ Ce chat n'a pas de message récurrent #{id}."
+recurring_removed: "✅ Message récurrent #{id} supprimé."
+
+# Locks module extended documentation
+locks_notes_docs: |
+  <b>Notes techniques</b>
+  • L'application des verrous est en temps réel
+  • Les admins et les utilisateurs approuvés sont exemptés de tous les verrous
+  • Les verrous persistent après les redémarrages du bot
+  • Le cache est invalidé lors des mises à jour
+
+# Languages extended docs
+languages_extended_docs: |
+  <b>Comment ça fonctionne</b>
+  • <b>Chats privés :</b> N'importe quel utilisateur peut changer sa langue personnelle
+  • <b>Chats de groupe :</b> Seuls les admins peuvent changer la langue du groupe
+
+  Les préférences de langue sont mises en cache pour la performance et stockées séparément pour les utilisateurs et les groupes.
+
+# Greetings extended docs
+greetings_extended_docs: |
+  <b>Intégration Captcha</b>
+  Quand le module Captcha est activé :
+  1. Les nouveaux membres sont rendus muets à l'arrivée
+  2. Un défi captcha est envoyé au lieu du message de bienvenue
+  3. Après vérification, le message de bienvenue est envoyé
+  4. L'échec de vérification applique l'action captcha
+
+# Notes module extended documentation
+notes_extended_docs: |
+  <b>Fonctionnalités :</b>
+  • <b>Support Texte &amp; Médias</b> : Sauvegardez des messages texte, photos, vidéos, documents, et plus
+  • <b>Boutons Personnalisés</b> : Ajoutez des boutons clavier en ligne aux notes
+  • <b>Options de Formatage</b> : Contrôlez la visibilité et le comportement des notes
+  • <b>Notes Admin Uniquement</b> : Restreignez certaines notes aux administrateurs seulement
+  • <b>Notes Privées</b> : Envoyez des notes en privé aux utilisateurs via DM
+  • <b>Contrôle Aperçu Web</b> : Les aperçus de liens sont désactivés par défaut ; ajoutez <code>{preview}</code> pour les activer
+  • <b>Contenu Protégé</b> : Empêchez le transfert du contenu des notes
+
+  <b>Options de Formatage des Notes :</b>
+  Lors de la sauvegarde d'une note, vous pouvez utiliser des tags spéciaux pour contrôler son comportement :
+  • <code>{private}</code> - La note sera uniquement envoyée via DM, jamais dans le groupe
+  • <code>{noprivate}</code> - Récupérée dans un groupe, la note est envoyée dans le groupe même si les notes privées sont activées (récupérée en MP, elle est toujours envoyée en MP)
+  • <code>{admin}</code> - La note ne peut être accédée que par les admins
+  • <code>{protect}</code> - Le contenu ne peut pas être transféré
+  • <code>{nonotif}</code> - Envoyer sans son de notification
+  • <code>{preview}</code> - Afficher l'aperçu des liens (désactivé par défaut)
+
+  <b>Mode Notes Privées :</b>
+  Quand les notes privées sont activées (<code>/privatenotes on</code>), toutes les notes sont envoyées aux utilisateurs via DM au lieu du groupe. Cela garde le chat de groupe propre.
+
+  Les notes individuelles peuvent outrepasser ce comportement :
+  • <code>{private}</code> - Toujours envoyer en privé
+  • <code>{noprivate}</code> - Toujours envoyer dans le groupe
+
+  <b>Note Brute (Sans Formatage) :</b>
+  Les admins peuvent voir le contenu brut d'une note sans formatage (pour édition) :
+  <code>/get nomdelanote noformat</code> ou <code>#nomdelanote noformat</code>
+
+notes_permissions_docs: |
+  <b>Permissions Requises :</b>
+  • Sauvegarder/Effacer notes : Changer les Infos du Groupe
+  • Voir les notes admin : Statut Admin
+  • Effacer toutes les notes : Propriétaire du Chat
+  • Obtenir les notes régulières : N'importe quel utilisateur
+  • Bot : doit être admin pour /save, /addnote, /clear, /rmnote, /notes et /saved (/get et #nomdelanote fonctionnent sans cela)
+
+# Pins module extended documentation
+pins_extended_docs: |
+  <b>Fonctionnalités :</b>
+
+  <b>Anti-Épingle de Chaîne :</b>
+  Quand activé, le bot désépinglera automatiquement tout message qui est auto-épinglé par une chaîne liée. C'est utile quand vous voulez garder le contrôle sur ce qui est épinglé dans votre groupe.
+
+  <b>Nettoyer Lié :</b>
+  Quand activé, le bot supprimera automatiquement tous les messages envoyés au groupe depuis la chaîne liée. Cela garde votre chat de groupe propre du contenu cross-posté de la chaîne.
+
+  <b>Permapin :</b>
+  Créez des messages épinglés personnalisés avec :
+  • Texte avec formatage HTML/Markdown
+  • Boutons en ligne avec URLs
+  • Pièces jointes médias (photos, documents, stickers, audio, vidéo, notes vocales, notes vidéo)
+
+  <b>Supporté via Connexion :</b>
+  Les commandes suivantes fonctionnent quand connecté à un chat via <code>/connect</code> :
+  • <code>/antichannelpin</code>
+  • <code>/cleanlinked</code>
+
+pins_notes_docs: |
+  <b>Notes :</b>
+  • La commande <code>/unpinall</code> affiche un dialogue de confirmation avant de désépingler tous les messages
+  • Permapin prend en charge le texte, les photos, les documents et GIF, les stickers, l'audio, les messages vocaux, les vidéos et les notes vidéo ; les autres types de messages sont refusés
+  • Les paramètres anti-épingle de chaîne et nettoyer lié sont stockés par chat et persistent après les redémarrages du bot
+
+  <b>Permissions Requises :</b>
+  <b>Bot :</b> Doit être admin avec permission "Épingler des Messages" (et "Supprimer des messages" pour <code>/cleanlinked</code>)
+  <b>Utilisateur :</b> La plupart des commandes requièrent admin avec permission "Épingler des Messages"
+
+# Purges module extended documentation
+purges_extended_docs: |
+  <b>Suppression de Plage avec purgefrom/purgeto :</b>
+  Quand vous avez besoin de plus de contrôle sur la plage de suppression :
+
+  1. Répondez au <b>premier</b> message de la plage :
+  <code>/purgefrom</code>
+  Le bot confirmera que le message est marqué (expire après 30 secondes).
+
+  2. Répondez au <b>dernier</b> message de la plage :
+  <code>/purgeto</code>
+  Tous les messages entre les deux marqueurs (inclus) seront supprimés.
+
+  C'est utile quand vous ne pouvez pas facilement défiler jusqu'au point de départ ou avez besoin de vérifier la plage avant suppression.
+
+  <b>Limites et Restrictions :</b>
+  • <b>Maximum de messages par purge :</b> 1000 messages
+  • <b>Limite d'âge des messages :</b> Les messages de plus de 48 heures peuvent ne pas être supprimables (restriction API Telegram)
+  • <b>Permissions requises :</b> L'utilisateur et le bot doivent avoir la permission "Supprimer des Messages"
+
+purges_notes_docs: |
+  <b>Notes :</b>
+  • Le marqueur <code>/purgefrom</code> expire après 30 secondes s'il n'est pas suivi par <code>/purgeto</code>
+  • La suppression de grandes plages utilise un traitement concurrent pour de meilleures performances
+  • Les messages de statut (montrant combien de messages ont été supprimés) s'auto-suppriment après 3 secondes
+  • Le bot gère gracieusement les messages déjà supprimés sans erreurs
+
+# Reports module extended documentation
+reports_extended_docs: |
+  <b>Comment ça fonctionne :</b>
+
+  <b>Signaler un Message :</b>
+  1. <b>Répondez au message offensant</b> avec <code>/report</code> ou mentionnez <code>@admin</code>
+  2. Le bot envoie une notification mentionnant tous les admins qui ont les rapports activés
+  3. La notification inclut des boutons d'action pour une modération rapide
+
+  <b>Boutons d'Action Admin :</b>
+  • <b>➡ Message</b> - Lien vers le message signalé
+  • <b>⚠ Expulser</b> - Expulser l'utilisateur signalé (il peut rejoindre)
+  • <b>⛔️ Bannir</b> - Bannir permanemment l'utilisateur signalé
+  • <b>❎ Supprimer le message</b> - Supprimer le message signalé
+  • <b>✔️ Marquer comme résolu</b> - Marquer le rapport comme résolu sans action
+
+  <b>Fiche dans le canal de journal :</b>
+  Si le groupe a un canal de journal (<code>/setlog</code>) avec la catégorie <code>reports</code> activée, chaque message signalé y reçoit aussi une fiche, avec ses propres boutons <b>Bannir</b>, <b>Rendre muet</b>, <b>Supprimer</b> et <b>Ignorer</b>. Seuls les administrateurs du groupe concerné peuvent les utiliser, avec les mêmes droits que dans le groupe. Le groupe reçoit toujours le signalement complet, avec les mentions des admins et les boutons décrits ci-dessus.
+
+  Dans le canal de journal :
+  • Une copie du message signalé, pour que la preuve reste disponible si l'original est supprimé. Les messages qui ne peuvent pas être copiés sont cités sous forme de texte.
+  • Une fiche en réponse à cette copie, avec l'utilisateur signalé, le nombre de membres qui ont signalé le message, le dernier à l'avoir signalé et son motif, et un lien vers le message d'origine.
+  • Les signalements suivants du même message mettent à jour la même fiche ; un membre qui signale deux fois le même message n'est compté qu'une fois.
+  • Une fois que les admins ont tranché le signalement d'un membre, si ce membre signale à nouveau le même message, il reçoit une réponse indiquant que les admins l'ont déjà examiné, sans mention des admins ni boutons.
+  • Les boutons d'une fiche fonctionnent tant qu'un signalement y reste ouvert ; quand il n'y en a plus, appuyer dessus indique que le signalement a expiré.
+
+  Chaque signalement est aussi enregistré dans la base de données avec son auteur, sa cible, l'ID du message, les 100 premiers caractères du texte du message et son statut, que les boutons ci-dessus enregistrent ; le message complet n'est conservé que dans le canal de journal. Les signalements clos sont supprimés 90 jours après leur clôture, et ceux que personne n'a clos 90 jours après leur création. Les signalements ne sont pas inclus dans <code>/export</code>.
+
+  <b>Paramètres Personnels vs Groupe :</b>
+  • <b>En MP :</b> <code>/reports on/off</code> bascule si VOUS recevez les notifications de rapport (nécessite une connexion active via /connect à un groupe où vous et le bot êtes administrateurs)
+  • <b>En Groupe :</b> <code>/reports on/off</code> bascule si le signalement est activé pour ce groupe
+  • <b>Mise en sourdine automatique :</b> <code>/reports mute &lt;N&gt;</code> (N de 2 à 20) rend muet un utilisateur dès que N membres différents ont des signalements ouverts contre lui, jusqu'à la décision d'un admin et pour 24 heures au maximum. Marquer le signalement comme résolu ou supprimer le message lève la sourdine. Ne s'applique jamais aux admins ni aux utilisateurs approuvés. <code>/reports mute off</code> la désactive (par défaut).
+
+reports_permissions_docs: |
+  <b>Qui peut signaler ?</b>
+  ✅ Utilisateurs réguliers
+  ❌ Admins (pas besoin de se signaler eux-mêmes)
+  ❌ Utilisateurs bloqués
+  ❌ Chaînes anonymes / Comptes système Telegram
+
+  <b>Qui peut être signalé ?</b>
+  ✅ Utilisateurs réguliers
+  ❌ Le bot lui-même
+  ❌ Admins (protégés des signalements)
+  ❌ Chaînes anonymes / Comptes système Telegram
+
+# Rules module extended documentation
+rules_extended_docs: |
+  <b>Fonctionnalités :</b>
+
+  <b>Règles Privées :</b>
+  Activez les règles privées (<code>/privaterules on</code>) pour envoyer les règles via MP au lieu du groupe. Cela garde le chat de groupe propre.
+
+  <b>Bouton Règles Personnalisé :</b>
+  Définissez un texte de bouton personnalisé (max 30 caractères) :
+  <code>/rulesbtn Voir les Règles</code>
+
+  Réinitialiser par défaut :
+  <code>/resetrulesbtn</code>
+
+  <b>Définir les Règles :</b>
+  Vous pouvez définir les règles en fournissant du texte directement ou en répondant à un message :
+  <code>/setrules Veuillez respecter tous les membres.</code>
+
+  Ou répondez à un message :
+  <code>/setrules</code>
+
+  <b>Permissions Requises :</b>
+  • Commandes utilisateur : Disponibles pour tous les utilisateurs
+  • Commandes admin : Requièrent des permissions admin dans le chat
+
+# Filters module extended documentation
+filters_extended_docs: |
+  <b>Fonctionnalités Avancées :</b>
+
+  <b>Réponses Aléatoires :</b>
+  Utilisez <code>%%%</code> pour séparer plusieurs réponses. Une sera choisie aléatoirement :
+  <code>/filter bonjour Salut !%%%Bonjour !%%%Hey, comment ça va ?</code>
+
+  <b>Filtres Média :</b>
+  Répondez à n'importe quel média (photo, vidéo, document, sticker, etc.) avec <code>/filter déclencheur</code> pour créer un filtre qui envoie ce média.
+
+  <b>Mode Noformat :</b>
+  Les admins peuvent voir le contenu brut du filtre (incluant les codes de formatage) en ajoutant <code>noformat</code> après le déclencheur :
+  <code>bonjour noformat</code>
+  C'est utile pour déboguer les filtres ou voir les configurations de boutons.
+
+  <b>Boutons de Filtre :</b>
+  Vous pouvez ajouter des boutons en ligne à vos filtres :
+  <code>/filter bonjour Bonjour ! Consultez ces liens :
+  [Bouton 1](buttonurl:https://example.com)
+  [Bouton 2](buttonurl:https://example2.com)</code>
+
+# Captcha module extended documentation
+captcha_extended_docs: |
+  <b>Comment ça fonctionne :</b>
+  1. Quand le captcha est activé, les nouveaux membres sont automatiquement rendus muets à l'arrivée
+  2. Un défi captcha est envoyé au nouveau membre
+  3. L'utilisateur doit sélectionner la bonne réponse parmi les options fournies
+  4. Si réussi, l'utilisateur est démuet et peut participer au groupe
+  5. S'ils échouent ou timeout, l'action configurée est prise (kick, ban, ou mute)
+
+  <b>Types de Captcha :</b>
+  • <b>Math</b> : Résoudre des problèmes arithmétiques simples (addition, soustraction, multiplication)
+  • <b>Text</b> : Identifier le texte montré dans une image déformée
+
+  <b>Fonctionnalité Messages en Attente :</b>
+  Quand un utilisateur complète le captcha, tous les messages qu'il essaie d'envoyer sont stockés et supprimés. Les admins peuvent :
+  • Voir quels messages un utilisateur a essayé d'envoyer en utilisant <code>/captchapending</code>
+  • Effacer les messages stockés en utilisant <code>/captchaclear</code>
+
+  Cela aide à identifier les tentatives de spam potentielles avant que les utilisateurs ne complètent la vérification.
+
+captcha_permissions_docs: |
+  <b>Exigences du Bot :</b>
+  • Bannir des utilisateurs (pour les actions kick/ban)
+  • Restreindre des membres (pour rendre muet pendant la vérification)
+  • Supprimer des messages (pour nettoyer les messages captcha)
+
+  <b>Actions d'Échec :</b>
+  • <code>kick</code> - Retire l'utilisateur tout en lui permettant de revenir
+  • <code>ban</code> - Bannir permanemment l'utilisateur
+  • <code>mute</code> - Garder l'utilisateur muet pendant 24 heures
+
+# Blacklists module extended documentation
+blacklists_extended_docs: |
+  <b>Actions Disponibles :</b>
+  Les actions suivantes peuvent être définies en utilisant <code>/blaction</code> :
+  • <code>none</code> - Supprime juste le message sans autre action
+  • <code>warn</code> - Supprime le message et émet un avertissement à l'utilisateur (par défaut)
+  • <code>mute</code> - Supprime le message et rend l'utilisateur muet
+  • <code>kick</code> - Supprime le message et expulse l'utilisateur (il peut rejoindre)
+  • <code>ban</code> - Supprime le message et bannit permanemment l'utilisateur
+  • <code>tban &lt;durée&gt;</code> - Supprime le message et bannit l'utilisateur pour la durée obligatoire indiquée (par exemple <code>/blaction tban 1d</code>)
+  • <code>tmute &lt;durée&gt;</code> - Supprime le message et rend l'utilisateur muet pour la durée obligatoire indiquée (par exemple <code>/blaction tmute 2h</code>)
+
+  <b>Note :</b>
+  Le mode par défaut pour la Liste Noire est <b>warn</b>, qui supprimera le message et émettra un avertissement à l'utilisateur.
+
+  <b>Commandes :</b>
+  • <code>/addblacklist &lt;déclencheur&gt;</code> - Ajoute le mot à la liste noire dans le chat actuel
+  • <code>/rmblacklist &lt;déclencheur&gt;</code> - Supprime le mot des Mots sur Liste Noire actuels dans le Chat
+  • <code>/blaction &lt;mute/kick/ban/warn/none/tban/tmute&gt; [durée]</code> - Définit l'action lorsqu'un mot de la liste noire est détecté ; tban/tmute nécessitent une durée
+  • <code>/remallbl</code> - Supprime tous les mots sur liste noire du chat (Propriétaire Uniquement)
+
+# Disabling module extended documentation
+disabling_extended_docs: |
+  <b>Fonctionnalités Clés :</b>
+  • Désactiver des commandes bot spécifiques pour les utilisateurs non-admin
+  • Les admins peuvent toujours contourner les commandes désactivées
+  • Suppression automatique optionnelle des messages de commandes désactivées
+  • Support pour désactiver plusieurs commandes à la fois
+
+  <b>Désactiver Plusieurs Commandes :</b>
+  <code>/disable adminlist rules info</code>
+  Désactive les commandes <code>/adminlist</code>, <code>/rules</code>, et <code>/info</code> en une fois.
+
+  <b>Basculer Suppression de Commande :</b>
+  <code>/disabledel on</code> - Les messages désactivés seront maintenant supprimés.
+  <code>/disabledel off</code> - Les messages désactivés ne seront plus supprimés.
+  <code>/disabledel</code> - Vérifier le paramètre de suppression actuel.
+
+disabling_notes_docs: |
+  <b>Notes Importantes :</b>
+  • <b>Contournement Admin :</b> Les commandes désactivées n'affectent que les utilisateurs non-admin. Tous les admins peuvent toujours utiliser n'importe quelle commande.
+  • <b>Support Connexion :</b> Les commandes désactivées sont toujours accessibles via la fonctionnalité <code>/connect</code> pour les chats connectés.
+  • <b>Commandes Multiples :</b> <code>/disable</code> et <code>/enable</code> supportent tous deux plusieurs noms de commandes dans un seul message.
+
+  <b>Permissions Requises :</b>
+  • <code>/disable</code>, <code>/enable</code>, <code>/disabledel</code> : Admin uniquement
+  • <code>/disableable</code>, <code>/disabled</code> : Tous les utilisateurs (mais <code>/disabled</code> peut être désactivé)
+
+# Extended documentation locale keys - Help module
+help_extended_docs: |
+  <b>Système de Navigation:</b>
+  Le module d'Aide fournit les points d'entrée principaux et la navigation du bot. Lorsqu'un utilisateur envoie <code>/start</code> dans un chat privé, le bot affiche un message de bienvenue avec un clavier intégré pour naviguer vers les différents modules.
+
+  La commande <code>/help</code> affiche une liste de modules. En cliquant sur un bouton de module, les commandes et les informations d'utilisation de ce module s'affichent. Lorsque <code>/help</code> est utilisé dans un chat de groupe, le bot redirige l'utilisateur vers un message privé pour une aide détaillée afin d'éviter d'encombrer le groupe.
+
+  <code>/about</code> affiche les informations du bot, la version et les liens, tandis que <code>/donate</code> affiche les informations de don pour soutenir le projet.
+
+  <code>/extend</code> envoie toutes les commandes de tous les modules en une seule liste ; dans un groupe, il répond avec un bouton qui ouvre la liste en MP.
+
+# Extended documentation locale keys - Devs module
+devs_extended_docs: |
+  <b>Hiérarchie d'Équipe:</b>
+  Le module Développeurs fournit des commandes de gestion du bot et de diagnostic réservées à l'équipe interne du bot. L'équipe a trois niveaux avec des privilèges décroissants.
+
+  <b>Niveau 1 — Propriétaire:</b> Défini via la variable d'environnement <code>OWNER_ID</code> lors du déploiement. Contrôle total : gérer la liste d'équipe, toutes les commandes de diagnostic, toutes les commandes d'équipe.
+
+  <b>Niveau 2 — Dev:</b> Attribué par le propriétaire via <code>/adddev</code>. A accès aux commandes de diagnostic : <code>/stats</code>, <code>/chatinfo</code>, <code>/chatlist</code>, <code>/leavechat</code>. Également listé dans <code>/teamusers</code> et signalé comme utilisateur dev dans <code>/info</code>.
+
+  <b>Niveau 2 — Sudo:</b> Attribué par le propriétaire via <code>/addsudo</code>. Listé dans <code>/teamusers</code>, mais N'A PAS accès aux commandes de diagnostic.
+
+  <b>Promotions:</b> Lorsqu'un utilisateur Dev ou Sudo qui est admin du chat avec le droit d'ajouter des admins utilise <code>/promote</code>, le nouvel admin reçoit tous les droits d'admin que possède le bot, même ceux qui manquent à celui qui le promeut. Le créateur du chat bénéficie du même traitement. Les autres admins ne peuvent transmettre que les droits qu'ils possèdent eux-mêmes.
+
+  <b>Niveau 3 — Membre d'Équipe:</b> Inclut automatiquement le propriétaire + tous les utilisateurs sudo + tous les utilisateurs dev. Voir la liste d'équipe uniquement via <code>/teamusers</code>.
+
+  <b>Remarque:</b> Parmi les commandes de ce module, les utilisateurs Sudo ne peuvent utiliser que <code>/teamusers</code>. <code>/stats</code>, <code>/chatinfo</code>, <code>/chatlist</code> et <code>/leavechat</code> nécessitent Dev ou Propriétaire.
+
+  <b>Important:</b> Ces commandes ne sont pas visibles dans le menu d'aide public et ignorent silencieusement les utilisateurs non autorisés.
+
+# Extended documentation locale keys - Users module
+users_extended_docs: |
+  <b>Suivi en Arrière-plan:</b>
+  Le module Utilisateurs est un module passif en arrière-plan sans commandes visibles pour l'utilisateur. Il s'exécute silencieusement sur chaque message que le bot traite, suivant automatiquement tous les expéditeurs de messages et tous les chats dans lesquels le bot est actif.
+
+  <b>Ce qu'il suit:</b>
+  • IDs d'utilisateur, noms d'utilisateur et noms affichés de chaque expéditeur de message
+  • IDs de chat et noms de chaque groupe où le bot est présent
+  • IDs de canal, noms et noms d'utilisateur des canaux liés
+
+  <b>Limitation de débit:</b>
+  • Fiches des utilisateurs, chats et canaux : actualisées au plus une fois par heure
+  • Un nom, un nom d'utilisateur ou un titre de chat modifié est enregistré immédiatement
+  • Cela évite les écritures excessives dans la base de données tout en maintenant les données raisonnablement à jour
+
+  <b>Fonctionnement Passif:</b>
+  • S'exécute comme un observateur de messages dans le groupe de gestionnaires -1 (se déclenche avant tous les gestionnaires de commandes)
+  • Aucune interaction utilisateur requise — entièrement automatique
+  • D'autres modules, comme <code>/info</code>, dépendent des données collectées par ce module
+
+# Formatting module help message
+formatting_help_msg: "NexGuard supporte un grand nombre d'options de formatage pour rendre vos messages plus expressifs. Jetez un œil en cliquant sur les boutons ci-dessous !
+
+  *Commandes utilisateur* :
+
+  × /markdownhelp: Affiche le guide de formatage. Dans un groupe, répond avec un bouton qui ouvre le guide en privé.
+
+  × /formatting: Identique à /markdownhelp."
+
+# Formatting module - Markdown documentation
+formatting_markdown: |
+  <b>Formatage Markdown</b>
+
+  Vous pouvez formater votre message en utilisant <b>gras</b>, <i>italique</i>, <u>souligné</u>,
+  et bien plus. Allez-y et expérimentez !
+
+  <b>Markdown supporté</b> :
+
+  - <code>`mots de code`</code> : Les accents graves sont utilisés pour les polices monospace. S'affiche comme : <code>mots de code</code>.
+
+  - <code>_mots italiques_</code> : Les underscores sont utilisés pour les polices italiques. S'affiche comme : <i>mots italiques</i>.
+
+  - <code>*mots gras*</code> : Les astérisques sont utilisés pour les polices gras. S'affiche comme : <b>mots gras</b>.
+
+  - <code>~barré~</code> : Les tildes sont utilisés pour le texte barré. S'affiche comme : <strike>barré</strike>.
+
+  - <code>||spoiler||</code> : Les doubles barres verticales sont utilisées pour les spoilers. S'affiche comme : <tg-spoiler>Spoiler</tg-spoiler>.
+
+  - <code>```pre```</code> : Pour que le formateur ignore les autres caractères de formatage à l'intérieur du texte formaté avec '```', sera comme : <code>**gras** | *gras*</code>.
+
+  - <code>__souligné__</code> : Les doubles underscores sont utilisés pour le soulignement. S'affiche comme : souligné. NOTE : Certains clients essaient d'être intelligents et l'interprètent comme italique. Dans ce cas, essayez d'utiliser le formatage intégré de votre application.
+
+  - <code>[hyperlien](example.com)</code> : C'est le formatage utilisé pour les hyperliens. S'affiche comme : <a href='https://example.com/'>hyperlien</a>.
+
+  - <code>[Mon Bouton](buttonurl://https://example.com)</code> : C'est le formatage utilisé pour créer des boutons. Cet exemple créera un bouton nommé "Mon bouton" qui ouvre <code>https://example.com</code> quand on clique. Le lien doit commencer par <code>http://</code> ou <code>https://</code>, sinon aucun bouton n'est créé.
+
+  Si vous souhaitez envoyer des boutons sur la même ligne, utilisez le formatage <code>:same</code>.
+
+  <b>Exemple :</b>
+
+  <code>[bouton 1](buttonurl:https://example.com)</code>
+
+  <code>[bouton 2](buttonurl://https://example.com:same)</code>
+
+  <code>[bouton 3](buttonurl://https://example.com)</code>
+
+  Cela affichera les boutons 1 et 2 sur la même ligne, avec le 3 en dessous.
+
+formatting_random: |
+  <b>Contenu Aléatoire</b>
+
+  Une autre chose qui peut être amusante, c'est de randomiser le contenu d'un message. Rendez les choses
+  un peu plus personnelles en rendant aléatoires les réponses des filtres ou les notes !
+
+  Comment utiliser le contenu aléatoire :
+
+  - %%% : Ce séparateur peut être utilisé pour ajouter des réponses aléatoires au bot.
+
+  Par exemple :
+
+  <code>bonjour
+
+  %%%
+
+  comment ça va</code>
+
+  Cela choisira aléatoirement entre envoyer le premier message, "bonjour", ou le second
+  message, "comment ça va".
+
+  Utilisez ceci pour rendre NexGuard un peu plus personnalisé ! (fonctionne uniquement dans les filtres/notes)
+
+  Exemple de filtre :
+
+  - Chaque fois que quelqu'un dit "hey", le bot répond avec l'un des trois messages
+  montrés ici.
+
+  -> /filter "hey"
+
+  bonjour <code>{first}</code> !
+
+  %%%
+
+  Ooooh, <code>{first}</code> comment ça va ?
+
+  %%%
+
+  Salut ! <code>{first}</code>
+
+# Antiflood module runtime strings
+antiflood_checkflood_perform_action:
+  "Ouais, je n'aime pas vos inondations. %s a été
+  %s !"
+antiflood_errors_expected_args:
+  "J'attendais des arguments ! Soit off, soit un entier.
+  ex: <code>/setflood 5</code>, ou <code>/setflood off</code>"
+antiflood_errors_invalid_int:
+  "Ce n'est pas un entier valide. Veuillez me donner un entier valide,
+  ou <code>off</code>."
+antiflood_errors_set_in_limit: La limite antiflood doit être définie entre 3 et 100.
+antiflood_flood_deleter_already_disabled: "La suppression des messages antiflood est actuellement *désactivée* dans ce chat. Seul le message qui déclenche l'antiflood sera supprimé ; les messages précédents du flood restent."
+antiflood_flood_deleter_already_enabled:
+  "La suppression des messages antiflood est actuellement *activée*
+  dans ce chat, les messages causant l'antiflood seront supprimés !"
+antiflood_flood_deleter_disabled: "Désactivation de la suppression des messages antiflood. Seul le message qui déclenche l'antiflood sera supprimé ; les messages précédents du flood restent."
+antiflood_flood_deleter_enabled:
+  "Activation de la suppression des messages antiflood. Les messages causant
+  l'antiflood seront supprimés !"
+antiflood_flood_deleter_invalid_option: "Je ne comprends qu'une option parmi : `yes`/`no`/`on`/`off`"
+antiflood_flood_disabled: Ce chat n'applique actuellement pas le contrôle d'inondation.
+antiflood_flood_show_settings:
+  "Ce chat applique actuellement le contrôle d'inondation après
+  %d messages. Tout utilisateur envoyant plus que cette quantité de messages sera %s."
+antiflood_setflood_disabled: |
+  D'accord.
+  Je n'avertirai pas les utilisateurs pour inondation.
+antiflood_setflood_success: La limite d'inondation a été définie à <b>%d</b> messages.
+antiflood_setfloodmode_specify_action:
+  "Vous devez spécifier une action en cas
+  de flood. Utilisez ban/kick/mute, ou tban/tmute avec une durée (par exemple tban 1d ou tmute 10m)."
+antiflood_setfloodmode_success: Le mode d'inondation a été défini sur %s.
+antiflood_mode_tban: "Le mode antiflood a été défini sur tban pendant %s."
+antiflood_mode_tmute: "Le mode antiflood a été défini sur tmute pendant %s."
+antiflood_setfloodmode_unknown_type: "Type inconnu '%s'. Utilisez ban/kick/mute, ou tban/tmute avec une durée (par exemple tban 1d ou tmute 10m)."
+antiflood_button_unban_admins: "Débannir (Admins uniquement)"
+antiflood_action_muted: "rendu muet"
+antiflood_action_banned: "banni"
+antiflood_action_kicked: "expulsé"
+antiflood_action_tbanned: "banni pendant {duration}"
+antiflood_action_tmuted: "rendu muet pendant {duration}"
+antiflood_action_none: "aucun"
+
+# Common strings admin cache
+commonstrings_admin_cache_cache_reloaded: Cache admin rechargé avec succès.
+
+# Formatting fillings
+formatting_fillings: "<b>Remplissages</b>
+
+
+  Vous pouvez également personnaliser le contenu de vos messages avec des données contextuelles. Par exemple,
+  vous pouvez mentionner un utilisateur par son nom dans le message de bienvenue, ou le mentionner dans un filtre !
+
+  Vous pouvez utiliser ces remplissages pour mentionner un utilisateur dans les notes aussi !
+
+
+  <b>Remplissages supportés :</b>
+
+  - <code>{first}</code> : Le prénom de l'utilisateur.
+
+  - <code>{last}</code> : Le nom de famille de l'utilisateur.
+
+  - <code>{fullname}</code> : Le nom complet de l'utilisateur.
+
+  - <code>{username}</code> : Le nom d'utilisateur. S'il n'en a pas, mentionne
+  l'utilisateur à la place.
+
+  - <code>{mention}</code> : Identique à <code>{username}</code> (le @nom d'utilisateur, ou une mention par prénom s'il n'en a pas).
+
+  - <code>{id}</code> : L'ID de l'utilisateur.
+
+  - <code>{chatname}</code> : Le nom du chat.
+
+  - <code>{count}</code> : Le nombre de membres du chat.
+
+  - <code>{rules}</code> : Ajoute un bouton Règles sous les autres boutons du message (seulement si le chat a des règles). Utilisez <code>{rules:same}</code> pour le placer sur la même ligne que le bouton précédent, ou <code>{rules:up}</code> pour le placer avant tous les autres boutons.
+
+  - <code>{protect}</code> : Protège le contenu contre le partage (notes uniquement).
+
+  - <code>{preview}</code> : Active les aperçus de liens (notes uniquement).
+
+  - <code>{nonotif}</code> : Désactive la notification pour ce message (notes uniquement)."
+
+# Main bot command strings
+main_bot_command_start: "Démarre le bot"
+main_bot_command_help: "Consulter la section d'aide du bot"
+
+# Message type strings
+message_type_text: "texte"
+message_type_sticker: "autocollant"
+message_type_document: "document"
+message_type_photo: "photo"
+message_type_audio: "audio"
+message_type_voice: "message vocal"
+message_type_video: "vidéo"
+message_type_video_note: "note vidéo"
+message_type_unknown: "inconnu"
+
+# Issue #628 remediation keys
+misc_translate_parse_error: "Impossible d'analyser la réponse de traduction. Veuillez réessayer."
+blacklists_set_bl_action_update_failed: "Impossible de mettre à jour l'action de la liste noire. Veuillez réessayer."
+blacklists_set_bl_action_no_words: "Il n'y a encore aucun mot dans la liste noire de ce chat. Ajoutez-en un avec /addblacklist, puis choisissez l'action."
+filters_overwrite_token_failed: "Impossible de créer la confirmation d'écrasement. Veuillez réessayer."
+notes_overwrite_token_failed: "Impossible de créer la confirmation d'écrasement. Veuillez réessayer."
+common_settings_save_failed: "Échec de la sauvegarde des paramètres. Veuillez réessayer plus tard."
+devs_chatlist_error: "Échec de la génération de la liste des chats. Veuillez réessayer."
+
+# Reactions module strings
+# TODO: Translate
+reactions_help_msg: |
+  <b>🎭 Auto-Réactions</b>
+
+  Réagissez automatiquement aux messages contenant des mots-clés spécifiques !
+
+  Configurez des réactions automatiques qui se déclenchent quand les utilisateurs envoient des mots spécifiques.
+
+  <b>Commandes Utilisateur :</b>
+  • /reactions - Lister les réactions configurées
+
+  <b>Commandes Admin :</b>
+  • /addreaction <mot-clé> <emoji> - Ajouter une auto-réaction
+  • /removereaction <mot-clé> - Supprimer une réaction
+  • /resetreactions - Effacer toutes les réactions
+
+  <b>Exemple :</b>
+  • /addreaction bonjour 👍 - Le bot réagit avec 👍 quand quelqu'un dit "bonjour"
+  Seuls les emojis de réaction standard de Telegram (par exemple 👍 ❤ 🔥 🎉) peuvent être utilisés.
+
+reactions_add_usage: "Utilisation : /addreaction &lt;mot_cle&gt; &lt;emoji&gt;"
+reactions_invalid_emoji: "Veuillez fournir un emoji valide."
+reactions_add_error: "Impossible d'enregistrer la réaction. Veuillez réessayer."
+reactions_add_success: "Réaction ajoutée : <code>{keyword}</code> -> {emoji}"
+reactions_remove_usage: "Utilisation : /removereaction &lt;mot_cle&gt;"
+reactions_keyword_not_found: "Aucune réaction trouvée pour le mot-clé : <code>{keyword}</code>"
+reactions_remove_error: "Impossible de supprimer la réaction. Veuillez réessayer."
+reactions_remove_success: "Réaction supprimée pour le mot-clé : <code>{keyword}</code>"
+reactions_none: "Aucune réaction n'est configurée dans ce chat."
+reactions_list_header: "<b>Réactions configurées :</b>\n{list}"
+reactions_reset_success: "Toutes les réactions ont été réinitialisées pour ce chat."
+
+# Backup/Restore module strings
+backup_help_msg: |
+  <b>📦 Sauvegarde & Restauration</b>
+
+  Sauvegardez et restaurez les paramètres de votre groupe :
+
+  <b>Commandes Admin :</b>
+  • /export - Exporter tous les paramètres du groupe en fichier JSON
+  • /export notes filters rules - Exporter uniquement des modules spécifiques
+
+  <b>Commandes Créateur :</b>
+  • /import - Répondre à un fichier de sauvegarde pour restaurer les paramètres
+  • /import notes filters - Importer uniquement des modules spécifiques
+  • /reset - Réinitialiser tous les paramètres par défaut
+  • /reset warns locks - Réinitialiser uniquement des modules spécifiques
+
+  <b>Limites de Débit :</b>
+  • Export : 1 par 5 minutes
+  • Import : 1 par 10 minutes
+  • Réinitialisation : 1 par heure
+
+backup_export_success: |
+  <b>✅ Export Réussi !</b>
+
+  <b>Chat :</b> %s
+  <b>Modules exportés :</b> %d
+  <b>Exporté le :</b> %s
+
+  <b>Modules :</b>
+  %s
+
+backup_export_rate_limited: "⏳ Veuillez attendre <b>{time}</b> avant d'exporter à nouveau."
+backup_export_no_modules: "❌ Aucun module exportable trouvé pour ce chat."
+backup_invalid_modules: "❌ Aucun de ces modules ne peut être utilisé ici. Modules valides : <code>{modules}</code>"
+backup_export_failed: "❌ Échec de l'export des paramètres. Veuillez réessayer plus tard."
+
+backup_import_success: |
+  <b>✅ Import Réussi !</b>
+
+  <b>Modules importés :</b> %d
+
+  <b>Modules :</b>
+  %s
+
+backup_import_rate_limited: "⏳ Veuillez attendre <b>{time}</b> avant d'importer à nouveau."
+backup_import_no_reply: "❌ Veuillez répondre à un fichier de sauvegarde avec <code>/import</code>."
+backup_import_invalid_file: "❌ Format de fichier de sauvegarde invalide. Veuillez envoyer un fichier JSON de sauvegarde valide."
+backup_import_file_too_large: "❌ Le fichier de sauvegarde est trop grand. Taille maximale : 10 Mo."
+backup_import_download_failed: "❌ Échec du téléchargement du fichier de sauvegarde. Veuillez réessayer."
+backup_import_version_mismatch: "❌ Cette sauvegarde utilise une version de format non prise en charge et ne peut pas être importée. Exportez une nouvelle sauvegarde avec ce bot et réessayez."
+backup_import_creator_only: "❌ Seul le créateur du groupe peut importer des paramètres."
+backup_import_confirm: |
+  <b>⚠️ Confirmer l'Import</b>
+
+  Vous êtes sur le point d'importer <b>%s modules</b> :
+  %s
+
+  Cela écrasera les paramètres existants. Êtes-vous sûr ?
+
+backup_import_expired: "❌ La demande d'import a expiré. Veuillez recommencer avec <code>/import</code>."
+backup_import_cancelled: "❌ Import annulé."
+backup_import_failed: "❌ Échec de l'import : %s"
+backup_import_federation_skipped: "⚠️ La fédération <code>{fed_id}</code> de la sauvegarde n'existe pas sur ce bot, ce chat n'a donc rejoint aucune fédération."
+
+backup_reset_success: |
+  <b>✅ Réinitialisation Réussie !</b>
+
+  <b>Modules réinitialisés :</b> %d
+
+  <b>Modules :</b>
+  %s
+
+backup_reset_rate_limited: "⏳ Veuillez attendre <b>{time}</b> avant de réinitialiser à nouveau."
+backup_reset_creator_only: "❌ Seul le créateur du groupe peut réinitialiser les paramètres."
+backup_reset_confirm: |
+  <b>⚠️ Confirmer la Réinitialisation</b>
+
+  Vous êtes sur le point de réinitialiser <b>%s modules</b> :
+  %s
+
+  <b>Cette action est irréversible !</b> Êtes-vous sûr ?
+
+backup_reset_expired: "❌ La demande de réinitialisation a expiré. Veuillez recommencer avec <code>/reset</code>."
+backup_reset_cancelled: "❌ Réinitialisation annulée."
+backup_reset_failed: "❌ Échec de la réinitialisation : %s"
+
+button_confirm_import: "✅ Confirmer l'Import"
+button_cancel_import: "❌ Annuler"
+button_confirm_reset: "⚠️ Oui, Réinitialiser"
+button_cancel_reset: "❌ Annuler"
+
+# Callback validation strings (previously hardcoded)
+common_callback_invalid_request: "Demande invalide."
+common_callback_message_unavailable: "Message n'est plus disponible."
+
+# Admin module hardcoded strings
+admin_check_status_failed: "Échec de la vérification du statut de l'utilisateur."
+
+# Reactions module button strings
+reactions_button_add: "Ajouter Réaction"
+reactions_button_remove: "Supprimer Réaction"
+
+# Database default strings
+db_blacklist_default_reason: "Mot sur liste noire : '%s'"
+
+
+approvals_help_msg: |
+  <b>👤 Approbations</b>
+
+  Accorde aux membres de confiance une immunité contre les mesures anti-spam automatisées sans les nommer administrateurs.
+
+  <b>Commandes Administrateur:</b>
+
+  × /approve <code><reply/username/mention/userid></code> <code>[reason]</code>
+  × /unapprove <code><reply/username/mention/userid></code>
+  × /approval <code><reply/username/mention/userid></code>
+  × /approved: Lister tous les utilisateurs approuvés
+  × /unapproveall: Supprimer toutes les approbations (créateur uniquement)
+
+  Les utilisateurs approuvés sont exempts de : antiflood, antiraid, listes noires, verrous, CAPTCHA et le filtre anti-spam par IA.
+approvals_user_approved: "Approuvé %s par %s.%s"
+approvals_already_approved: "%s est déjà approuvé dans ce chat."
+approvals_not_approved: "%s n'est pas dans la liste des approuvés."
+approvals_user_unapproved: "Supprimé %s de la liste des approuvés."
+approvals_check_not_approved: "%s n'est actuellement pas approuvé dans ce chat."
+approvals_check_status: |
+  <b>Utilisateur :</b> %s
+  <b>Approuvé le :</b> %s
+  <b>Approuvé par :</b> %s
+  %s
+approvals_none_approved: "Aucun utilisateur approuvé dans ce chat."
+approvals_approved_list_file_caption: "Liste des utilisateurs approuvés pour %s"
+approvals_list_file_error: "Échec de la génération du fichier des utilisateurs approuvés."
+approvals_unapproveall_ask: "Êtes-vous sûr de vouloir supprimer TOUS les utilisateurs approuvés ?"
+approvals_unapproveall_done: "Tous les utilisateurs approuvés ont été supprimés."
+approvals_unapproveall_cancel: "Suppression de toutes les approbations annulée."
+approvals_approve_error: "Échec de l'approbation de l'utilisateur. Veuillez réessayer."
+approvals_unapprove_error: "Échec de la suppression de l'utilisateur de la liste des approuvés."
+approvals_unapproveall_error: "Échec de la suppression de tous les utilisateurs approuvés : {error}"
+approvals_reason: "\nRaison : %s"
+approvals_list_header: "Utilisateurs approuvés :\n"
+approvals_list_item: " - %s"
+approvals_list_file_header: "Utilisateurs approuvés pour le chat %d\n"
+approvals_list_file_item: "%d. %s"
+approvals_list_reason: " (raison : %s)"
+
+# AntiRaid module strings
+antiraid_help_msg: |
+  Protégez votre groupe des attaques de spam-join avec AntiRaid.
+  *Commandes Admin :*
+  /antiraid: Affiche l'état actuel + boutons activer/désactiver.
+  /antiraid on: Active le mode raid pour la durée configurée.
+  /antiraid <durée>: Active pour une durée personnalisée (ex. 3h, 30m).
+  /antiraid off: Désactive immédiatement le mode raid.
+  /raidtime <temps>: Définit la durée du raid (défaut : 6h).
+  /raidactiontime <temps>: Définit la durée du ban temporaire (défaut : 1h).
+  /autoantiraid <N>: Activation auto si N+ joins/min.
+  /autoantiraid off: Désactive le déclenchement automatique.
+antiraid_active_status: "AntiRaid ACTIF | Expire : {expires_in} | Raid : {raid_time} | Action : {action_time} | Auto : {auto_threshold}"
+antiraid_inactive_status: "AntiRaid INACTIF | Raid : {raid_time} | Action : {action_time} | Auto : {auto_threshold}"
+antiraid_enabled: "AntiRaid activé pour {duration}."
+antiraid_disabled: "AntiRaid désactivé."
+antiraid_already_active: "AntiRaid est déjà actif."
+antiraid_not_active: "AntiRaid n'est pas actif."
+antiraid_invalid_duration: "Durée invalide. Utilisez un format comme : 30m, 2h, 1d, 1w"
+antiraid_raidtime_usage: "Usage : /raidtime &lt;durée&gt; (ex., 6h)"
+antiraid_raidtime_no_change: "La durée du raid est déjà {duration}."
+antiraid_raidtime_set: "Durée du raid définie à {duration}."
+antiraid_raidactiontime_usage: "Usage : /raidactiontime &lt;durée&gt; (ex., 1h)"
+antiraid_raidactiontime_no_change: "La durée d'action du raid est déjà {duration}."
+antiraid_raidactiontime_set: "Durée d'action du raid définie à {duration}."
+antiraid_auto_disabled: "L'AntiRaid automatique est désactivé."
+antiraid_auto_enabled: "Seuil d'Auto-AntiRaid : {threshold} joins/min."
+antiraid_invalid_threshold: "Seuil invalide. Donnez un nombre positif ou 'off'."
+antiraid_auto_triggered: "Raid auto déclenché ! %s utilisateurs ont rejoint/min — nouveaux arrivants bannis temporairement."
+antiraid_btn_enable: "Activer AntiRaid"
+antiraid_btn_disable: "Désactiver AntiRaid"
+
+# Rose feature-parity keys (federations, log channels, extras)
+federations_help_msg: |
+  Les fédérations partagent une liste de bannissements entre les groupes que vous possédez.
+
+  *Propriétaire (privé) :*
+  × /newfed <name>: Créer une fédération (une par utilisateur).
+  × /renamefed <name>: Renommer votre fédération.
+  × /delfed: Supprimer votre fédération (avec confirmation).
+  × /fedpromote /feddemote <user>: Promouvoir ou rétrograder un administrateur de la fédération (réponse, ID ou @nom d'utilisateur).
+  × /fedreason on/off: Exiger un motif pour les fban.
+  × /fednotif on/off: Prévenir le propriétaire des fban en privé.
+  × /subfed /unsubfed <fed_id>: S'abonner aux bannissements d'une autre fédération ou s'en désabonner (5 max).
+  × /fedsubs: Lister les fédérations auxquelles la vôtre est abonnée.
+  × /fbanlist [csv|json|minicsv]: Exporter les fban.
+  × /importfbans: Importer depuis un fichier CSV/JSON cité.
+  × /unsetfedlog: Retirer le chat de journal de la fédération.
+
+  *Propriétaire (dans un groupe) :*
+  × /setfedlog: Faire de ce groupe le chat de journal de votre fédération.
+
+  *Propriétaire du groupe :*
+  × /joinfed <fed_id>: Rattacher ce chat à une fédération.
+  × /leavefed: Quitter la fédération.
+
+  *Administrateurs du groupe :*
+  × /quietfed on/off: Masquer les avis passifs de fban.
+
+  *Administrateurs de la fédération :*
+  × /fban <user> [reason]: Bannir un utilisateur de toute la fédération (dans un groupe de la fédération ; le propriétaire peut aussi l'utiliser en privé).
+  × /unfban /funban <user>: Lever un bannissement de fédération.
+  × /feddemoteme <fed_id>: Quitter votre rôle d'administrateur de la fédération.
+
+  *Tout le monde :*
+  × /fedstat /fbanstat [user] [fed_id]: Vérifier les fban d'un utilisateur (les vôtres par défaut) ; avec un fed_id, afficher le motif de ce bannissement.
+  × /fedinfo [fed_id]: Afficher les infos de la fédération.
+  × /fedadmins [fed_id]: Lister les administrateurs d'une fédération.
+  × /chatfed: Afficher la fédération de ce groupe (groupes uniquement).
+  × /myfeds: Lister les fédérations que vous possédez ou administrez.
+logchannels_help_msg: |
+  Envoyez les actions des administrateurs vers un canal de journal dédié.
+
+  1. Ajoutez le bot à un canal en tant qu'administrateur.
+  2. Dans ce canal, envoyez /setlog.
+  3. Transférez ce message dans le groupe.
+
+  *Commandes admin :*
+  × /setlog: Définir le canal de journal (envoyez-le dans le canal, puis transférez le message dans le groupe). En privé, indiquez le groupe puis le canal, si vous êtes administrateur des deux et que le bot peut publier dans le canal.
+  × /unsetlog: Retirer le canal de journal.
+  × /log <category>: Activer une catégorie.
+  × /nolog <category>: Désactiver une catégorie.
+
+  *Tout le monde :*
+  × /logchannel: Afficher le canal de journal actuel.
+  × /logcategories: Lister les catégories.
+
+  Catégories : settings (modifications du canal de journal et du mode AntiRaid), admin (bannissements, expulsions, mises en sourdine, débannissements et levées de sourdine), user (/kickme et /banme), reports (signalements des utilisateurs), automated (actions que le bot prend de lui-même : détections dans les bases de spam, actions de l'antiflood et de la liste noire, limite d'avertissements atteinte par des avertissements de la liste noire, captchas échoués, mode AntiRaid activé par le seuil d'arrivées, bots bannis par le verrou bots), warns (avertissements donnés, retirés et réinitialisés par les administrateurs, et limite d'avertissements atteinte par leurs avertissements ; désactivée tant qu'elle n'est pas activée avec /log warns), joins (membres qui réussissent le captcha ; désactivée tant qu'elle n'est pas activée avec /log joins), other. Rien n'est encore journalisé dans other.
+
+  En privé, indiquez d'abord le groupe dans /setlog, /unsetlog, /log, /nolog et /logchannel : son titre, son @nom d'utilisateur ou son ID.
+feds_pm_only: "Cette commande ne peut être utilisée qu'en discussion privée avec moi."
+feds_group_only: "Cette commande ne peut être utilisée que dans les groupes."
+feds_need_name: "Donnez un nom à votre fédération."
+feds_already_own: "Vous possédez déjà une fédération. Supprimez-la d'abord avec /delfed."
+feds_create_failed: "Impossible d'effectuer cette action sur la fédération. Réessayez."
+feds_created: "Fédération <b>{name}</b> créée.\nID : <code>{id}</code>\nConservez cet ID : les propriétaires de groupe l'utilisent avec /joinfed."
+feds_no_fed: "Vous ne possédez aucune fédération. Créez-en une avec /newfed."
+feds_rename_failed: "Impossible de renommer la fédération."
+feds_renamed: "Fédération renommée en <b>{name}</b>."
+feds_delfed_confirm: "Supprimer la fédération <b>{name}</b> ? Cette action est irréversible."
+feds_delfed_confirm_btn: "Oui, supprimer"
+feds_delfed_cancel_btn: "Annuler"
+feds_deleted: "Fédération supprimée."
+feds_delete_failed: "Impossible de supprimer la fédération."
+feds_owner_only_join: "Seul le créateur du groupe peut rejoindre ou quitter une fédération."
+feds_invalid_id: "Cela ne ressemble pas à un ID de fédération."
+feds_not_found: "Je n'ai pas trouvé cette fédération."
+feds_already_joined: "Ce chat fait déjà partie d'une fédération. Utilisez d'abord /leavefed."
+feds_join_failed: "Impossible de rejoindre cette fédération."
+feds_joined: "Ce chat a rejoint la fédération <b>{name}</b> (<code>{id}</code>)."
+feds_not_in_fed: "Ce chat ne fait partie d'aucune fédération."
+feds_left: "Ce chat a quitté sa fédération."
+feds_invalid_toggle: "Utilisez on ou off."
+feds_quiet_on: "La fédération silencieuse est activée. Les fban passifs ne seront pas annoncés ici."
+feds_quiet_off: "La fédération silencieuse est désactivée. Les fban passifs seront annoncés."
+feds_info: "<b>{name}</b>\nID : <code>{id}</code>\nPropriétaire : <code>{owner}</code>\nChats : {chats}\nBannissements : {bans}\nAdministrateurs : {admins}\nAbonnements : {subs}\nMotif obligatoire : {reason}\nPrévenir le propriétaire : {notify}"
+feds_admins_header: "Administrateurs de <b>{name}</b> :"
+feds_chatfed: "Ce chat fait partie de <b>{name}</b> (<code>{id}</code>)."
+feds_myfeds_none: "Vous ne possédez ni n'administrez aucune fédération."
+feds_myfeds_header: "Vos fédérations :"
+feds_role_owner: "propriétaire"
+feds_role_admin: "administrateur"
+feds_cannot_promote_self: "Vous possédez déjà cette fédération."
+feds_cannot_promote_owner: "Le propriétaire est déjà administrateur de la fédération."
+feds_already_admin: "Cet utilisateur est déjà administrateur de la fédération."
+feds_promoted: "{user} est désormais administrateur de la fédération."
+feds_not_fed_admin: "Cet utilisateur n'est pas administrateur de la fédération."
+feds_demoted: "{user} n'est plus administrateur de la fédération."
+feds_demoteme_not_admin: "Vous n'êtes pas administrateur de cette fédération."
+feds_demoteme_ok: "Vous n'êtes plus administrateur de cette fédération."
+feds_demoteme_owner: "Vous êtes le propriétaire de cette fédération, vous ne pouvez donc pas renoncer à votre rôle d'administrateur. Utilisez /delfed pour la supprimer."
+feds_fedreason_on: "Les fban exigent désormais un motif."
+feds_fedreason_off: "Les fban n'exigent plus de motif."
+feds_fednotif_on: "Vous serez prévenu des fban."
+feds_fednotif_off: "Vous ne serez pas prévenu des fban."
+feds_not_admin: "Vous n'êtes pas administrateur de la fédération ici."
+feds_cannot_fban_self: "Vous ne pouvez pas vous fban vous-même."
+feds_cannot_fban_owner: "Vous ne pouvez pas fban le propriétaire de la fédération."
+feds_cannot_fban_admin: "Vous ne pouvez pas fban un administrateur de la fédération."
+feds_need_reason: "Cette fédération exige un motif pour les fban."
+feds_fban_failed: "Impossible de fban cet utilisateur."
+feds_fban_already: "Cet utilisateur est déjà fban. Motif mis à jour."
+feds_fban_ok: "{user} a été fban dans <b>{name}</b>.\nMotif : {reason}"
+feds_unfban_not_banned: "Cet utilisateur n'est pas fban."
+feds_unfban_ok: "Le fban de {user} dans <b>{name}</b> a été levé."
+feds_log_fban: "FBAN <code>{user_id}</code> par {actor}\nRaison : {reason}"
+feds_log_unfban: "UNFBAN <code>{user_id}</code> par {actor}"
+feds_fedstat_none: "Cet utilisateur n'est fban dans aucune fédération que je connais."
+feds_fedstat_reason: "Banni dans <b>{name}</b> : {reason}"
+feds_fedstat_header: "Bannissements de fédération de {user} :"
+feds_sub_self: "Une fédération ne peut pas s'abonner à elle-même."
+feds_already_sub: "Déjà abonné à cette fédération."
+feds_sub_max: "Une fédération peut s'abonner à 5 autres au maximum."
+feds_sub_ok: "Abonné à la liste de bannissements de cette fédération."
+feds_not_sub: "Pas abonné à cette fédération."
+feds_unsub_ok: "Désabonné de cette fédération."
+feds_subs_none: "Cette fédération n'a aucun abonnement."
+feds_subs_header: "Abonnements :"
+feds_setfedlog_ok: "Chat de journal de la fédération défini."
+feds_unsetfedlog_ok: "Chat de journal de la fédération retiré."
+feds_export_wait: "Vous pouvez exporter la liste des fban une fois toutes les 30 minutes. Réessayez plus tard."
+feds_export_empty: "Cette fédération n'a aucun bannissement à exporter."
+feds_import_need_file: "Répondez à une liste de fban au format CSV ou JSON."
+feds_import_failed: "Impossible d'importer cette liste de fban."
+feds_import_ok: "{count} bannissements de fédération importés."
+feds_passive_ban: "{user} est fban dans <b>{name}</b> et a été retiré.\nMotif : {reason}"
+feds_callback_denied: "Vous ne pouvez pas utiliser ce bouton."
+feds_callback_stale: "Ce bouton n'est plus valide."
+logs_need_channel: "Utilisez /setlog dans un canal, puis transférez ce message dans le groupe."
+logs_forward_to_group: "Transférez maintenant votre message /setlog (pas cette réponse) dans le groupe à journaliser, dans l'heure qui suit."
+logs_set_ok: "Canal de journal défini. Les actions d'administration de ce chat y seront envoyées."
+logs_pm_set_ok: "Canal de journal défini. Les actions d'administration de <b>{group}</b> y seront envoyées."
+logs_unset_ok: "Canal de journal retiré."
+logs_not_set: "Aucun canal de journal n'est défini pour ce chat."
+logs_current: "Canal de journal : <code>{id}</code>"
+logs_categories: "Catégories : settings (modifications du canal de journal et du mode AntiRaid), admin (bannissements, expulsions, mises en sourdine, débannissements et levées de sourdine), user (/kickme et /banme), reports (signalements des utilisateurs), automated (actions que le bot prend de lui-même : détections dans les bases de spam, actions de l'antiflood et de la liste noire, limite d'avertissements atteinte par des avertissements de la liste noire, captchas échoués, mode AntiRaid activé par le seuil d'arrivées, bots bannis par le verrou bots), warns (avertissements donnés, retirés et réinitialisés par les administrateurs, et limite d'avertissements atteinte par leurs avertissements ; désactivée tant qu'elle n'est pas activée avec /log warns), joins (membres qui réussissent le captcha ; désactivée tant qu'elle n'est pas activée avec /log joins), other. Rien n'est encore journalisé dans other."
+logs_enabled: "Journalisation activée pour : {cats}"
+logs_disabled: "Journalisation désactivée pour : {cats}"
+logs_unknown_category: "Catégorie inconnue. Voir /logcategories."
+logs_usage: "Utilisation : /log &lt;catégorie&gt; ou /nolog &lt;catégorie&gt;"
+logs_pm_need_channel: "Indiquez le canal après le groupe : <code>/setlog @mongroupe @moncanal</code>, ou l'ID du canal. Faites-moi d'abord administrateur du canal avec le droit de publier des messages."
+logs_pm_setlog_usage: "Indiquez le groupe, puis un seul canal. Tant que vous êtes connecté, indiquez un autre groupe par son @username ou son ID : son titre n'est pas recherché."
+logs_pm_not_channel: "<code>{channel}</code> n'est pas un canal que je peux voir. Faites-moi administrateur du canal avec le droit de publier des messages, puis indiquez-le par son @nom d'utilisateur ou son ID."
+logs_pm_user_not_channel_admin: "Pour faire du canal le canal de journal, vous devez en être le propriétaire ou un administrateur avec le droit de publier des messages."
+logs_pm_bot_cannot_post: "Je dois être administrateur du canal avec le droit de publier des messages."
+bans_banme_is_admin: "Les administrateurs ne peuvent pas se bannir eux-mêmes. Démissionnez d'abord."
+bans_banme_ok: "Comme vous voulez. Vous êtes banni."
+bans_unbanall_ask: "Débannir tous les utilisateurs connus de ce chat ? Cette action est difficile à annuler."
+bans_unbanall_done: "Débannissement envoyé pour {count} utilisateurs connus."
+bans_unbanall_cancel: "Annulé."
+bans_baninfo_record: "<b>Enregistrement du bannissement</b>\n<b>Utilisateur :</b> {user} (<code>{id}</code>)\n<b>État :</b> {status}\n<b>Banni par :</b> {admin}\n<b>Date :</b> {date}\n<b>Origine :</b> {source}\n<b>Jusqu'au :</b> {until}"
+bans_baninfo_reason: "\n<b>Raison :</b> {reason}"
+bans_baninfo_status_banned: "banni"
+bans_baninfo_status_expired: "bannissement temporaire terminé"
+bans_baninfo_status_lifted: "débanni par {admin} le {date}"
+bans_baninfo_permanent: "définitif"
+bans_baninfo_none: "Je n'ai aucun enregistrement de bannissement pour {user} ici. Je n'enregistre que les bannissements que je fais, et je supprime chaque enregistrement 90 jours après la fin de son bannissement."
+bans_record_by_bot: "moi, automatiquement"
+bans_record_by_anonymous: "un administrateur anonyme"
+bans_record_read_failed: "Je n'ai pas pu lire les enregistrements de bannissements pour le moment. Réessayez plus tard."
+bans_banlist_header: "<b>Bannissements en vigueur : {count}</b> (page {page} sur {pages})"
+bans_banlist_header_search: "<b>Bannissements en vigueur correspondant à</b> <code>{query}</code><b> : {count}</b> (page {page} sur {pages})"
+bans_banlist_entry: "{n}. {user} (<code>{id}</code>) · {source} · {date}"
+bans_banlist_entry_until: "{n}. {user} (<code>{id}</code>) · {source} · {date} · jusqu'au {until}"
+bans_banlist_empty: "Aucun bannissement que j'ai enregistré ici n'est en vigueur. Je n'enregistre que les bannissements que je fais."
+bans_banlist_no_match: "Aucun bannissement en vigueur enregistré ici ne correspond à <code>{query}</code>."
+bans_banlist_expired: "Cette liste a expiré. Renvoyez /banlist."
+bans_banlist_prev: "« Précédent"
+bans_banlist_next: "Suivant »"
+bans_log_unban_button: "🔓 Débannir"
+bans_log_unban_done: "Débanni."
+bans_log_unban_already: "Ce bannissement n'est plus en vigueur : déjà levé, ou terminé."
+bans_log_unban_failed: "Je n'ai pas pu débannir cet utilisateur. Vérifiez que je peux toujours bannir des membres dans le groupe."
+bans_kick_target_banned: "Cet utilisateur est banni ici. L'expulser lèverait le bannissement, je l'ai donc laissé en place."
+admin_setgtitle_need_title: "Donnez-moi un nouveau titre pour le groupe."
+admin_setgtitle_ok: "Titre du groupe mis à jour."
+admin_setgtitle_failed: "Je n'ai pas pu changer le titre du groupe. Vérifiez que je peux modifier les infos du groupe."
+admin_setgpic_need_photo: "Répondez à une photo pour la définir comme image du groupe."
+admin_setgpic_ok: "Image du groupe mise à jour."
+admin_setgpic_failed: "Je n'ai pas pu changer l'image du groupe."
+admin_setgdesc_ok: "Description du groupe mise à jour."
+admin_setgdesc_failed: "Je n'ai pas pu changer la description du groupe."
+timezone_status: "Le fuseau horaire de ce chat est <b>{timezone}</b> (UTC{offset}) ; il y est {time}.\nChangez-le avec <code>/timezone &lt;nom&gt;</code>, un nom IANA comme <code>Europe/Paris</code>."
+timezone_set: "Fuseau horaire défini sur <b>{timezone}</b> (UTC{offset}) ; il y est {time}."
+timezone_invalid: "Je ne connais pas le fuseau horaire <code>{input}</code>. Utilisez un nom IANA comme <code>Europe/Paris</code> ou <code>America/Toronto</code> (liste : https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)."
+ephemeral_status_on: "Les réponses privées sont <b>activées</b> : les règles privées, les notes privées et la redirection de /help s'affichent dans le groupe uniquement pour le membre qui les a demandées."
+ephemeral_status_off: "Les réponses privées sont <b>désactivées</b> : les règles privées, les notes privées et /help envoient un bouton qui les ouvre en privé. Activez-les avec <code>/ephemeral on</code>."
+ephemeral_enabled: "Réponses privées <b>activées</b>. Les membres qui demandent les règles privées, les notes privées ou /help les voient ici, affichées pour eux seuls."
+ephemeral_disabled: "Réponses privées <b>désactivées</b>. Les règles privées, les notes privées et /help renvoient de nouveau un bouton vers le privé."
+misc_stickerid_need_sticker: "Répondez à un sticker pour obtenir son ID de fichier."
+misc_stickerid_result: "ID de fichier du sticker : <code>{id}</code>"
+misc_zombies_scanning: "Recherche des comptes supprimés…"
+misc_zombies_none: "Aucun compte supprimé trouvé parmi les membres connus."
+misc_zombies_cleaned: "{count} comptes supprimés retirés."
+misc_github_usage: "Utilisation : /github &lt;utilisateur&gt; ou /github &lt;utilisateur/dépôt&gt;"
+misc_github_not_found: "Je n'ai pas trouvé cet utilisateur ou ce dépôt GitHub."
+misc_wiki_usage: "Utilisation : /wiki &lt;recherche&gt;"
+misc_wiki_not_found: "Aucun résultat Wikipédia pour cela."
+misc_ud_usage: "Utilisation : /ud &lt;terme&gt;"
+misc_ud_not_found: "Aucun résultat Urban Dictionary pour cela."
+misc_runs:
+  - "S'enfuit en courant."
+  - "Non merci."
+  - "Je me tire."
+  - "Attrape-moi si tu peux."
+chat_status_bot_change_info_error: "Je ne peux pas modifier les infos du groupe ici ! Vérifiez que je suis administrateur et que je peux modifier les infos du groupe."
+
+# /extend: every help-menu command, one line each ("/command — description")
+main_bot_command_extend: "Toutes les commandes en une liste"
+main_bot_command_commands: "Commandes par section, pour membres ou admins"
+help_extend_hint: "\n\nEnvoyez /extend pour voir toutes les commandes en une liste."
+help_extend_header: "📋 <b>Toutes les commandes</b>\nArguments et exemples : /help → module."
+help_extend_pm: "La liste complète des commandes est longue, je vous l'envoie en privé."
+help_extend_button: "📋 Toutes les commandes"
+commands_menu_member: "📋 <b>Commandes par section</b>\nSeules les commandes qu'un membre peut utiliser sont listées. Appuyez sur une section pour voir ses commandes."
+commands_menu_admin: "📋 <b>Commandes par section</b>\nVous êtes admin, les commandes d'administration sont donc listées aussi. Appuyez sur une section pour voir ses commandes."
+commands_section_hint: "<i>Appuyez sur une commande pour voir comment l'utiliser.</i>"
+commands_copy_example_button: "📋 Copier l'exemple"
+commands_open_in_pm: "La liste dépend de qui la lit, je vous l'affiche donc en privé."
+commands_open_in_pm_button: "📋 Ouvrir en privé"
+admin_section_desc: "Promouvoir, rétrograder et gérer les admins du groupe"
+aispam_section_desc: "Détecter le spam avec un filtre IA"
+antiflood_section_desc: "Sanctionner ceux qui envoient trop de messages"
+antiraid_section_desc: "Bloquer les raids d'arrivées en masse"
+approvals_section_desc: "Exempter les utilisateurs de confiance des contrôles automatiques"
+backup_section_desc: "Exporter, importer et réinitialiser les réglages du chat"
+bans_section_desc: "Bannir, expulser et restreindre des utilisateurs"
+blacklists_section_desc: "Sanctionner les mots en liste noire"
+captcha_section_desc: "Faire résoudre un captcha aux nouveaux membres"
+connections_section_desc: "Gérer un groupe depuis le privé"
+digest_section_desc: "Un résumé hebdomadaire de l'activité du groupe"
+recurring_section_desc: "Des messages que le bot publie selon un calendrier"
+disabling_section_desc: "Désactiver des commandes pour les membres"
+federations_section_desc: "Partager les bannissements entre groupes"
+filters_section_desc: "Réponses automatiques à des mots déclencheurs"
+formatting_section_desc: "Comment mettre en forme les messages"
+greetings_section_desc: "Messages de bienvenue et d'au revoir"
+languages_section_desc: "Changer la langue du bot"
+locks_section_desc: "Verrouiller des types de messages"
+logchannels_section_desc: "Journaliser les actions dans un canal"
+misc_section_desc: "Infos, ID, traduction et autres outils"
+mutes_section_desc: "Rendre muets des utilisateurs et leur rendre la parole"
+notes_section_desc: "Notes enregistrées que tout le monde peut obtenir"
+pins_section_desc: "Épingler des messages et gérer les épinglages du canal"
+probation_section_desc: "Retenir les liens et médias des nouveaux membres"
+purges_section_desc: "Supprimer des messages en masse"
+reactions_section_desc: "Réagir à des mots-clés avec un emoji"
+reports_section_desc: "Signaler des messages aux admins"
+rules_section_desc: "Le règlement du groupe"
+spamdb_section_desc: "Vérifier les nouveaux membres dans des bases anti-spam"
+spamfilter_section_desc: "Apprendre du spam supprimé et repérer ses copies proches"
+warns_section_desc: "Avertir des utilisateurs et sanctionner à la limite"
+admin_extend_msg: |
+  /adminlist — liste des administrateurs du chat
+  /promote — promouvoir un utilisateur administrateur
+  /demote — rétrograder un administrateur
+  /title — définir le titre personnalisé d'un administrateur
+  /invitelink — obtenir le lien d'invitation du chat
+  /anonadmin — faire confiance aux administrateurs anonymes (on) ou exiger une confirmation par bouton (off)
+  /admincache — recharger la liste des administrateurs
+  /clearadmincache — vider le cache des administrateurs
+  /setgtitle — changer le titre du groupe
+  /setgpic — définir la photo citée comme photo du groupe
+  /setgdesc — changer la description du groupe
+  /timezone — afficher ou changer le fuseau horaire du chat
+  /ephemeral — afficher les réponses privées uniquement à qui les demande, dans le groupe
+aispam_extend_msg: |
+  /aispam — afficher ou activer le filtre anti-spam IA
+antiflood_extend_msg: |
+  /flood — afficher les réglages antiflood
+  /setflood — messages autorisés (sans pause de plus de 60 s) avant sanction (off pour désactiver)
+  /setfloodmode — sanction du flood : ban, kick, mute ou tban/tmute avec durée obligatoire (par exemple tmute 10m)
+  /delflood — supprimer aussi les messages de flood
+antiraid_extend_msg: |
+  /antiraid — afficher, activer ou désactiver le mode raid
+  /raidtime — durée du mode raid
+  /raidactiontime — durée du bannissement temporaire pendant un raid
+  /autoantiraid — activer le mode raid après N arrivées par minute
+approvals_extend_msg: |
+  /approve — exempter un utilisateur d'antiflood, d'antiraid, de liste noire, de verrous, de captcha et du filtre anti-spam par IA
+  /unapprove — retirer l'approbation d'un utilisateur
+  /approval — vérifier si un utilisateur est approuvé
+  /approved — liste des utilisateurs approuvés
+  /unapproveall — retirer toutes les approbations (créateur uniquement)
+backup_extend_msg: |
+  /export — exporter les réglages du chat dans un fichier JSON
+  /import — restaurer les réglages depuis un fichier de sauvegarde cité
+  /reset — rétablir les réglages par défaut
+bans_extend_msg: |
+  /ban — bannir un utilisateur
+  /sban — bannir en silence et supprimer votre commande
+  /dban — bannir et supprimer le message cité
+  /tban — bannir pour une durée (m/h/d/w)
+  /unban — débannir un utilisateur
+  /kick — expulser un utilisateur
+  /skick — expulser en silence et supprimer votre commande
+  /dkick — expulser et supprimer le message cité
+  /kickme — vous expulser
+  /banme — vous bannir
+  /restrict — choisir kick, ban ou mute avec des boutons
+  /unrestrict — choisir unmute ou unban avec des boutons
+  /unbanall — débannir tous les utilisateurs connus (propriétaire uniquement)
+  /baninfo — voir l'enregistrement du bannissement d'un utilisateur
+  /banlist — voir les bannissements en vigueur
+blacklists_extend_msg: |
+  /blacklists — liste des mots en liste noire
+  /addblacklist — ajouter un mot à la liste noire
+  /rmblacklist — retirer un mot de la liste noire
+  /blaction — sanction d'un mot interdit : mute, kick, ban, warn, none ou tban/tmute avec durée obligatoire (par exemple tban 1d)
+  /blacklistaction — identique à /blaction
+  /remallbl — vider la liste noire
+captcha_extend_msg: |
+  /captcha — activer ou désactiver le captcha pour les nouveaux membres
+  /captchajoin — activer ou désactiver le captcha privé pour les demandes d'adhésion
+  /captchamode — type de captcha : math ou text
+  /captchatime — minutes pour résoudre le captcha
+  /captchaaction — sanction en cas d'échec : kick, ban ou mute
+  /captchamaxattempts — essais autorisés par captcha
+  /captchapending — afficher les messages stockés d'un utilisateur en attente
+  /captchaclear — supprimer les messages stockés d'un utilisateur en attente
+connections_extend_msg: |
+  /connect — gérer un groupe depuis le privé
+  /disconnect — se déconnecter du groupe
+  /reconnect — se reconnecter au dernier groupe
+  /connection — afficher le groupe connecté
+  /settings — voir les paramètres d'un groupe depuis le privé
+  /allowconnect — autoriser les membres à se connecter à ce groupe
+disabling_extend_msg: |
+  /disable — désactiver une commande pour les membres
+  /enable — réactiver une commande
+  /disableable — liste des commandes désactivables
+  /disabled — liste des commandes désactivées
+  /disabledel — supprimer les commandes désactivées envoyées par les membres
+federations_extend_msg: |
+  /newfed — créer une fédération
+  /renamefed — renommer votre fédération
+  /delfed — supprimer votre fédération
+  /fedinfo — afficher les infos de la fédération
+  /fedadmins — liste des administrateurs de la fédération
+  /fedpromote — nommer un administrateur de la fédération
+  /feddemote — retirer un administrateur de la fédération
+  /feddemoteme — quitter votre rôle d'administrateur de la fédération
+  /joinfed — rattacher ce chat à une fédération
+  /leavefed — quitter la fédération
+  /chatfed — afficher la fédération de ce chat
+  /myfeds — liste de vos fédérations
+  /fban — bannir un utilisateur dans toute la fédération
+  /unfban — lever un bannissement de fédération
+  /funban — identique à /unfban
+  /fedstat — consulter les bannissements de fédération d'un utilisateur
+  /fbanstat — identique à /fedstat
+  /fedreason — exiger un motif pour les fban
+  /fednotif — prévenir le propriétaire des fban en privé
+  /quietfed — masquer les avis passifs de fban dans ce chat
+  /subfed — s'abonner aux bannissements d'une autre fédération
+  /unsubfed — se désabonner d'une fédération
+  /fedsubs — liste des fédérations suivies
+  /fbanlist — exporter la liste des fban
+  /importfbans — importer des fban depuis un fichier cité
+  /setfedlog — définir le chat de journal de la fédération
+  /unsetfedlog — retirer le chat de journal de la fédération
+filters_extend_msg: |
+  /filter — réponse automatique à un mot déclencheur
+  /filters — liste des filtres
+  /stop — supprimer un filtre
+  /stopall — supprimer tous les filtres
+formatting_extend_msg: |
+  /markdownhelp — afficher le guide de formatage
+  /formatting — identique à /markdownhelp
+greetings_extend_msg: |
+  /welcome — afficher le message de bienvenue, ou l'activer ou le désactiver
+  /setwelcome — définir le message de bienvenue
+  /resetwelcome — réinitialiser le message de bienvenue
+  /goodbye — afficher le message d'au revoir, ou l'activer ou le désactiver
+  /setgoodbye — définir le message d'au revoir
+  /resetgoodbye — réinitialiser le message d'au revoir
+  /cleanwelcome — supprimer le précédent message de bienvenue
+  /cleangoodbye — supprimer le précédent message d'au revoir
+  /cleanservice — supprimer les messages de service d'arrivée et de départ
+  /autoapprove — approuver automatiquement les demandes d'adhésion
+languages_extend_msg: |
+  /lang — changer la langue du bot pour vous ou le groupe
+locks_extend_msg: |
+  /lock — verrouiller un type de message
+  /unlock — déverrouiller un type de message
+  /locks — afficher les verrous actuels
+  /locktypes — liste des types verrouillables
+  /nightmode — verrous de nuit selon un horaire quotidien
+logchannels_extend_msg: |
+  /setlog — définir un canal de journal (à envoyer dans le canal)
+  /unsetlog — retirer le canal de journal
+  /logchannel — afficher le canal de journal
+  /logcategories — liste des catégories de journal
+  /log — activer une catégorie de journal
+  /nolog — désactiver une catégorie de journal
+logchannels_examples_docs: |
+  <b>Configurer un canal de journal :</b>
+  1. Ajoutez le bot au canal en tant qu'administrateur pouvant publier des messages.
+  2. Envoyez <code>/setlog</code> dans le canal.
+  3. Dans l'heure qui suit, transférez ce message /setlog dans votre groupe.
+
+  <b>Le configurer et le gérer en privé :</b>
+  En privé, indiquez d'abord le groupe : son ID, son @username ou le titre d'un groupe dont vous êtes administrateur (la casse est ignorée ; mettez entre guillemets un titre qui contient des espaces). Rien n'est publié dans le groupe, et le canal ne reçoit que l'entrée de paramètres habituelle.
+  • <code>/setlog @mygroup @mychannel</code> - lier un canal par son @username
+  • <code>/setlog -1001234567890 -1009876543210</code> - le lier par ses ID
+  • <code>/log @mygroup admin</code> - activer une catégorie
+  • <code>/nolog -1001234567890 settings</code> - désactiver une catégorie
+  • <code>/logchannel @mygroup</code> - afficher le canal de journal
+  • <code>/unsetlog @mygroup</code> - le retirer
+  Vous devez être administrateur du groupe et, en plus, propriétaire du canal ou administrateur du canal avec la permission de publier des messages, comme il le faudrait pour y publier /setlog ; le bot doit être administrateur du canal avec la permission de publier des messages. Si vous êtes connecté avec /connect, vous pouvez omettre le groupe : <code>/setlog @mychannel</code>. Tant que vous êtes connecté, /setlog, /log et /nolog ne cherchent pas de titre : indiquez un autre groupe par son @username ou son ID. Le groupe passe les mêmes vérifications qu'avec /connect, et la connexion reste inchangée.
+
+  <b>Choisir ce qui est journalisé :</b>
+  • <code>/logcategories</code> - lister les catégories
+  • <code>/log admin user</code> - activer deux catégories
+  • <code>/nolog settings</code> - désactiver une catégorie
+
+federations_permissions_docs: |
+  <b>Propriétaire de la fédération :</b>
+  • <code>/delfed</code> (en MP), <code>/renamefed</code>, <code>/fedpromote</code>, <code>/feddemote</code>, <code>/fedreason</code>, <code>/fednotif</code>, <code>/subfed</code>, <code>/unsubfed</code>, <code>/fedsubs</code>, <code>/setfedlog</code>, <code>/unsetfedlog</code>, <code>/fbanlist</code>, <code>/importfbans</code>
+
+  <b>Admins de la fédération :</b>
+  • <code>/fban</code>, <code>/unfban</code>, <code>/funban</code> dans un groupe membre (en MP, ils agissent sur la fédération que vous possédez), <code>/feddemoteme</code>
+
+  <b>Créateur du groupe :</b>
+  • <code>/joinfed</code>, <code>/leavefed</code>
+
+  <b>Admins du groupe :</b>
+  • <code>/quietfed</code>
+
+  <b>Tout le monde :</b>
+  • <code>/newfed</code> (en MP, une fédération par utilisateur), <code>/fedstat</code>, <code>/fbanstat</code>, <code>/fedinfo</code>, <code>/fedadmins</code>, <code>/chatfed</code>, <code>/myfeds</code>
+
+  <b>Exigences du Bot :</b>
+  • Bannir des utilisateurs dans chaque chat membre, pour appliquer les fbans
+
+logchannels_permissions_docs: |
+  <b>Permissions des utilisateurs :</b>
+  • <code>/setlog</code> s'envoie dans le canal lui-même, où seuls les administrateurs du canal peuvent publier.
+  • Seuls les administrateurs du groupe peuvent lier le canal en transférant ce message, et eux seuls peuvent utiliser <code>/unsetlog</code>, <code>/log</code> et <code>/nolog</code>.
+  • <code>/setlog</code> en privé ne lie le canal que pour un administrateur du groupe qui est propriétaire du canal ou administrateur du canal avec la permission de publier des messages.
+  • Tout le monde peut utiliser <code>/logchannel</code> et <code>/logcategories</code> ; en privé, <code>/logchannel</code> fonctionne pour un groupe auquel vous pourriez vous connecter avec <code>/connect</code>.
+
+  <b>Permissions du bot :</b>
+  • Le bot doit être administrateur du canal de journal avec la permission de publier des messages, à la fois pour voir <code>/setlog</code> et pour envoyer les entrées du journal. Les entrées qu'il ne peut pas envoyer sont abandonnées sans erreur.
+misc_extend_msg: |
+  /info — afficher les infos d'un utilisateur
+  /id — afficher l'ID du chat ou d'un utilisateur
+  /ping — vérifier le temps de réponse du bot
+  /stat — compter les messages du chat
+  /tell — faire répondre le bot à un message avec votre texte
+  /tr — traduire un message
+  /removebotkeyboard — retirer un clavier du bot bloqué
+  /stickerid — obtenir le file ID d'un sticker
+  /zombies — expulser les comptes supprimés
+  /github — chercher un utilisateur ou un dépôt GitHub
+  /wiki — chercher sur Wikipédia
+  /ud — chercher sur Urban Dictionary
+  /referral — créer des liens d’invitation suivis et voir les statistiques
+  /runs — une phrase au hasard
+mutes_extend_msg: |
+  /mute — rendre muet un utilisateur
+  /smute — rendre muet en silence et supprimer votre commande
+  /dmute — rendre muet et supprimer le message cité
+  /tmute — rendre muet pour une durée (m/h/d/w)
+  /unmute — rendre la parole à un utilisateur
+notes_extend_msg: |
+  /save — enregistrer une note
+  /addnote — identique à /save
+  /get — obtenir une note (ou #name)
+  /notes — liste des notes
+  /saved — identique à /notes
+  /clear — supprimer une note
+  /rmnote — identique à /clear
+  /clearall — supprimer toutes les notes (propriétaire uniquement)
+  /privatenotes — envoyer les notes en privé
+  /privnote — identique à /privatenotes
+pins_extend_msg: |
+  /pin — épingler le message cité
+  /unpin — désépingler un message
+  /unpinall — désépingler tous les messages
+  /pinned — afficher le message épinglé
+  /permapin — épingler un message personnalisé du bot
+  /antichannelpin — bloquer les épinglages auto du canal lié
+  /cleanlinked — supprimer les publications du canal lié
+purges_extend_msg: |
+  /del — supprimer le message cité
+  /purge — tout supprimer à partir du message cité
+  /purgefrom — marquer le début d'une plage à supprimer
+  /purgeto — supprimer jusqu'au message cité
+reactions_extend_msg: |
+  /addreaction — réagir par un emoji à un mot-clé
+  /removereaction — retirer la réaction à un mot-clé
+  /reactions — liste des réactions
+  /resetreactions — retirer toutes les réactions
+reports_extend_msg: |
+  /report — signaler le message cité aux administrateurs (ou @admin)
+  /reports — activer ou désactiver les signalements, bloquer ou débloquer un signaleur, mise en sourdine automatique
+rules_extend_msg: |
+  /rules — afficher les règles
+  /setrules — définir les règles
+  /resetrules — réinitialiser les règles
+  /privaterules — envoyer les règles en privé
+  /rulesbtn — définir le texte du bouton des règles
+  /resetrulesbutton — réinitialiser le texte du bouton des règles
+  /resetrulesbtn — identique à /resetrulesbutton
+spamdb_extend_msg: |
+  /spamdb — afficher ou basculer la vérification anti-spam, choisir ses bases ou son action
+probation_extend_msg: |
+  /probation — afficher ou basculer la période d'essai des nouveaux membres, ou régler sa durée, ses messages, sa longueur, le contenu bloqué et l'avis
+spamfilter_extend_msg: |
+  /spam — supprimer le spam visé, bannir son auteur et l'enregistrer comme exemple
+  /spamfilter — afficher ou changer le filtre anti-spam, ou régler son seuil
+  /spamsamples — lister les exemples de spam du chat
+  /forgetspam — supprimer un exemple de spam
+digest_extend_msg: |
+  /digest — affiche l'état du résumé hebdomadaire, l'active ou le désactive, choisit sa destination ou en donne un aperçu
+recurring_extend_msg: |
+  /recurring — ajouter, lister ou supprimer les messages que le bot publie selon un calendrier
+warns_extend_msg: |
+  /warn — avertir un utilisateur
+  /swarn — avertir et supprimer votre commande
+  /dwarn — avertir et supprimer le message cité
+  /warns — afficher les avertissements d'un utilisateur
+  /rmwarn — retirer le dernier avertissement d'un utilisateur
+  /resetwarns — réinitialiser les avertissements d'un utilisateur
+  /resetallwarns — réinitialiser tous les avertissements du chat
+  /warnings — afficher les réglages d'avertissement
+  /setwarnlimit — avertissements avant sanction
+  /setwarntime — durée de validité d'un avertissement
+  /setwarnmode — sanction : ban, kick, mute, tban ou tmute
+settings_summary_legend: "<i>• indique une valeur différente de celle par défaut. Envoyez la commande indiquée pour la modifier.</i>"
+settings_summary_toggle_hint: "<i>Chaque bouton ci-dessous règle le paramètre qu'il nomme sur la valeur après la flèche.</i>"
+settings_picker_text: "Choisissez un groupe pour voir ses paramètres. Il n’apparaît pas ? Envoyez /connect &lt;chat id&gt; ici ou /settings dans le groupe."
+settings_picker_empty: "Je n’ai trouvé aucun groupe où vous êtes administrateur. Je ne connais que les groupes où vous avez écrit depuis mon arrivée : envoyez /connect &lt;chat id&gt; ici ou /settings dans le groupe."
+settings_picker_wait: "⏳ Attendez {seconds} s avant de rouvrir la liste des groupes."
+settings_open_in_pm: "Appuyez sur le bouton pour voir les paramètres de ce groupe en privé."
+settings_open_in_pm_button: "Ouvrir les paramètres en privé"
+settings_btn_refresh: "🔄 Actualiser"
+settings_btn_other_group: "↩️ Autre groupe"
+settings_toggle_saved: "✅ Enregistré : {command} → {value}"
+
+# Admin panel (Telegram Mini App) PM deep link
+panel_open_message: "Appuyez sur le bouton ci-dessous pour ouvrir le panneau d’administration de ce groupe."
+panel_open_button: "Ouvrir le panneau d’administration"

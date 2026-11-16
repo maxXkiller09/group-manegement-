@@ -1,0 +1,697 @@
+package modules
+
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
+
+	"github.com/divkix/Alita_Robot/alita/db/disabling"
+	"github.com/divkix/Alita_Robot/alita/db/reports"
+	"github.com/divkix/Alita_Robot/alita/utils/cache"
+)
+
+func TestReportsMuteAnonymousProofRunsAsConfirmingAdmin(t *testing.T) {
+	useRealLocales(t)
+	withDisableCommands(t)
+	for _, tt := range []struct {
+		name      string
+		limitedID string
+		replyKey  string
+		want      int
+	}{
+		{name: "full rights", want: 3},
+		{name: "limited tapper", limitedID: "admin", replyKey: "chat_status_restrict_cmd_error"},
+		{name: "limited bot", limitedID: "999", replyKey: "chat_status_bot_restrict_group_error"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			if tt.limitedID != "" {
+				id := tt.limitedID
+				if id == "admin" {
+					id = fmt.Sprint(f.admin.Id)
+				}
+				limited := fmt.Sprintf(`{"status":"administrator","user":{"id":%s,"is_bot":false,"first_name":"Limited"},"can_manage_chat":true}`, id)
+				f.client.membersByUser[id] = json.RawMessage(limited)
+				if id == "999" {
+					f.client.adminsByChat[fmt.Sprint(f.chat.Id)] = json.RawMessage("[" + limited + "," + string(f.client.membersByUser[fmt.Sprint(f.admin.Id)]) + "]")
+				} else {
+					f.client.adminsByChat[fmt.Sprint(f.chat.Id)] = json.RawMessage(`[{"status":"administrator","user":{"id":999,"is_bot":true,"first_name":"Alita"},` + fixtureAdminRights + `},` + limited + "]")
+				}
+			}
+			d := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
+			LoadReports(d)
+			LoadBotUpdates(d)
+			command := newModuleMessageContext(f.bot, f.chat, f.admin, "/reports mute 3")
+			tap := anonymousAdminProof(t, d, f, command)
+			if got := reports.GetChatReportSettings(f.chat.Id).MuteThreshold; got != 0 {
+				t.Fatalf("threshold before proof = %d, want 0", got)
+			}
+			if err := d.ProcessUpdate(f.bot, tap, nil); err != nil {
+				t.Fatal(err)
+			}
+			if got := reports.GetChatReportSettings(f.chat.Id).MuteThreshold; got != tt.want {
+				t.Fatalf("threshold after proof = %d, want %d", got, tt.want)
+			}
+			if tt.replyKey != "" {
+				texts := sentTexts(f.client)
+				if len(texts) != 2 || texts[1] != trS(ctxTr(command), tt.replyKey) {
+					t.Fatalf("proof and refusal = %q, want only proof then %q", texts, tt.replyKey)
+				}
+			}
+			assertDeleted(t, f.client, f.chat.Id, 9001)
+		})
+	}
+}
+
+func seedCallbackAdmins(t *testing.T, chatID int64, members ...gotgbot.MergedChatMember) {
+	t.Helper()
+	m := cache.GetMarshal()
+	if m == nil {
+		t.Fatal("cache marshal is not initialized")
+	}
+	key := fmt.Sprintf("alita:cache:adminCache:%d", chatID)
+	if err := m.Set(cache.Context, key, cache.AdminCache{
+		ChatId:   chatID,
+		UserInfo: members,
+		Cached:   true,
+	}); err != nil {
+		t.Fatalf("seed admin cache: %v", err)
+	}
+	t.Cleanup(func() { _ = m.Delete(cache.Context, key) })
+}
+
+func newReportReplyContext(
+	bot *gotgbot.Bot,
+	chat gotgbot.Chat,
+	reporter gotgbot.User,
+	target gotgbot.User,
+	text string,
+) *ext.Context {
+	ctx := newModuleMessageContext(bot, chat, reporter, text)
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 505,
+		Date:      1,
+		Chat:      chat,
+		From:      &target,
+		Text:      "reported message",
+	}
+	return ctx
+}
+
+func TestReportRequiresReplyAndSendsAdminReport(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Report Chat"}
+	reporter := gotgbot.User{Id: 42, FirstName: "Reporter"}
+	target := gotgbot.User{Id: 43, FirstName: "Target"}
+
+	noReplyCtx := newModuleMessageContext(bot, chat, reporter, "/report")
+	if err := reportsModule.report(bot, noReplyCtx); err != ext.EndGroups {
+		t.Fatalf("report no reply error = %v, want EndGroups", err)
+	}
+
+	reportCtx := newReportReplyContext(bot, chat, reporter, target, "/report spam")
+	if err := reportsModule.report(bot, reportCtx); err != ext.EndGroups {
+		t.Fatalf("report reply error = %v, want EndGroups", err)
+	}
+	calls := client.callsFor("sendMessage")
+	if len(calls) < 2 {
+		t.Fatalf("sendMessage calls = %d, want validation and report messages", len(calls))
+	}
+	last := calls[len(calls)-1]
+	if last.Params["reply_markup"] == nil {
+		t.Fatal("report message did not include action buttons")
+	}
+}
+
+func TestReportRejectsInvalidReplyTargetsAndDisabledChats(t *testing.T) {
+	tests := []struct {
+		name        string
+		reporter    gotgbot.User
+		target      *gotgbot.User
+		disable     bool
+		wantReplies int
+	}{
+		{
+			name:        "channel post target",
+			reporter:    gotgbot.User{Id: 42, FirstName: "Reporter"},
+			target:      nil,
+			wantReplies: 1,
+		},
+		{
+			name:        "self report",
+			reporter:    gotgbot.User{Id: 42, FirstName: "Reporter"},
+			target:      &gotgbot.User{Id: 42, FirstName: "Reporter"},
+			wantReplies: 1,
+		},
+		{
+			name:        "special reporter",
+			reporter:    gotgbot.User{Id: 777000, FirstName: "Telegram"},
+			target:      &gotgbot.User{Id: 43, FirstName: "Target"},
+			wantReplies: 1,
+		},
+		{
+			name:        "special target",
+			reporter:    gotgbot.User{Id: 42, FirstName: "Reporter"},
+			target:      &gotgbot.User{Id: 777000, FirstName: "Telegram"},
+			wantReplies: 1,
+		},
+		{
+			name:        "disabled chat stays silent",
+			reporter:    gotgbot.User{Id: 42, FirstName: "Reporter"},
+			target:      &gotgbot.User{Id: 43, FirstName: "Target"},
+			disable:     true,
+			wantReplies: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := newModuleBotClient()
+			bot := newModuleTestBot(client)
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Report Chat"}
+			if tt.disable {
+				if err := reports.SetChatReportStatus(chat.Id, false); err != nil {
+					t.Fatalf("SetChatReportStatus setup error = %v", err)
+				}
+			}
+			ctx := newModuleMessageContext(bot, chat, tt.reporter, "/report")
+			ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+				MessageId: 505,
+				Date:      1,
+				Chat:      chat,
+				From:      tt.target,
+				Text:      "reported message",
+			}
+
+			if err := reportsModule.report(bot, ctx); err != ext.EndGroups {
+				t.Fatalf("report error = %v, want EndGroups", err)
+			}
+			if calls := client.callsFor("sendMessage"); len(calls) != tt.wantReplies {
+				t.Fatalf("sendMessage calls = %d, want %d", len(calls), tt.wantReplies)
+			}
+		})
+	}
+}
+
+func TestReportSkipsBlockedAdminBotAndAdminTargets(t *testing.T) {
+	t.Run("blocked reporter command is deleted", func(t *testing.T) {
+		client := newModuleBotClient()
+		bot := newModuleTestBot(client)
+		chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Report Chat"}
+		reporter := gotgbot.User{Id: 42, FirstName: "Reporter"}
+		target := gotgbot.User{Id: 43, FirstName: "Target"}
+		if err := reports.BlockReportUser(chat.Id, reporter.Id); err != nil {
+			t.Fatalf("BlockReportUser setup error = %v", err)
+		}
+
+		ctx := newReportReplyContext(bot, chat, reporter, target, "/report")
+		if err := reportsModule.report(bot, ctx); err != ext.EndGroups {
+			t.Fatalf("report(blocked) error = %v, want EndGroups", err)
+		}
+		assertParams(t, client.onlyCall(t, "deleteMessage"), map[string]any{"chat_id": chat.Id, "message_id": ctx.EffectiveMessage.MessageId})
+		if calls := client.callsFor("sendMessage"); len(calls) != 0 {
+			t.Fatalf("sendMessage calls = %d, want blocked reporter to stay silent", len(calls))
+		}
+	})
+
+	t.Run("admin reporter", func(t *testing.T) {
+		f := newAdminChatFixture(t)
+		client, bot, chat, reporter := f.client, f.bot, f.chat, f.admin
+		target := gotgbot.User{Id: 43, FirstName: "Target"}
+
+		ctx := newReportReplyContext(bot, chat, reporter, target, "/report")
+		if err := reportsModule.report(bot, ctx); err != ext.EndGroups {
+			t.Fatalf("report(admin reporter) error = %v, want EndGroups", err)
+		}
+		if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+			t.Fatalf("sendMessage calls = %d, want admin reporter warning", len(calls))
+		}
+	})
+
+	for _, tt := range []struct {
+		name   string
+		target func(adminChatFixture) gotgbot.User
+	}{
+		{name: "bot target", target: func(adminChatFixture) gotgbot.User { return gotgbot.User{Id: 999, FirstName: "Alita", IsBot: true} }},
+		{name: "admin target", target: func(f adminChatFixture) gotgbot.User { return f.admin }},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			client, bot, chat, reporter := f.client, f.bot, f.chat, f.member
+
+			ctx := newReportReplyContext(bot, chat, reporter, tt.target(f), "/report")
+			if err := reportsModule.report(bot, ctx); err != ext.EndGroups {
+				t.Fatalf("report(%s) error = %v, want EndGroups", tt.name, err)
+			}
+			if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+				t.Fatalf("sendMessage calls = %d, want target warning", len(calls))
+			}
+		})
+	}
+}
+
+func TestReportsSettingsBlockUnblockAndShowBlocklist(t *testing.T) {
+	d := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
+	LoadReports(d)
+	f := newAdminChatFixture(t)
+	bot, chat, admin, target := f.bot, f.chat, f.admin, f.member
+
+	memberOffCtx := newModuleMessageContext(bot, chat, target, "/reports off")
+	if err := d.ProcessUpdate(bot, memberOffCtx.Update, nil); err != nil {
+		t.Fatalf("reports off (member) error = %v", err)
+	}
+	if !reports.GetChatReportSettings(chat.Id).Status {
+		t.Fatal("a member turned reports off")
+	}
+
+	offCtx := newModuleMessageContext(bot, chat, admin, "/reports off")
+	if err := d.ProcessUpdate(bot, offCtx.Update, nil); err != nil {
+		t.Fatalf("reports off error = %v", err)
+	}
+	if reports.GetChatReportSettings(chat.Id).Status {
+		t.Fatal("reports setting is still enabled after /reports off")
+	}
+
+	onCtx := newModuleMessageContext(bot, chat, admin, "/reports on")
+	if err := d.ProcessUpdate(bot, onCtx.Update, nil); err != nil {
+		t.Fatalf("reports on error = %v", err)
+	}
+	if !reports.GetChatReportSettings(chat.Id).Status {
+		t.Fatal("reports setting is still disabled after /reports on")
+	}
+
+	blockCtx := newReportReplyContext(bot, chat, admin, target, "/reports block")
+	if err := d.ProcessUpdate(bot, blockCtx.Update, nil); err != nil {
+		t.Fatalf("reports block error = %v", err)
+	}
+	if got := reports.GetChatReportSettings(chat.Id).BlockedList; len(got) != 1 || got[0] != target.Id {
+		t.Fatalf("blocked list = %v, want target user", got)
+	}
+
+	showCtx := newModuleMessageContext(bot, chat, admin, "/reports showblocklist")
+	if err := d.ProcessUpdate(bot, showCtx.Update, nil); err != nil {
+		t.Fatalf("reports showblocklist error = %v", err)
+	}
+
+	unblockCtx := newReportReplyContext(bot, chat, admin, target, "/reports unblock")
+	if err := d.ProcessUpdate(bot, unblockCtx.Update, nil); err != nil {
+		t.Fatalf("reports unblock error = %v", err)
+	}
+	if got := reports.GetChatReportSettings(chat.Id).BlockedList; len(got) != 0 {
+		t.Fatalf("blocked list after unblock = %v, want empty", got)
+	}
+}
+
+func TestReportsSettingsPrivateAndValidationBranches(t *testing.T) {
+	d := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
+	LoadReports(d)
+	f := newAdminChatFixture(t)
+	client, bot, admin, groupChat := f.client, f.bot, f.admin, f.chat
+	privateChat := f.connectAdmin(t)
+
+	privateOnCtx := newModuleMessageContext(bot, privateChat, admin, "/reports on")
+	if err := d.ProcessUpdate(bot, privateOnCtx.Update, nil); err != nil {
+		t.Fatalf("private reports on error = %v", err)
+	}
+	if !reports.GetUserReportSettings(admin.Id).Status {
+		t.Fatal("private report setting did not enable")
+	}
+
+	privateOffCtx := newModuleMessageContext(bot, privateChat, admin, "/reports off")
+	if err := d.ProcessUpdate(bot, privateOffCtx.Update, nil); err != nil {
+		t.Fatalf("private reports off error = %v", err)
+	}
+	if reports.GetUserReportSettings(admin.Id).Status {
+		t.Fatal("private report setting did not disable")
+	}
+
+	for _, text := range []string{
+		"/reports",
+		"/reports maybe",
+		"/reports block",
+		"/reports unblock",
+		"/reports showblocklist",
+	} {
+		ctx := newModuleMessageContext(bot, privateChat, admin, text)
+		if err := d.ProcessUpdate(bot, ctx.Update, nil); err != nil {
+			t.Fatalf("%s error = %v", text, err)
+		}
+	}
+
+	for _, text := range []string{"/reports block", "/reports unblock", "/reports unknown"} {
+		ctx := newModuleMessageContext(bot, groupChat, admin, text)
+		if err := d.ProcessUpdate(bot, ctx.Update, nil); err != nil {
+			t.Fatalf("%s group error = %v", text, err)
+		}
+	}
+
+	nilTargetCtx := newModuleMessageContext(bot, groupChat, admin, "/reports block")
+	nilTargetCtx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{MessageId: 505, Chat: groupChat}
+	if err := d.ProcessUpdate(bot, nilTargetCtx.Update, nil); err != nil {
+		t.Fatalf("block nil target error = %v", err)
+	}
+
+	if calls := client.callsFor("sendMessage"); len(calls) != 11 {
+		t.Fatalf("sendMessage calls = %d, want one response per settings command", len(calls))
+	}
+}
+
+func TestReportActionCallbacksBanDeleteAndResolve(t *testing.T) {
+	f := newAdminChatFixture(t)
+	client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+
+	banData := encodeCallbackData("report", map[string]string{
+		"a": "ban",
+		"u": "42",
+		"m": "505",
+	})
+	banCtx := newModuleCallbackContext(bot, chat, admin, banData)
+	if err := reportsModule.markResolvedButtonHandler(bot, banCtx); err != ext.EndGroups {
+		t.Fatalf("report ban callback error = %v, want EndGroups", err)
+	}
+	assertParams(t, client.onlyCall(t, "banChatMember"), targetParams(chat.Id, 42))
+
+	deleteData := encodeCallbackData("report", map[string]string{
+		"a": "delete",
+		"u": "42",
+		"m": "505",
+	})
+	deleteCtx := newModuleCallbackContext(bot, chat, admin, deleteData)
+	if err := reportsModule.markResolvedButtonHandler(bot, deleteCtx); err != ext.EndGroups {
+		t.Fatalf("report delete callback error = %v, want EndGroups", err)
+	}
+	assertParams(t, client.onlyCall(t, "deleteMessage"), map[string]any{"chat_id": chat.Id, "message_id": 505})
+
+	resolvedData := encodeCallbackData("report", map[string]string{
+		"a": "resolved",
+		"u": "42",
+		"m": "505",
+	})
+	resolvedCtx := newModuleCallbackContext(bot, chat, admin, resolvedData)
+	if err := reportsModule.markResolvedButtonHandler(bot, resolvedCtx); err != ext.EndGroups {
+		t.Fatalf("report resolved callback error = %v, want EndGroups", err)
+	}
+	if calls := client.callsFor("editMessageText"); len(calls) != 3 {
+		t.Fatalf("editMessageText calls = %d, want one edit per callback", len(calls))
+	}
+	if calls := client.callsFor("answerCallbackQuery"); len(calls) != 3 {
+		t.Fatalf("answerCallbackQuery calls = %d, want one answer per callback", len(calls))
+	}
+}
+
+func TestReportActionCallbacksKickAndInvalidData(t *testing.T) {
+	f := newAdminChatFixture(t)
+	client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+
+	kickCtx := newModuleCallbackContext(bot, chat, admin, encodeCallbackData("report", map[string]string{"a": "kick", "u": "42", "m": "505"}))
+	if err := reportsModule.markResolvedButtonHandler(bot, kickCtx); err != ext.EndGroups {
+		t.Fatalf("report kick callback error = %v, want EndGroups", err)
+	}
+	assertParams(t, client.onlyCall(t, "unbanChatMember"), targetParams(chat.Id, 42))
+
+	for _, data := range []string{
+		"report.invalid",
+		encodeCallbackData("report", map[string]string{"a": "ban", "u": "nan", "m": "505"}),
+		encodeCallbackData("report", map[string]string{"a": "ban", "u": "42", "m": "nan"}),
+		encodeCallbackData("report", map[string]string{"a": "crafted", "u": "42", "m": "505"}),
+	} {
+		ctx := newModuleCallbackContext(bot, chat, admin, data)
+		if err := reportsModule.markResolvedButtonHandler(bot, ctx); err != ext.EndGroups {
+			t.Fatalf("report invalid callback %q error = %v, want EndGroups", data, err)
+		}
+	}
+
+	if calls := client.callsFor("editMessageText"); len(calls) != 1 {
+		t.Fatalf("editMessageText calls = %d, want only valid kick edit", len(calls))
+	}
+	if calls := client.callsFor("answerCallbackQuery"); len(calls) != 5 {
+		t.Fatalf("answerCallbackQuery calls = %d, want kick plus four invalid acknowledgements", len(calls))
+	}
+}
+
+func TestReportDeleteFailureLeavesReportUnresolved(t *testing.T) {
+	f := newAdminChatFixture(t)
+	client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
+	client.errors["deleteMessage"] = fmt.Errorf("delete failed")
+	data := encodeCallbackData("report", map[string]string{"a": "delete", "u": "42", "m": "505"})
+
+	err := reportsModule.markResolvedButtonHandler(bot, newModuleCallbackContext(bot, chat, admin, data))
+	if err == nil {
+		t.Fatal("markResolvedButtonHandler() error = nil, want delete failure")
+	}
+	if calls := client.callsFor("editMessageText"); len(calls) != 0 {
+		t.Fatalf("editMessageText calls = %d, want report left unresolved", len(calls))
+	}
+	if calls := client.callsFor("answerCallbackQuery"); len(calls) != 0 {
+		t.Fatalf("answerCallbackQuery calls = %d, want no success acknowledgement", len(calls))
+	}
+}
+
+func TestReportActionCallbacksRequireGranularPermissions(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		action string
+		bot    gotgbot.MergedChatMember
+		admin  gotgbot.MergedChatMember
+	}{
+		{
+			name:   "kick requires user restrict",
+			action: "kick",
+			bot:    gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 999, IsBot: true}, CanRestrictMembers: true},
+			admin:  gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 42}},
+		},
+		{
+			name:   "ban requires bot restrict",
+			action: "ban",
+			bot:    gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 999, IsBot: true}},
+			admin:  gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 42}, CanRestrictMembers: true},
+		},
+		{
+			name:   "delete requires user delete",
+			action: "delete",
+			bot:    gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 999, IsBot: true}, CanDeleteMessages: true},
+			admin:  gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 42}},
+		},
+		{
+			name:   "delete requires bot delete",
+			action: "delete",
+			bot:    gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 999, IsBot: true}},
+			admin:  gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 42}, CanDeleteMessages: true},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			client := newModuleBotClient()
+			bot := newModuleTestBot(client)
+			chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Report Chat"}
+			admin := gotgbot.User{Id: 42, FirstName: "Limited Admin"}
+			seedCallbackAdmins(t, chat.Id, tt.bot, tt.admin)
+
+			data := encodeCallbackData("report", map[string]string{"a": tt.action, "u": "43", "m": "505"})
+			ctx := newModuleCallbackContext(bot, chat, admin, data)
+			if err := reportsModule.markResolvedButtonHandler(bot, ctx); err != ext.EndGroups {
+				t.Fatalf("markResolvedButtonHandler() error = %v, want EndGroups", err)
+			}
+			if calls := client.callsFor("banChatMember"); len(calls) != 0 {
+				t.Fatalf("banChatMember calls = %d, want permission denial before action", len(calls))
+			}
+			if calls := client.callsFor("deleteMessage"); len(calls) != 0 {
+				t.Fatalf("deleteMessage calls = %d, want permission denial before action", len(calls))
+			}
+			if calls := client.callsFor("editMessageText"); len(calls) != 0 {
+				t.Fatalf("editMessageText calls = %d, want report left unresolved", len(calls))
+			}
+			if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+				t.Fatalf("answerCallbackQuery calls = %d, want one permission denial", len(calls))
+			}
+		})
+	}
+}
+
+func TestReportActionCallbackAllowsGranularAdmin(t *testing.T) {
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Report Chat"}
+	admin := gotgbot.User{Id: 42, FirstName: "Restrict Admin"}
+	seedCallbackAdmins(t, chat.Id,
+		gotgbot.MergedChatMember{Status: "administrator", User: gotgbot.User{Id: 999, IsBot: true}, CanRestrictMembers: true},
+		gotgbot.MergedChatMember{Status: "administrator", User: admin, CanRestrictMembers: true},
+	)
+
+	data := encodeCallbackData("report", map[string]string{"a": "ban", "u": "43", "m": "505"})
+	if err := reportsModule.markResolvedButtonHandler(bot, newModuleCallbackContext(bot, chat, admin, data)); err != ext.EndGroups {
+		t.Fatalf("markResolvedButtonHandler() error = %v, want EndGroups", err)
+	}
+	assertParams(t, client.onlyCall(t, "banChatMember"), targetParams(chat.Id, 43))
+	if calls := client.callsFor("answerCallbackQuery"); len(calls) != 1 {
+		t.Fatalf("answerCallbackQuery calls = %d, want success acknowledgement", len(calls))
+	}
+}
+
+func TestReportMentionWatcherContinuesGroups(t *testing.T) {
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Report Chat"}
+	reporter := gotgbot.User{Id: 42, FirstName: "Reporter"}
+	target := gotgbot.User{Id: 43, FirstName: "Target"}
+
+	t.Run("mention without reply", func(t *testing.T) {
+		client := newModuleBotClient()
+		bot := newModuleTestBot(client)
+		LoadReports(ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1}))
+		ctx := newModuleMessageContext(bot, chat, reporter, "ask @admin later")
+		if err := reportsModule.reportWatcher(bot, ctx); err != ext.ContinueGroups {
+			t.Fatalf("reportWatcher(no reply) error = %v, want ContinueGroups", err)
+		}
+		if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+			t.Fatalf("sendMessage calls = %d, want the reply-to-report hint", len(calls))
+		}
+	})
+
+	t.Run("mention as reply sends the report", func(t *testing.T) {
+		client := newModuleBotClient()
+		bot := newModuleTestBot(client)
+		LoadReports(ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1}))
+		ctx := newReportReplyContext(bot, chat, reporter, target, "@admin spam")
+		if err := reportsModule.reportWatcher(bot, ctx); err != ext.ContinueGroups {
+			t.Fatalf("reportWatcher(reply) error = %v, want ContinueGroups", err)
+		}
+		calls := client.callsFor("sendMessage")
+		if len(calls) == 0 {
+			t.Fatal("reportWatcher sent no report")
+		}
+		if calls[len(calls)-1].Params["reply_markup"] == nil {
+			t.Fatal("report message did not include action buttons")
+		}
+	})
+}
+
+func TestReportStaysSilentWhenReportsDisabled(t *testing.T) {
+	disable := func(t *testing.T, chatID int64) {
+		t.Helper()
+		if err := reports.SetChatReportStatus(chatID, false); err != nil {
+			t.Fatalf("SetChatReportStatus setup error = %v", err)
+		}
+	}
+	assertSilent := func(t *testing.T, client *moduleBotClient, bot *gotgbot.Bot, ctx *ext.Context) {
+		t.Helper()
+		if err := reportsModule.report(bot, ctx); err != ext.EndGroups {
+			t.Fatalf("report error = %v, want EndGroups", err)
+		}
+		if calls := client.callsFor("sendMessage"); len(calls) != 0 {
+			t.Fatalf("sendMessage calls = %d, want reports off to stay silent", len(calls))
+		}
+	}
+	reporter := gotgbot.User{Id: 42, FirstName: "Reporter"}
+
+	t.Run("mention without reply", func(t *testing.T) {
+		client := newModuleBotClient()
+		bot := newModuleTestBot(client)
+		chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Report Chat"}
+		disable(t, chat.Id)
+		assertSilent(t, client, bot, newModuleMessageContext(bot, chat, reporter, "@admin"))
+	})
+
+	t.Run("self report", func(t *testing.T) {
+		client := newModuleBotClient()
+		bot := newModuleTestBot(client)
+		chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Report Chat"}
+		disable(t, chat.Id)
+		assertSilent(t, client, bot, newReportReplyContext(bot, chat, reporter, reporter, "/report"))
+	})
+
+	t.Run("admin reporter", func(t *testing.T) {
+		f := newAdminChatFixture(t)
+		disable(t, f.chat.Id)
+		assertSilent(t, f.client, f.bot, newReportReplyContext(f.bot, f.chat, f.admin, f.member, "/report"))
+	})
+}
+
+func TestReportCommandAndMentionShareDisableSetting(t *testing.T) {
+	useRealLocales(t)
+	withDisableCommands(t)
+	for _, text := range []string{"/report", "ask @admin later"} {
+		for _, disabled := range []bool{false, true} {
+			for _, admin := range []bool{false, true} {
+				t.Run(fmt.Sprintf("%s/disabled=%t/admin=%t", text, disabled, admin), func(t *testing.T) {
+					f := newAdminChatFixture(t)
+					d := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
+					LoadReports(d)
+					continued := false
+					d.AddHandlerToGroup(handlers.NewMessage(func(*gotgbot.Message) bool { return true }, func(*gotgbot.Bot, *ext.Context) error {
+						continued = true
+						return ext.ContinueGroups
+					}), 9)
+					if disabled {
+						if err := disabling.DisableCMD(f.chat.Id, "report"); err != nil {
+							t.Fatal(err)
+						}
+					}
+					user := f.member
+					if admin {
+						user = f.admin
+					}
+					ctx := newModuleMessageContext(f.bot, f.chat, user, text)
+					if err := d.ProcessUpdate(f.bot, ctx.Update, nil); err != nil {
+						t.Fatal(err)
+					}
+					want := 1
+					if disabled && !admin {
+						want = 0
+					}
+					if got := len(sentTexts(f.client)); got != want {
+						t.Fatalf("replies = %d, want %d", got, want)
+					}
+					if continued != !strings.HasPrefix(text, "/") {
+						t.Fatalf("continued = %t, want only mentions to reach later watchers", continued)
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestReportMentionFromChannelStaysSilent(t *testing.T) {
+	useRealLocales(t)
+	withDisableCommands(t)
+	f := newAdminChatFixture(t)
+	d := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
+	LoadReports(d)
+	continued := false
+	d.AddHandlerToGroup(handlers.NewMessage(func(*gotgbot.Message) bool { return true }, func(*gotgbot.Bot, *ext.Context) error {
+		continued = true
+		return ext.ContinueGroups
+	}), 9)
+	ctx := newModuleMessageContext(f.bot, f.chat, f.member, "ask @admin")
+	ctx.Message.From = nil
+	ctx.Message.SenderChat = &gotgbot.Chat{Id: uniqueModuleChatID(), Type: "channel", Title: "Sender"}
+	if err := d.ProcessUpdate(f.bot, ctx.Update, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := sentTexts(f.client); len(got) != 0 {
+		t.Fatalf("channel mention replies = %q, want silence", got)
+	}
+	if !continued {
+		t.Fatal("channel mention did not reach later watchers")
+	}
+}
+
+func TestReportCommandRefusesChannelSender(t *testing.T) {
+	useRealLocales(t)
+	withDisableCommands(t)
+	f := newAdminChatFixture(t)
+	d := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
+	LoadReports(d)
+	update := newModuleMessageContext(f.bot, f.chat, f.member, "/report").Update
+	update.Message.From = nil
+	update.Message.SenderChat = &gotgbot.Chat{Id: uniqueModuleChatID(), Type: "channel"}
+	if err := d.ProcessUpdate(f.bot, update, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := fmt.Sprint(f.client.onlyCall(t, "sendMessage").Params["text"]); got != "Cannot identify user. This command cannot be used by channels." {
+		t.Fatalf("channel /report = %q, want the identity refusal", got)
+	}
+}
