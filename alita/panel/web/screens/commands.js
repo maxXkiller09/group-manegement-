@@ -25,7 +25,7 @@ function beginnerGuide(){
 }
 function copyButton(value){
  const b=el("button","ng-command-primary","Command copy karein");b.type="button";
- b.addEventListener("click",async()=>{try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(value);else{const t=document.createElement("textarea");t.value=value;t.style.position="fixed";t.style.opacity="0";document.body.append(t);t.select();const ok=document.execCommand("copy");t.remove();if(!ok)throw Error("copy unavailable");}haptic("success");toast("Command copy ho gaya. Group mein paste karke bhejein.");}catch{toast("Copy nahi hua. Command ko select karke copy karein.","error");}});
+ b.addEventListener("click",async()=>{try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(value);else{const t=document.createElement("textarea");t.value=value;t.className="ng-command-copy-fallback";document.body.append(t);t.select();const ok=document.execCommand("copy");t.remove();if(!ok)throw Error("copy unavailable");}haptic("success");toast("Command copy ho gaya. Group mein paste karke bhejein.");}catch{toast("Copy nahi hua. Command ko select karke copy karein.","error");}});
  return b;
 }
 function directForm(chatID,command){
