@@ -1,6 +1,6 @@
 import { telegram } from "./api.js?v=2026.11.16-bootfix1";
-import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.16-bootfix1";
-import { renderChats } from "./screens/chats.js?v=2026.11.16-bootfix1";
+import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.16-dashboard1";
+import { renderChats } from "./screens/chats.js?v=2026.11.16-dashboard1";
 import { renderHome } from "./screens/home.js?v=2026.11.16-bootfix1";
 import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, supports } from "./ui.js?v=2026.11.16-bootfix1";
 
