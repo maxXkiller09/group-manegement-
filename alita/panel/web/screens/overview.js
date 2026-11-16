@@ -2,8 +2,8 @@
 // chart for a 7, 30 or 90 day window, and the most recent moderation actions.
 // Server data reaches the DOM only through textContent and SVG attributes, so
 // a chat title or an action value can never become markup.
-import { api } from "../api.js";
-import { clear, haptic, loading, relativeTime, showError, textElement, userLabel } from "../ui.js";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { clear, haptic, loading, relativeTime, showError, textElement, userLabel } from "../ui.js?v=2026.11.16-bootfix1";
 
 const WINDOWS = [7, 30, 90];
 const SVG_NS = "http://www.w3.org/2000/svg";
