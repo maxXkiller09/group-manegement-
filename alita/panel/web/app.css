@@ -2212,3 +2212,26 @@ body {
   height: 40px;
   border-radius: 13px;
 }
+
+
+/* Moderation history action filters — theme-aware and usable on narrow screens. */
+.timeline-filters{display:flex;flex-direction:column;gap:10px;min-width:0}
+.timeline-action-filters{display:flex;gap:7px;max-width:100%;padding:2px 1px 6px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.timeline-filter-chip{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:7px;min-width:74px;min-height:46px;padding:8px 13px;border:1px solid var(--separator);border-radius:999px;background:var(--card);color:var(--text);font-size:14px;font-weight:650}
+.timeline-chip-icon{font-size:15px;line-height:1}
+.timeline-filter-chip[data-action="ban"] .timeline-chip-icon,.timeline-filter-chip[data-action="ban"].active{color:#e05270}
+.timeline-filter-chip[data-action="kick"] .timeline-chip-icon,.timeline-filter-chip[data-action="kick"].active{color:#c98216}
+.timeline-filter-chip[data-action="mute"] .timeline-chip-icon,.timeline-filter-chip[data-action="mute"].active{color:#3987e8}
+.timeline-filter-chip[data-action="unban"] .timeline-chip-icon,.timeline-filter-chip[data-action="unban"].active{color:#269b62}
+.timeline-filter-chip.active{border-color:currentColor;background:color-mix(in srgb,currentColor 13%,var(--card));box-shadow:inset 0 0 0 1px currentColor}
+.timeline-admin-filter{display:flex;flex-direction:column;gap:4px;min-width:0}
+.timeline-admin-filter input{width:100%;min-width:0;min-height:46px}
+.timeline-filter-hint{color:var(--hint);font-size:12px}
+.timeline-empty{padding:18px 14px;border:1px dashed var(--separator);border-radius:var(--radius);background:var(--card);text-align:center;list-style:none}
+.timeline-empty-copy{margin:8px 0 0;color:var(--hint);font-size:14px}
+.timeline-action-badge.action-ban{background:color-mix(in srgb,#e05270 16%,transparent);color:#e05270}
+.timeline-action-badge.action-kick{background:color-mix(in srgb,#c98216 18%,transparent);color:#c98216}
+.timeline-action-badge.action-mute{background:color-mix(in srgb,#3987e8 16%,transparent);color:#3987e8}
+.timeline-action-badge.action-unban{background:color-mix(in srgb,#269b62 16%,transparent);color:#269b62}
+.timeline-event .timeline-action-badge{align-self:flex-start}
+@media(max-width:360px){.timeline-action-filters{gap:6px}.timeline-filter-chip{min-width:68px;padding-inline:10px}.timeline-admin-filter input{font-size:14px}}
