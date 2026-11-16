@@ -166,10 +166,10 @@ function openQuickActions() {
 
 function openMoreMenu() {
   openActionSheet("More", [
-    [selectedChatID() ? destination("activity") : "#/activity", "⌁", "Activity & Analytics"],
-    [destination("filters"), "◈", "Content Tools"],
-    [destination("commands"), "⌘", "All Commands"],
-    ["#/account", "◉", "Account"],
+    [selectedChatID() ? destination("activity") : "#/activity", "activity", "Activity & Analytics"],
+    [destination("filters"), "filters", "Content Tools"],
+    [destination("commands"), "commands", "All Commands"],
+    ["#/account", "account", "Account"],
   ]);
 }
 
@@ -183,7 +183,7 @@ function renderNavigation() {
   const hash = location.hash;
   const route = routePattern.exec(hash);
   const section = route?.[2] ?? "";
-  const groupTarget = /^#\\/groups\\/([a-z-]+)$/.exec(hash)?.[1] ?? "";
+  const groupTarget = /^#\/groups\/([a-z-]+)$/.exec(hash)?.[1] ?? "";
   const moreDestinations = [
     "activity", "filters", "blacklists", "notes", "commands",
     "timeline", "members", "referrals",
@@ -196,7 +196,7 @@ function renderNavigation() {
         : "home";
 
   const entries = [
-    { key: "home", icon: "home", label: "Home", href: "#/groups" },
+    { key: "home", icon: "home", label: "Home", href: "#/" },
     { key: "security", icon: "security", label: "Security", href: destination("settings") },
     { key: "add", icon: "plus", label: "Quick actions" },
     { key: "moderation", icon: "moderation", label: "Moderation", href: destination("warnings") },
