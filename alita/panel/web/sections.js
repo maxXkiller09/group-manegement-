@@ -11,7 +11,7 @@ export const sections=[
 {key:"overview",label:"Group Overview",description:"Group health, member activity and recent actions",render:renderOverview},
 {key:"settings",label:"Security Center",description:"Welcome, captcha, antiflood, locks and protection",render:renderSettings},
 {key:"warnings",label:"Moderation",description:"Warnings and member moderation",render:renderWarnings,adminOnly:true},
-{key:"commands",label:"All Commands",description:"Hinglish guide and available one-tap actions",render:renderCommands},
+{key:"commands",label:"All Commands",description:"Simple guide to commands and quick actions",render:renderCommands},
 {key:"filters",label:"Content Tools · Filters",description:"Automatic keyword replies",render:renderFilters},
 {key:"blacklists",label:"Content Tools · Blacklists",description:"Blocked words and automatic actions",render:renderBlacklists},
 {key:"notes",label:"Content Tools · Notes",description:"Saved messages for members",render:renderNotes},
