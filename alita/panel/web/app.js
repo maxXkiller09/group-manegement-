@@ -26,7 +26,7 @@ function showBootError(error) {
 
 async function start() {
   try {
-    await import("./bootstrap.js?v=2026.11.16-bootfix1");
+    await import("./bootstrap.js?v=2026.11.16-dashboard1");
   } catch (error) {
     showBootError(error);
   }
