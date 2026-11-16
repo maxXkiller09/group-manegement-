@@ -228,7 +228,7 @@ function securityIcon(moduleKey, fieldKey = "") {
 		nightmode: "blue", locks: "orange", log_channel: "green",
 	};
 	const symbol = fieldKey.includes("enabled") ? (symbols[moduleKey] || "◉") : (symbols[moduleKey] || "•");
-	const tile = textElement("span", symbol, \`ng-icon-tile tone-\${tones[moduleKey] || "blue"}\`);
+	const tile = textElement("span", symbol, `ng-icon-tile tone-${tones[moduleKey] || "blue"}`);
 	tile.setAttribute("aria-hidden", "true");
 	return tile;
 }
@@ -239,7 +239,7 @@ function securityMiniStat(label, value, symbol, tone) {
 	item.append(securityIcon(tone === "orange" ? "antiflood" : tone === "green" ? "antispam" : "captcha"));
 	const icon = item.firstElementChild;
 	icon.textContent = symbol;
-	icon.className = \`ng-icon-tile tone-\${tone}\`;
+	icon.className = `ng-icon-tile tone-${tone}`;
 	const copy = document.createElement("span");
 	copy.className = "ng-stat-copy";
 	copy.append(textElement("span", label, "ng-stat-label"), textElement("strong", String(value), "ng-stat-value"));
@@ -295,7 +295,7 @@ function securityDashboard(data, chat) {
 		const active = switches.some((field) => Boolean(field.value));
 		const card = document.createElement("article");
 		card.className = "ng-security-card";
-		const icon = textElement("span", symbol, \`ng-icon-tile tone-\${tone}\`);
+		const icon = textElement("span", symbol, `ng-icon-tile tone-${tone}`);
 		icon.setAttribute("aria-hidden", "true");
 		const copy = document.createElement("span");
 		copy.className = "ng-security-card-copy";
