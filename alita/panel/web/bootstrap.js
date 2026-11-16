@@ -1,6 +1,6 @@
 import { telegram } from "./api.js?v=2026.11.16-bootfix1";
-import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.16-bootfix1";
-import { renderChats } from "./screens/chats.js?v=2026.11.16-bootfix1";
+import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.16-dashboard1";
+import { renderChats } from "./screens/chats.js?v=2026.11.16-dashboard1";
 import { renderHome } from "./screens/home.js?v=2026.11.16-bootfix1";
 import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, supports } from "./ui.js?v=2026.11.16-bootfix1";
 
@@ -153,29 +153,59 @@ function renderNavigation() {
   const route = routePattern.exec(hash);
   const section = route?.[2] ?? "";
   const groupTarget = /^#\/groups\/([a-z-]+)$/.exec(hash)?.[1] ?? "";
-  const active = hash === "#/" || hash === "" ? "home"
-    : section === "settings" || groupTarget === "settings" ? "security"
-      : section === "warnings" || groupTarget === "warnings" ? "moderation"
-        : hash === "#/account" || hash === "#/activity" || section === "activity" ||
-          ["filters", "blacklists", "notes", "commands"].includes(section) ||
-          ["filters", "blacklists", "notes", "commands"].includes(groupTarget) ? "more"
-          : "home";
+  const moreDestinations = [
+    "overview", "activity", "filters", "blacklists", "notes", "commands",
+    "timeline", "members", "referrals",
+  ];
+  const isMoreDestination = hash === "#/account" || hash === "#/activity" ||
+    moreDestinations.includes(section) || moreDestinations.includes(groupTarget);
+  const active = section === "settings" || groupTarget === "settings" ? "security"
+    : section === "warnings" || groupTarget === "warnings" ? "moderation"
+      : isMoreDestination ? "more"
+        : "home";
 
-  const chatID = selectedChatID();
+  const iconPaths = {
+    home: ["M3.5 10.5 12 3.5l8.5 7M5.5 9.5v10h13v-10M9.5 19.5v-6h5v6"],
+    security: ["M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"],
+    moderation: ["M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z", "m9 12 2 2 4-4"],
+    more: ["M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"],
+    plus: ["M12 5v14M5 12h14"],
+  };
+
+  function navIcon(name) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "bottom-nav-icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+    for (const pathData of iconPaths[name]) {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", pathData);
+      svg.append(path);
+    }
+    return svg;
+  }
+
   const entries = [
-    { key: "home", glyph: "⌂", label: "Home", href: "#/" },
-    { key: "security", glyph: "◈", label: "Security", href: destination("settings") },
-    { key: "add", glyph: "+", label: "Quick actions" },
-    { key: "moderation", glyph: "⚑", label: "Moderation", href: destination("warnings") },
-    { key: "more", glyph: "•••", label: "More" },
+    { key: "home", icon: "home", label: "Home", href: "#/groups" },
+    { key: "security", icon: "security", label: "Security", href: destination("settings") },
+    { key: "add", icon: "plus", label: "Quick actions" },
+    { key: "moderation", icon: "moderation", label: "Moderation", href: destination("warnings") },
+    { key: "more", icon: "more", label: "More" },
   ];
 
   for (const entry of entries) {
-    const item = document.createElement(entry.key === "add" || entry.key === "more" ? "button" : "a");
+    const isAction = entry.key === "add" || entry.key === "more";
+    const item = document.createElement(isAction ? "button" : "a");
     item.className = "bottom-nav-item" +
       (entry.key === active ? " active" : "") +
       (entry.key === "add" ? " add-tab" : "");
-    if (entry.key === "add" || entry.key === "more") {
+
+    if (isAction) {
       item.type = "button";
       item.setAttribute("aria-label", entry.label);
       item.setAttribute("aria-haspopup", "dialog");
@@ -183,13 +213,18 @@ function renderNavigation() {
     } else {
       item.href = entry.href;
       item.setAttribute("aria-label", entry.label);
+      if (entry.key === active) item.setAttribute("aria-current", "page");
     }
-    item.append(document.createTextNode(entry.glyph));
-    const caption = document.createElement("span");
-    caption.textContent = entry.key === "add" ? "" : entry.label;
-    item.append(caption);
+
+    item.append(navIcon(entry.icon));
+    if (entry.key !== "add") {
+      const caption = document.createElement("span");
+      caption.textContent = entry.label;
+      item.append(caption);
+    }
     nav.append(item);
   }
+
   document.body.append(nav);
 }
 function render() {
