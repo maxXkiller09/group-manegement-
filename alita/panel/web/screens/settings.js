@@ -233,6 +233,20 @@ function securityIcon(moduleKey, fieldKey = "") {
 	return tile;
 }
 
+function securityMiniStat(label, value, symbol, tone) {
+	const item = document.createElement("div");
+	item.className = "ng-mini-stat";
+	item.append(securityIcon(tone === "orange" ? "antiflood" : tone === "green" ? "antispam" : "captcha"));
+	const icon = item.firstElementChild;
+	icon.textContent = symbol;
+	icon.className = \`ng-icon-tile tone-\${tone}\`;
+	const copy = document.createElement("span");
+	copy.className = "ng-stat-copy";
+	copy.append(textElement("span", label, "ng-stat-label"), textElement("strong", String(value), "ng-stat-value"));
+	item.append(copy);
+	return item;
+}
+
 function securityDashboard(data, chat) {
 	const modules = Array.isArray(data.modules) ? data.modules : [];
 	const fields = modules.flatMap((module) => (module.fields || []).map((field) => ({ module, field })));
@@ -258,9 +272,9 @@ function securityDashboard(data, chat) {
 	const mini = document.createElement("div");
 	mini.className = "ng-mini-stats";
 	mini.append(
-		miniStat("Protection groups", modules.length, "▦", "blue"),
-		miniStat("Enabled switches", enabled, "◉", "green"),
-		miniStat("Editable settings", editable, "⚙", "purple"),
+		securityMiniStat("Protection groups", modules.length, "▦", "blue"),
+		securityMiniStat("Enabled switches", enabled, "◉", "green"),
+		securityMiniStat("Editable settings", editable, "⚙", "purple"),
 	);
 
 	const quick = document.createElement("section");
