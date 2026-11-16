@@ -39,6 +39,7 @@ export async function renderTimeline(root, chatID, chat) {
 		button.className = "timeline-filter-chip";
 		button.dataset.action = filter.value;
 		button.setAttribute("aria-pressed", String(filter.value === ""));
+		if (filter.value === "") button.classList.add("active");
 		const icon = textElement("span", filter.icon, "timeline-chip-icon");
 		icon.setAttribute("aria-hidden", "true");
 		button.append(icon, document.createTextNode(filter.label));
@@ -85,7 +86,7 @@ export async function renderTimeline(root, chatID, chat) {
 		const head = document.createElement("div");
 		head.className = "timeline-head";
 		head.append(
-			textElement("span", actionLabel(event.action), "badge timeline-action-badge"),
+			textElement("span", actionLabel(event.action), "badge timeline-action-badge action-" + event.action),
 			textElement("span", event.actor_id <= 0 ? "automatic" : userLabel(names, event.actor_id), "list-name"),
 			textElement("span", "→ " + userLabel(names, event.target_user_id), "list-name"),
 		);
@@ -147,7 +148,7 @@ export async function renderTimeline(root, chatID, chat) {
 	form.addEventListener("submit", (event) => {
 		event.preventDefault();
 		const actor = actorInput.value.trim();
-		if (actor && !/^\\d+$/.test(actor)) {
+		if (actor && !actor.split("").every((character) => character >= "0" && character <= "9")) {
 			status.className = "error";
 			status.textContent = "Username filtering PR B mein enable hoga. Filhaal numeric admin ID use karo.";
 			return;
