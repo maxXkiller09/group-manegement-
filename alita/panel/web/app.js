@@ -240,6 +240,24 @@ if (root) {
   }
   if (supports("6.1")) {
     telegram.BackButton.onClick(() => {
+      // Close an open sheet before leaving its screen.
+      const sheetClose = document.querySelector(
+        "#ng-quick-backdrop .ng-sheet-close, .ng-command-backdrop .ng-sheet-close",
+      );
+      if (sheetClose) {
+        haptic("light");
+        sheetClose.click();
+        return;
+      }
+
+      // The command guide has its own module -> command-list level.
+      const commandBack = document.querySelector(".ng-command-back:not([hidden])");
+      if (commandBack) {
+        haptic("light");
+        commandBack.click();
+        return;
+      }
+
       const parent = parentRoute(location.hash);
       if (parent) {
         haptic("light");
