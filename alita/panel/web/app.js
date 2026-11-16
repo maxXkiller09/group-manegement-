@@ -15,3 +15,16 @@ function render(){leaveScreen();syncBackButton();renderNavigation();window.scrol
 let currentHash="",confirming=false;
 async function navigate(){const target=location.hash;if(target===currentHash)return;if(blocksLeave()){history.replaceState(null,"",currentHash||location.pathname+location.search);if(confirming)return;confirming=true;const ok=await confirmDestructive({title:"Discard changes?",message:"You have unsaved changes on this screen. Leaving now loses them.",action:"Discard"}).finally(()=>confirming=false);if(!ok)return;setLeaveGuard(null);location.hash=target;return;}currentHash=target;render();}
 if(root){if(!location.hash){const id=launchChatID();if(id)history.replaceState(null,"",`#/chats/${id}`);}if(supports("6.1"))telegram.BackButton.onClick(()=>{const p=parentRoute(location.hash);if(p){haptic("light");location.hash=p;}});window.addEventListener("hashchange",navigate);currentHash=location.hash;render();}
+
+// Hide the fixed bottom navigation while a mobile keyboard is open.
+const visualViewport=window.visualViewport;
+function syncKeyboardState(){
+  const active=document.activeElement;
+  const editing=active instanceof HTMLElement && (active.matches("input,textarea,select") || active.isContentEditable);
+  const keyboardOpen=Boolean(editing && visualViewport && window.innerHeight-visualViewport.height>140);
+  document.body.classList.toggle("keyboard-open",keyboardOpen);
+}
+for(const event of ["focusin","focusout"]){document.addEventListener(event,()=>requestAnimationFrame(syncKeyboardState));}
+visualViewport?.addEventListener("resize",syncKeyboardState);
+visualViewport?.addEventListener("scroll",syncKeyboardState);
+window.addEventListener("resize",syncKeyboardState);
