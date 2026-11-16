@@ -1,7 +1,7 @@
 // Shared pieces of the analytics screens: SVG nodes and the 7/30/90-day
 // window switch. Like the overview, nothing here builds markup from strings:
 // server data reaches the DOM only through textContent and SVG attributes.
-import { clear, haptic, loading, showError, textElement } from "./ui.js";
+import { clear, haptic, loading, showError, textElement } from "./ui.js?v=2026.11.16-bootfix1";
 
 export const WINDOWS = [7, 30, 90];
 const SVG_NS = "http://www.w3.org/2000/svg";
