@@ -1,9 +1,9 @@
 // Top members: the users who sent the most messages in a 7, 30 or 90 day
 // window. It names users, so like the timeline it is admin-only (the server
 // refuses members too). Names reach the DOM only through textContent.
-import { api } from "../api.js";
-import { collectionNote, finite, svgNode, windowedScreen } from "../charts.js";
-import { textElement, userLabel } from "../ui.js";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { collectionNote, finite, svgNode, windowedScreen } from "../charts.js?v=2026.11.16-bootfix1";
+import { textElement, userLabel } from "../ui.js?v=2026.11.16-bootfix1";
 
 // bar is a fixed-height SVG bar whose length is the member's share of the
 // first member's count.
