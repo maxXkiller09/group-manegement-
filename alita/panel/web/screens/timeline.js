@@ -59,9 +59,9 @@ export async function renderTimeline(root, chatID, chat) {
 	const actorInput = document.createElement("input");
 	actorInput.type = "text";
 	actorInput.autocomplete = "off";
-	actorInput.placeholder = "Admin (username ya ID)";
-	actorInput.setAttribute("aria-label", "Filter by admin username or ID");
-	const actorHint = textElement("span", "Numeric ID filter abhi available hai. Username support next update mein.", "timeline-filter-hint");
+	actorInput.placeholder = "Admin ID";
+	actorInput.setAttribute("aria-label", "Filter by numeric admin ID");
+	const actorHint = textElement("span", "Abhi sirf numeric Admin ID se filter hota hai. @username support PR B mein aayega.", "timeline-filter-hint");
 	const filterFields = document.createElement("div");
 	filterFields.className = "timeline-admin-filter";
 	filterFields.append(actorInput, actorHint);
@@ -150,7 +150,7 @@ export async function renderTimeline(root, chatID, chat) {
 		const actor = actorInput.value.trim();
 		if (actor && !actor.split("").every((character) => character >= "0" && character <= "9")) {
 			status.className = "error";
-			status.textContent = "Username filtering PR B mein enable hoga. Filhaal numeric admin ID use karo.";
+			status.textContent = "Abhi sirf numeric Admin ID chalta hai. @username support PR B mein aayega.";
 			return;
 		}
 		state.actor = actor;
