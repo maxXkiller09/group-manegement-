@@ -236,10 +236,9 @@ function securityIcon(moduleKey, fieldKey = "") {
 function securityMiniStat(label, value, symbol, tone) {
 	const item = document.createElement("div");
 	item.className = "ng-mini-stat";
-	item.append(securityIcon(tone === "orange" ? "antiflood" : tone === "green" ? "antispam" : "captcha"));
-	const icon = item.firstElementChild;
-	icon.textContent = symbol;
-	icon.className = `ng-icon-tile tone-${tone}`;
+	const icon = textElement("span", symbol, `ng-icon-tile tone-${tone}`);
+	icon.setAttribute("aria-hidden", "true");
+	item.append(icon);
 	const copy = document.createElement("span");
 	copy.className = "ng-stat-copy";
 	copy.append(textElement("span", label, "ng-stat-label"), textElement("strong", String(value), "ng-stat-value"));
@@ -596,7 +595,7 @@ export async function renderSettings(root, chatID, chat = {}) {
 		data = await api(`chats/${encodeURIComponent(chatID)}/settings`);
 	} catch (error) {
 		if (window.location.hash === route) {
-			showError(root, error, () => renderSettings(root, chatID));
+			showError(root, error, () => renderSettings(root, chatID, chat));
 		}
 		return;
 	}
