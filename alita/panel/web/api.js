@@ -25,7 +25,7 @@ export async function api(path, { method = "GET", body } = {}) {
 	let response;
 	let payload = null;
 	try {
-		response = await fetch(`/panel/api/v1/${path.replace(/^\\/+/, "")}`, {
+		response = await fetch(`/panel/api/v1/${path.replace(/^\/+/, "")}`, {
 			method,
 			headers,
 			body: body === undefined ? undefined : JSON.stringify(body),
