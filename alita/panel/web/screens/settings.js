@@ -370,9 +370,30 @@ function drawSettings(root, chatID, data, chat = {}) {
 	setLeaveGuard(() => changes.size > 0);
 
 	for (const module of data.modules) {
-		const section = document.createElement("section");
-		section.className = "settings-module";
-		section.append(textElement("h3", module.label));
+		const section = document.createElement("details");
+		section.className = "settings-module ng-settings-module";
+		section.open = true;
+		const heading = document.createElement("summary");
+		heading.className = "ng-module-header";
+		const moduleCopy = document.createElement("span");
+		moduleCopy.className = "ng-module-copy";
+		const descriptions = {
+			language: "Choose the language used in this group",
+			greetings: "Welcome and goodbye messages",
+			captcha: "Verify new members before they join",
+			antiflood: "Control repeated messages",
+			antispam: "Detect spam and suspicious joins",
+			antiraid: "Protect against sudden join raids",
+			warns: "Set warning limits and actions",
+			nightmode: "Schedule automatic quiet hours",
+			locks: "Control restricted message types",
+		};
+		moduleCopy.append(
+			textElement("strong", module.label, "ng-module-title"),
+			textElement("span", descriptions[module.key] || `Manage ${String(module.label).toLocaleLowerCase()} settings`, "ng-module-subtitle"),
+		);
+		heading.append(securityIcon(module.key), moduleCopy, textElement("span", "⌄", "ng-module-chevron"));
+		section.append(heading);
 		const group = document.createElement("div");
 		group.className = "group-list";
 
