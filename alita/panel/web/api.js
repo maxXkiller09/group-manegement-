@@ -20,19 +20,32 @@ export async function api(path, { method = "GET", body } = {}) {
 		headers["Content-Type"] = "application/json";
 	}
 
-	const response = await fetch(`/panel/api/v1/${path.replace(/^\/+/, "")}`, {
-		method,
-		headers,
-		body: body === undefined ? undefined : JSON.stringify(body),
-		credentials: "omit",
-		cache: "no-store",
-	});
-
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), 15000);
+	let response;
 	let payload = null;
 	try {
-		payload = await response.json();
-	} catch {
-		payload = null;
+		response = await fetch(`/panel/api/v1/${path.replace(/^\/+/, "")}`, {
+			method,
+			headers,
+			body: body === undefined ? undefined : JSON.stringify(body),
+			credentials: "omit",
+			cache: "no-store",
+			signal: controller.signal,
+		});
+		try {
+			payload = await response.json();
+		} catch (error) {
+			if (controller.signal.aborted) throw error;
+			payload = null;
+		}
+	} catch (error) {
+		if (controller.signal.aborted) {
+			throw new ApiError("timeout", "The request took too long. Please try again.", 0);
+		}
+		throw error;
+	} finally {
+		clearTimeout(timeout);
 	}
 
 	if (!response.ok) {

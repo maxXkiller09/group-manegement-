@@ -3,9 +3,9 @@
 // member with access sees this screen. Drawn as SVG like the overview (the
 // CSP blocks chart libraries); server data reaches the DOM only through
 // textContent and SVG attributes.
-import { api } from "../api.js";
-import { collectionNote, finite, svgNode, svgText, windowedScreen } from "../charts.js";
-import { textElement } from "../ui.js";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { collectionNote, finite, svgNode, svgText, windowedScreen } from "../charts.js?v=2026.11.16-bootfix1";
+import { textElement } from "../ui.js?v=2026.11.16-bootfix1";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 

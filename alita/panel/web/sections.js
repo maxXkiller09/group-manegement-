@@ -1,12 +1,12 @@
-import { renderActivity } from "./screens/activity.js";
-import { renderBlacklists, renderFilters, renderNotes } from "./screens/lists.js";
-import { renderMembers } from "./screens/members.js";
-import { renderOverview } from "./screens/overview.js";
-import { renderSettings } from "./screens/settings.js";
-import { renderTimeline } from "./screens/timeline.js";
-import { renderWarnings } from "./screens/warnings.js";
-import { renderReferrals } from "./screens/referrals.js";
-import { renderCommands } from "./screens/commands.js";
+import { renderActivity } from "./screens/activity.js?v=2026.11.16-bootfix1";
+import { renderBlacklists, renderFilters, renderNotes } from "./screens/lists.js?v=2026.11.16-bootfix1";
+import { renderMembers } from "./screens/members.js?v=2026.11.16-bootfix1";
+import { renderOverview } from "./screens/overview.js?v=2026.11.16-bootfix1";
+import { renderSettings } from "./screens/settings.js?v=2026.11.16-bootfix1";
+import { renderTimeline } from "./screens/timeline.js?v=2026.11.16-bootfix1";
+import { renderWarnings } from "./screens/warnings.js?v=2026.11.16-bootfix1";
+import { renderReferrals } from "./screens/referrals.js?v=2026.11.16-bootfix1";
+import { renderCommands } from "./screens/commands.js?v=2026.11.16-bootfix1";
 export const sections=[
 {key:"overview",label:"Group Overview",description:"Group health, member activity and recent actions",render:renderOverview},
 {key:"settings",label:"Security Center",description:"Welcome, captcha, antiflood, locks and protection",render:renderSettings},
