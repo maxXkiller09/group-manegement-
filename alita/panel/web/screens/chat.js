@@ -1,6 +1,6 @@
-import { api } from "../api.js";
-import { sections } from "../sections.js";
-import { backLink, clear, loading, setHeader, showError, textElement } from "../ui.js";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { sections } from "../sections.js?v=2026.11.16-bootfix1";
+import { backLink, clear, loading, setHeader, showError, textElement } from "../ui.js?v=2026.11.16-bootfix1";
 
 async function loadChat(root, chatID, retry) {
   clear(root);
