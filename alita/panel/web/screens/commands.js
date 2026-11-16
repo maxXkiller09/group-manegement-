@@ -41,7 +41,17 @@ function directForm(chatID,command){
  const reason=document.createElement("textarea");reason.maxLength=3000;reason.rows=2;reason.placeholder="Reason (optional)";
  const review=el("button","ng-command-primary","Action check karein");review.type="button";
  review.addEventListener("click",async()=>{const id=Number(target.value);if(!Number.isSafeInteger(id)||id<=0)return toast("Sahi Telegram user ID likhein.","error");const chosen=action.value,timed=chosen==="tban"||chosen==="tmute",seconds=timed?Number(duration.value):0;if(timed&&(!Number.isSafeInteger(seconds)||seconds<1||seconds>366*86400))return toast("Time 1 se 31622400 seconds ke beech dein.","error");
- const ok=await confirmDestructive({title:chosen.toUpperCase()+" member?",message:`Action: ${chosen}\nMember ID: ${id}${timed?`\nTime: ${seconds} seconds`:""}${reason.value.trim()?`\nReason: ${reason.value.trim()}`:""},action:"Confirm "+chosen});if(!ok)return;review.disabled=true;
+ const confirmationLines = [`Action: ${chosen}`, `Member ID: ${id}`];
+ if (timed) confirmationLines.push(`Time: ${seconds} seconds`);
+ const reasonText = reason.value.trim();
+ if (reasonText) confirmationLines.push(`Reason: ${reasonText}`);
+ const ok = await confirmDestructive({
+  title: `${chosen.toUpperCase()} member?`,
+  message: confirmationLines.join("\n"),
+  action: `Confirm ${chosen}`,
+ });
+ if (!ok) return;
+ review.disabled = true;
  try{const result=await api(`chats/${encodeURIComponent(chatID)}/actions`,{method:"POST",body:{action:chosen,target_user_id:id,reason:reason.value.trim(),duration_seconds:seconds,confirmed:true}});toast(result.message||"Action apply ho gaya.");haptic("success");}catch(error){toast(error.message||"Action nahi ho paya.","error");haptic("error");}finally{review.disabled=false;}});
  box.append(action,picker,target,duration,reason,review);return box;
 }
