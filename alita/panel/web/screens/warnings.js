@@ -73,7 +73,7 @@ export async function renderWarnings(root, chatID, chat) {
 			const userID = Number(target.value);
 			if (!Number.isSafeInteger(userID) || userID <= 0) {
 				status.className = "error";
-				status.textContent = "Valid Telegram user ID enter karein.";
+				status.textContent = "Enter a valid Telegram user ID.";
 				return;
 			}
 			const approved = await confirmDestructive({
