@@ -152,11 +152,13 @@ function renderNavigation() {
   const hash = location.hash;
   const route = routePattern.exec(hash);
   const section = route?.[2] ?? "";
+  const groupTarget = /^#\/groups\/([a-z-]+)$/.exec(hash)?.[1] ?? "";
   const active = hash === "#/" || hash === "" ? "home"
-    : section === "settings" ? "security"
-      : section === "warnings" ? "moderation"
+    : section === "settings" || groupTarget === "settings" ? "security"
+      : section === "warnings" || groupTarget === "warnings" ? "moderation"
         : hash === "#/account" || hash === "#/activity" || section === "activity" ||
-          ["filters", "blacklists", "notes", "commands"].includes(section) ? "more"
+          ["filters", "blacklists", "notes", "commands"].includes(section) ||
+          ["filters", "blacklists", "notes", "commands"].includes(groupTarget) ? "more"
           : "home";
 
   const chatID = selectedChatID();
