@@ -1679,3 +1679,15 @@ body.keyboard-open { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
   .ng-setting-row { grid-template-columns: 34px minmax(0,1fr); gap: 7px; padding-inline: 9px; }
   .ng-setting-row > .ng-icon-tile { width: 33px; height: 33px; }
 }
+
+
+.ng-settings-module { margin: 0 0 10px; overflow: hidden; border: 1px solid var(--ng-border); border-radius: 21px; background: rgba(12,29,52,.64); }
+.ng-module-header { display: flex; align-items: center; gap: 11px; min-height: 68px; padding: 11px 13px; list-style: none; cursor: pointer; }
+.ng-module-header::-webkit-details-marker { display: none; }
+.ng-module-header::marker { content: ""; }
+.ng-module-copy { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 3px; }
+.ng-module-title { color: #f3f6ff; font-size: 13px; font-weight: 850; }
+.ng-module-subtitle { color: #91a7c8; font-size: 10px; line-height: 1.35; }
+.ng-module-chevron { color: #8ba6ce; font-size: 21px; transition: transform .18s ease; }
+.ng-settings-module[open] .ng-module-chevron { transform: rotate(180deg); }
+.ng-settings-module .group-list { margin: 0 9px 9px; border: 1px solid rgba(190,213,255,.08); border-radius: 16px; background: rgba(5,18,36,.35); }
