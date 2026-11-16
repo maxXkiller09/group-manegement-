@@ -1,6 +1,6 @@
-import { commandModules } from "./commands-data.js";
-import { api } from "../api.js";
-import { confirmDestructive, haptic, textElement, toast, userLabel } from "../ui.js";
+import { commandModules } from "./commands-data.js?v=2026.11.16-bootfix1";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { confirmDestructive, haptic, textElement, toast, userLabel } from "../ui.js?v=2026.11.16-bootfix1";
 
 const labels={admin:"Sirf Admin",owner:"Sirf Owner",member:"Sabke liye"};
 const direct=new Set(["/ban","/tban","/unban","/kick","/mute","/tmute","/unmute"]);
