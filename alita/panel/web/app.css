@@ -1311,3 +1311,24 @@ body{background:var(--bg);padding-bottom:calc(92px + env(safe-area-inset-bottom)
 .group-search::placeholder{color:var(--hint)}
 .group-card{min-height:66px;padding-block:12px}
 .search-empty{margin-top:10px}
+
+
+/* Calm, guided group dashboard */
+.group-access-card{display:flex;flex-direction:column;gap:7px;padding:15px;border-radius:16px}
+.group-access-card .section-header{margin:0 0 2px;font-size:16px}
+.access-line{margin:0;font-size:13px;font-weight:650}
+.access-ok{margin:0;color:#55D6A5;font-size:12px}
+.access-warn{margin:0;color:#F4BD63;font-size:12px}
+.access-help{margin:2px 0 0;font-size:12px;line-height:1.55}
+.group-tool-section{margin-top:18px}
+.group-tool-heading{margin:0 3px;font-size:16px;letter-spacing:-.01em}
+.group-tool-hint{margin:3px 3px 8px;color:var(--subtitle);font-size:12px;line-height:1.4}
+.group-tool-list{display:flex;flex-direction:column;gap:7px}
+.group-tool-link{min-height:60px;padding:10px 13px;border:1px solid var(--separator);border-radius:14px;background:var(--card)}
+.group-tool-link .nav-title{font-size:14px}
+.group-tool-link .nav-subtitle{font-size:11px;line-height:1.35}
+
+.account-profile{display:flex;flex-direction:column;gap:7px;padding:16px;border-radius:16px}
+.account-name{margin:0;font-size:20px}
+.account-detail{margin:0;color:var(--subtitle);font-size:13px;overflow-wrap:anywhere}
+.inbox-groups{grid-template-columns:1fr;gap:8px}
