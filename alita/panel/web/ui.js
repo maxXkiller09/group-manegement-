@@ -1,6 +1,6 @@
 // Small DOM helpers. Everything renders with textContent so chat titles,
 // usernames and filter text can never become markup.
-import { telegram } from "./api.js";
+import { telegram } from "./api.js?v=2026.11.16-bootfix1";
 
 // supports reports whether the Telegram client implements a Bot API version;
 // outside Telegram nothing is supported and the page falls back to plain DOM.
