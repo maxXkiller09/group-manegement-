@@ -248,7 +248,7 @@ function collectionNote() {
 	return details;
 }
 
-function drawOverview(root, data, chat, days) {
+function drawOverview(root, data, chat, days, chatID, onWindowChange) {
 	const series = Array.isArray(data.days) ? data.days : [];
 	const totals = data.totals ?? {};
 	const recent = Array.isArray(data.recent) ? data.recent : [];
@@ -290,7 +290,7 @@ function drawOverview(root, data, chat, days) {
 		button.addEventListener("click", () => {
 			if (value !== days) {
 				haptic("selection");
-				root.dispatchEvent(new CustomEvent("ng-overview-window", { detail: value }));
+				onWindowChange(value);
 			}
 		});
 		controls.append(button);
@@ -308,7 +308,7 @@ function drawOverview(root, data, chat, days) {
 		root.append(textElement("p", "No messages, joins or leaves have been recorded in this window yet.", "empty"));
 	}
 
-	root.append(overviewLinks(chat.id || ""));
+	root.append(overviewLinks(chatID));
 	root.append(recentSection(recent, data.names, data.moderation_count), collectionNote());
 }
 
@@ -331,12 +331,7 @@ export async function renderOverview(root, chatID, chat = {}) {
 		}
 		if (current !== request) return;
 		clear(root);
-		drawOverview(root, data, chat, days);
-		const controls = root.querySelector(".window-switch");
-		controls?.addEventListener("ng-overview-window", (event) => {
-			days = event.detail;
-			void load();
-		});
+		drawOverview(root, data, chat, days, chatID, (next) => { days = next; void load(); });
 	}
 	await load();
 }
