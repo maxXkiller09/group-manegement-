@@ -113,7 +113,7 @@ function chartLegend() {
 }
 
 function iconTile(symbol, tone = "blue") {
-	const icon = textElement("span", symbol, \`ng-icon-tile tone-\${tone}\`);
+	const icon = textElement("span", symbol, `ng-icon-tile tone-${tone}`);
 	icon.setAttribute("aria-hidden", "true");
 	return icon;
 }
@@ -173,7 +173,7 @@ function overviewLinks(chatID) {
 	for (const [section, symbol, title, subtitle, tone] of items) {
 		const link = document.createElement("a");
 		link.className = "ng-grouped-row";
-		link.href = \`#/chats/\${encodeURIComponent(chatID)}/\${section}\`;
+		link.href = `#/chats/${encodeURIComponent(chatID)}/${section}`;
 		link.append(iconTile(symbol, tone));
 		const copy = document.createElement("span");
 		copy.className = "ng-grouped-copy";
@@ -283,7 +283,7 @@ function drawOverview(root, data, chat, days, chatID, onWindowChange) {
 	controls.setAttribute("aria-label", "Activity window");
 	root.append(controls);
 	for (const value of WINDOWS) {
-		const button = textElement("button", \`\${value} days\`);
+		const button = textElement("button", `${value} days`);
 		button.type = "button";
 		button.classList.toggle("active", value === days);
 		button.setAttribute("aria-pressed", String(value === days));
@@ -324,7 +324,7 @@ export async function renderOverview(root, chatID, chat = {}) {
 		root.append(loading("Loading group overview…"));
 		let data;
 		try {
-			data = await api(\`chats/\${encodeURIComponent(chatID)}/overview?days=\${days}\`);
+			data = await api(`chats/${encodeURIComponent(chatID)}/overview?days=${days}`);
 		} catch (error) {
 			if (current === request) showError(root, error, () => void load());
 			return;
