@@ -1,5 +1,5 @@
-import { api } from "../api.js";
-import { clear, loading, showError, textElement } from "../ui.js";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { clear, loading, showError, textElement } from "../ui.js?v=2026.11.16-bootfix1";
 
 function tile(title, description, href, symbol) {
   const link = document.createElement("a");
