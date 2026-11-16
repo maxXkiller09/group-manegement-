@@ -22,6 +22,18 @@ func isRemoteReference(reference string) bool {
 	return false
 }
 
+func localAssetPath(reference string) string {
+	// Browsers do not send query strings or fragments as part of a static
+	// asset path. Strip them before checking the embedded filesystem.
+	if pathPart, _, found := strings.Cut(reference, "?"); found {
+		reference = pathPart
+	}
+	if pathPart, _, found := strings.Cut(reference, "#"); found {
+		reference = pathPart
+	}
+	return reference
+}
+
 func TestIndexReferencesAssetsInEmbeddedFS(t *testing.T) {
 	index, err := fs.ReadFile(webFiles, "web/index.html")
 	if err != nil {
@@ -58,7 +70,7 @@ func TestIndexReferencesAssetsInEmbeddedFS(t *testing.T) {
 			if isRemoteReference(reference) {
 				continue
 			}
-			resolved := path.Join(path.Dir(name), reference)
+			resolved := path.Join(path.Dir(name), localAssetPath(reference))
 			checkFile(resolved)
 		}
 	}
@@ -68,7 +80,7 @@ func TestIndexReferencesAssetsInEmbeddedFS(t *testing.T) {
 		if isRemoteReference(reference) {
 			continue
 		}
-		checkFile(path.Join("web", reference))
+		checkFile(path.Join("web", localAssetPath(reference)))
 	}
 
 	if !checked["web/app.js"] || !checked["web/app.css"] {

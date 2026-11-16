@@ -112,19 +112,76 @@ function chartLegend() {
 	return legend;
 }
 
-function summaryItem(label, value) {
-	const item = document.createElement("li");
-	item.append(textElement("span", label, "summary-label"), textElement("strong", number(value)));
+function iconTile(symbol, tone = "blue") {
+	const icon = textElement("span", symbol, `ng-icon-tile tone-${tone}`);
+	icon.setAttribute("aria-hidden", "true");
+	return icon;
+}
+
+function miniStat(label, value, symbol, tone) {
+	const item = document.createElement("div");
+	item.className = "ng-mini-stat";
+	item.append(iconTile(symbol, tone));
+	const copy = document.createElement("span");
+	copy.className = "ng-stat-copy";
+	copy.append(textElement("span", label, "ng-stat-label"), textElement("strong", number(value), "ng-stat-value"));
+	item.append(copy);
 	return item;
 }
 
-function totalsBlock(totals) {
-	const row = document.createElement("ul");
-	row.className = "overview-totals";
-	for (const counter of SERIES) {
-		row.append(summaryItem(counter.label, totals[counter.key]));
+function statCard(label, value, description, symbol, tone) {
+	const card = document.createElement("article");
+	card.className = "ng-stat-card";
+	card.append(iconTile(symbol, tone));
+	const copy = document.createElement("div");
+	copy.className = "ng-stat-card-copy";
+	copy.append(
+		textElement("span", label, "ng-stat-label"),
+		textElement("strong", number(value), "ng-stat-value"),
+		textElement("span", description, "ng-stat-description"),
+	);
+	card.append(copy);
+	return card;
+}
+
+function heroCard(chat) {
+	const hero = document.createElement("section");
+	hero.className = "ng-screen-hero";
+	const eyebrow = textElement("span", "GROUP OVERVIEW", "ng-eyebrow");
+	const title = textElement("h2", chat.title || "Your Telegram group", "ng-hero-title");
+	const subtitle = textElement("p", "Your community health, member activity and recent actions", "ng-hero-subtitle");
+	const meta = document.createElement("div");
+	meta.className = "ng-hero-meta";
+	meta.append(
+		textElement("span", chat.role === "admin" ? "Admin access" : "View-only access", "ng-hero-chip"),
+		textElement("span", chat.bot_admin ? "NexGuard active" : "Bot admin needed", chat.bot_admin ? "ng-hero-chip ok" : "ng-hero-chip warn"),
+	);
+	hero.append(eyebrow, title, subtitle, meta);
+	return hero;
+}
+
+function overviewLinks(chatID) {
+	const list = document.createElement("section");
+	list.className = "ng-grouped-links";
+	list.append(textElement("h3", "MANAGE YOUR GROUP", "ng-section-label"));
+	const items = [
+		["settings", "◈", "Security Center", "Configure protection and group safety", "blue"],
+		["warnings", "⚑", "Moderation", "Review warnings and member actions", "orange"],
+		["filters", "⌕", "Content Tools", "Manage filters, blocked words and notes", "green"],
+		["commands", "⌘", "All Commands", "Browse available bot commands", "purple"],
+	];
+	for (const [section, symbol, title, subtitle, tone] of items) {
+		const link = document.createElement("a");
+		link.className = "ng-grouped-row";
+		link.href = `#/chats/${encodeURIComponent(chatID)}/${section}`;
+		link.append(iconTile(symbol, tone));
+		const copy = document.createElement("span");
+		copy.className = "ng-grouped-copy";
+		copy.append(textElement("strong", title, "ng-grouped-title"), textElement("span", subtitle, "ng-grouped-subtitle"));
+		link.append(copy, textElement("span", "›", "ng-row-chevron"));
+		list.append(link);
 	}
-	return row;
+	return list;
 }
 
 function formatTime(value) {
@@ -191,18 +248,53 @@ function collectionNote() {
 	return details;
 }
 
-function drawOverview(root, data) {
+function drawOverview(root, data, chat, days, chatID, onWindowChange) {
 	const series = Array.isArray(data.days) ? data.days : [];
 	const totals = data.totals ?? {};
 	const recent = Array.isArray(data.recent) ? data.recent : [];
+	const messageTotal = Number(totals.messages) || 0;
+	const joinsTotal = Number(totals.joins) || 0;
+	const leavesTotal = Number(totals.leaves) || 0;
 
-	const summary = document.createElement("ul");
-	summary.className = "overview-summary";
-	summary.append(
-		summaryItem("Members", data.member_count),
-		summaryItem("Moderation actions", data.moderation_count),
+	root.append(heroCard(chat));
+
+	const mini = document.createElement("div");
+	mini.className = "ng-mini-stats";
+	mini.append(
+		miniStat("Members", data.member_count, "♙", "blue"),
+		miniStat("Moderation", data.moderation_count, "⚑", "orange"),
+		miniStat("Activity window", days, "◷", "purple"),
 	);
-	root.append(summary);
+	root.append(mini);
+
+	const stats = document.createElement("section");
+	stats.className = "ng-stat-grid";
+	stats.append(
+		statCard("Messages", messageTotal, "Recorded in this period", "▤", "blue"),
+		statCard("New joins", joinsTotal, "Members who joined", "＋", "green"),
+		statCard("Members left", leavesTotal, "Members who left", "↗", "orange"),
+		statCard("Moderation actions", data.moderation_count, "Actions recorded", "⚑", "purple"),
+	);
+	root.append(stats);
+
+	const controls = document.createElement("div");
+	controls.className = "window-switch";
+	controls.setAttribute("role", "group");
+	controls.setAttribute("aria-label", "Activity window");
+	root.append(controls);
+	for (const value of WINDOWS) {
+		const button = textElement("button", `${value} days`);
+		button.type = "button";
+		button.classList.toggle("active", value === days);
+		button.setAttribute("aria-pressed", String(value === days));
+		button.addEventListener("click", () => {
+			if (value !== days) {
+				haptic("selection");
+				onWindowChange(value);
+			}
+		});
+		controls.append(button);
+	}
 
 	const hasActivity = series.some(
 		(point) => count(point, "messages") > 0 || count(point, "joins") > 0 || count(point, "leaves") > 0,
@@ -210,82 +302,36 @@ function drawOverview(root, data) {
 	if (hasActivity) {
 		const card = document.createElement("div");
 		card.className = "chart-card";
-		card.append(activityChart(series), chartLegend());
+		card.append(textElement("h3", "ACTIVITY TREND", "ng-section-label"), activityChart(series), chartLegend());
 		root.append(card);
 	} else {
-		root.append(
-			textElement(
-				"p",
-				"No messages, joins or leaves have been recorded in this window yet.",
-				"empty",
-			),
-		);
+		root.append(textElement("p", "No messages, joins or leaves have been recorded in this window yet.", "empty"));
 	}
 
-	root.append(totalsBlock(totals), collectionNote(), recentSection(recent, data.names, data.moderation_count));
+	root.append(overviewLinks(chatID));
+	root.append(recentSection(recent, data.names, data.moderation_count), collectionNote());
 }
 
-export async function renderOverview(root, chatID) {
+export async function renderOverview(root, chatID, chat = {}) {
 	clear(root);
 
-	const controls = document.createElement("div");
-	controls.className = "window-switch";
-	controls.setAttribute("role", "group");
-	controls.setAttribute("aria-label", "Activity window");
-	const content = document.createElement("div");
-	content.className = "overview-content";
-	root.append(controls, content);
-
 	let days = WINDOWS[0];
-	// request orders the fetches: a slow answer for the old window must not
-	// overwrite a newer one.
 	let request = 0;
-	const buttons = [];
-
-	function syncButtons() {
-		for (const entry of buttons) {
-			const active = entry.value === days;
-			entry.button.classList.toggle("active", active);
-			entry.button.setAttribute("aria-pressed", String(active));
-		}
-	}
 
 	async function load() {
 		const current = ++request;
-		clear(content);
-		content.append(loading("Loading activity…"));
+		clear(root);
+		root.append(loading("Loading group overview…"));
 		let data;
 		try {
 			data = await api(`chats/${encodeURIComponent(chatID)}/overview?days=${days}`);
 		} catch (error) {
-			if (current === request) {
-				showError(content, error, () => void load());
-			}
+			if (current === request) showError(root, error, () => void load());
 			return;
 		}
-		if (current !== request) {
-			return;
-		}
-		clear(content);
-		drawOverview(content, data);
+		if (current !== request) return;
+		clear(root);
+		drawOverview(root, data, chat, days, chatID, (next) => { days = next; void load(); });
 	}
-
-	for (const value of WINDOWS) {
-		const button = textElement("button", `${value} days`);
-		button.type = "button";
-		button.addEventListener("click", () => {
-			if (value === days) {
-				return;
-			}
-			days = value;
-			haptic("selection");
-			syncButtons();
-			void load();
-		});
-		controls.append(button);
-		buttons.push({ value, button });
-	}
-
-	syncButtons();
 	await load();
 }

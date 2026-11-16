@@ -83,7 +83,7 @@ button {
 
 @media (orientation: landscape) and (max-height: 500px) {
   body {
-    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
   }
 
   .header {

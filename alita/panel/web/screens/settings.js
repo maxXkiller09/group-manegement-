@@ -214,9 +214,105 @@ function buildControl(moduleKey, field, disabled) {
 	return textElement("p", String(field.value ?? "") || "Not set", "setting-text");
 }
 
+function securityIcon(moduleKey, fieldKey = "") {
+	const symbols = {
+		language: "文", greetings: "✦", rules: "▤", captcha: "◈",
+		antiflood: "≋", antispam: "⛨", antiraid: "⚡", warns: "⚑",
+		digest: "◷", reports: "⚑", timezone: "◷", ephemeral: "◉",
+		nightmode: "☾", locks: "⌑", log_channel: "▣",
+	};
+	const tones = {
+		language: "cyan", greetings: "purple", rules: "blue", captcha: "blue",
+		antiflood: "orange", antispam: "green", antiraid: "gold", warns: "orange",
+		digest: "purple", reports: "cyan", timezone: "gold", ephemeral: "purple",
+		nightmode: "blue", locks: "orange", log_channel: "green",
+	};
+	const symbol = fieldKey.includes("enabled") ? (symbols[moduleKey] || "◉") : (symbols[moduleKey] || "•");
+	const tile = textElement("span", symbol, `ng-icon-tile tone-${tones[moduleKey] || "blue"}`);
+	tile.setAttribute("aria-hidden", "true");
+	return tile;
+}
+
+function securityMiniStat(label, value, symbol, tone) {
+	const item = document.createElement("div");
+	item.className = "ng-mini-stat";
+	const icon = textElement("span", symbol, `ng-icon-tile tone-${tone}`);
+	icon.setAttribute("aria-hidden", "true");
+	item.append(icon);
+	const copy = document.createElement("span");
+	copy.className = "ng-stat-copy";
+	copy.append(textElement("span", label, "ng-stat-label"), textElement("strong", String(value), "ng-stat-value"));
+	item.append(copy);
+	return item;
+}
+
+function securityDashboard(data, chat) {
+	const modules = Array.isArray(data.modules) ? data.modules : [];
+	const fields = modules.flatMap((module) => (module.fields || []).map((field) => ({ module, field })));
+	const booleanFields = fields.filter(({ field }) => field.type === "bool");
+	const enabled = booleanFields.filter(({ field }) => Boolean(field.value)).length;
+	const editable = fields.filter(({ field }) => field.writable && !data.read_only).length;
+
+	const hero = document.createElement("section");
+	hero.className = "ng-screen-hero";
+	hero.append(
+		textElement("span", "SECURITY CENTER", "ng-eyebrow"),
+		textElement("h2", chat.title || "Your Telegram group", "ng-hero-title"),
+		textElement("p", "Protection controls and safety settings for this community", "ng-hero-subtitle"),
+	);
+	const meta = document.createElement("div");
+	meta.className = "ng-hero-meta";
+	meta.append(
+		textElement("span", chat.role === "admin" ? "Admin access" : "View-only access", "ng-hero-chip"),
+		textElement("span", chat.bot_admin ? "Bot admin active" : "Bot admin needed", chat.bot_admin ? "ng-hero-chip ok" : "ng-hero-chip warn"),
+	);
+	hero.append(meta);
+
+	const mini = document.createElement("div");
+	mini.className = "ng-mini-stats";
+	mini.append(
+		securityMiniStat("Protection groups", modules.length, "▦", "blue"),
+		securityMiniStat("Enabled switches", enabled, "◉", "green"),
+		securityMiniStat("Editable settings", editable, "⚙", "purple"),
+	);
+
+	const quick = document.createElement("section");
+	quick.className = "ng-security-quick";
+	quick.append(textElement("h3", "PROTECTION STATUS", "ng-section-label"));
+	const grid = document.createElement("div");
+	grid.className = "ng-security-grid";
+	const definitions = [
+		["captcha", "Captcha", "New-member verification", "◈", "blue"],
+		["antiflood", "Anti-flood", "Message flood protection", "≋", "orange"],
+		["antispam", "Anti-spam", "Spam and suspicious joins", "⛨", "green"],
+		["antiraid", "Anti-raid", "Rapid-join protection", "⚡", "gold"],
+	];
+	for (const [key, label, description, symbol, tone] of definitions) {
+		const module = modules.find((item) => item.key === key);
+		if (!module) continue;
+		const switches = (module.fields || []).filter((field) => field.type === "bool");
+		const active = switches.some((field) => Boolean(field.value));
+		const card = document.createElement("article");
+		card.className = "ng-security-card";
+		const icon = textElement("span", symbol, `ng-icon-tile tone-${tone}`);
+		icon.setAttribute("aria-hidden", "true");
+		const copy = document.createElement("span");
+		copy.className = "ng-security-card-copy";
+		copy.append(
+			textElement("strong", label, "ng-security-card-title"),
+			textElement("span", description, "ng-security-card-subtitle"),
+			textElement("span", active ? "Active" : "Off", active ? "ng-status active" : "ng-status"),
+		);
+		card.append(icon, copy);
+		grid.append(card);
+	}
+	quick.append(grid);
+	return [hero, mini, quick];
+}
+
 // drawSettings renders the grouped form and returns helpers so a failed save
 // can mark fields and put back what the admin typed.
-function drawSettings(root, chatID, data) {
+function drawSettings(root, chatID, data, chat = {}) {
 	clear(root);
 	// A focused input removed with the screen still fires change on blur, and
 	// a save can answer after the user left; once the screen is left, neither
@@ -229,6 +325,7 @@ function drawSettings(root, chatID, data) {
 	});
 
 	const readOnly = Boolean(data.read_only);
+	root.append(...securityDashboard(data, chat));
 	if (readOnly) {
 		root.append(textElement("p", readOnlyMessages[data.read_only_reason] ?? "Settings are read-only.", "callout warn"));
 	}
@@ -273,9 +370,30 @@ function drawSettings(root, chatID, data) {
 	setLeaveGuard(() => changes.size > 0);
 
 	for (const module of data.modules) {
-		const section = document.createElement("section");
-		section.className = "settings-module";
-		section.append(textElement("h3", module.label));
+		const section = document.createElement("details");
+		section.className = "settings-module ng-settings-module";
+		section.open = true;
+		const heading = document.createElement("summary");
+		heading.className = "ng-module-header";
+		const moduleCopy = document.createElement("span");
+		moduleCopy.className = "ng-module-copy";
+		const descriptions = {
+			language: "Choose the language used in this group",
+			greetings: "Welcome and goodbye messages",
+			captcha: "Verify new members before they join",
+			antiflood: "Control repeated messages",
+			antispam: "Detect spam and suspicious joins",
+			antiraid: "Protect against sudden join raids",
+			warns: "Set warning limits and actions",
+			nightmode: "Schedule automatic quiet hours",
+			locks: "Control restricted message types",
+		};
+		moduleCopy.append(
+			textElement("strong", module.label, "ng-module-title"),
+			textElement("span", descriptions[module.key] || `Manage ${String(module.label).toLocaleLowerCase()} settings`, "ng-module-subtitle"),
+		);
+		heading.append(securityIcon(module.key), moduleCopy, textElement("span", "⌄", "ng-module-chevron"));
+		section.append(heading);
 		const group = document.createElement("div");
 		group.className = "group-list";
 
@@ -284,7 +402,7 @@ function drawSettings(root, chatID, data) {
 			const info = infoFor(module.key, field);
 			const writable = field.writable && !readOnly;
 			const row = document.createElement("div");
-			row.className = "setting-row";
+			row.className = "setting-row ng-setting-row";
 			if (field.type === "list" || (!field.writable && field.type === "string")) {
 				row.classList.add("stacked");
 			}
@@ -314,7 +432,7 @@ function drawSettings(root, chatID, data) {
 			const head = document.createElement("div");
 			head.className = "setting-head";
 			head.append(text, value);
-			row.append(head);
+			row.append(securityIcon(module.key, field.key), head);
 
 			const meta = document.createElement("div");
 			meta.className = "setting-meta";
@@ -458,7 +576,7 @@ function drawSettings(root, chatID, data) {
 			modules: result.modules,
 			read_only: result.read_only,
 			read_only_reason: result.read_only_reason,
-		});
+		}, chat);
 	}
 
 	root.append(form);
@@ -488,7 +606,7 @@ function setClosingConfirmation(enabled) {
 	}
 }
 
-export async function renderSettings(root, chatID) {
+export async function renderSettings(root, chatID, chat = {}) {
 	clear(root);
 	root.append(loading("Loading settings…"));
 	const route = window.location.hash;
@@ -498,7 +616,7 @@ export async function renderSettings(root, chatID) {
 		data = await api(`chats/${encodeURIComponent(chatID)}/settings`);
 	} catch (error) {
 		if (window.location.hash === route) {
-			showError(root, error, () => renderSettings(root, chatID));
+			showError(root, error, () => renderSettings(root, chatID, chat));
 		}
 		return;
 	}
@@ -507,5 +625,5 @@ export async function renderSettings(root, chatID) {
 	if (window.location.hash !== route) {
 		return;
 	}
-	drawSettings(root, chatID, data);
+	drawSettings(root, chatID, data, chat);
 }
