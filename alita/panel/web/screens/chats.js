@@ -1,5 +1,5 @@
-import { api } from "../api.js";
-import { clear, initials, loading, relativeTime, setHeader, showError, textElement } from "../ui.js";
+import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { clear, initials, loading, relativeTime, setHeader, showError, textElement } from "../ui.js?v=2026.11.16-bootfix1";
 
 const ADD_GROUP_URL = "https://t.me/NexGuardd_Bot?startgroup=true";
 
