@@ -1,6 +1,5 @@
 // Keep the entry module dependency-free so failed imports can be shown to the user.
 const root = document.getElementById("app");
-let attempt = 0;
 
 function showBootError(error) {
   if (!root) return;
@@ -27,7 +26,6 @@ function showBootError(error) {
 
 async function start() {
   try {
-    attempt += 1;
     await import("./bootstrap.js?v=2026.11.16-bootfix1");
   } catch (error) {
     showBootError(error);
