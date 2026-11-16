@@ -1,6 +1,6 @@
 import { telegram } from "./api.js?v=2026.11.16-bootfix1";
-import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.16-dashboard1";
-import { renderChats } from "./screens/chats.js?v=2026.11.16-dashboard1";
+import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.16-bootfix1";
+import { renderChats } from "./screens/chats.js?v=2026.11.16-bootfix1";
 import { renderHome } from "./screens/home.js?v=2026.11.16-bootfix1";
 import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, supports } from "./ui.js?v=2026.11.16-bootfix1";
 
@@ -38,45 +38,14 @@ function onQuickKeydown(event) {
   if (event.key === "Escape") closeQuickActions();
 }
 
-const NAV_ICON_PATHS = {
-  home: ["M3.5 10.5 12 3.5l8.5 7M5.5 9.5v10h13v-10M9.5 19.5v-6h5v6"],
-  security: ["M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"],
-  moderation: ["M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z", "m9 12 2 2 4-4"],
-  more: ["M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"],
-  plus: ["M12 5v14M5 12h14"],
-  overview: ["M4 19.5h16M5.5 16V9m6.5 7V4.5m6.5 11.5v-5"],
-  activity: ["M3.5 12h3l2-5 4 10 2.5-6 1.5 3h4"],
-  filters: ["M4 5h16l-6.2 7.1v5.2l-3.6 1.8v-7L4 5Z"],
-  commands: ["m8 7-4 5 4 5M16 7l4 5-4 5M14 5l-4 14"],
-  account: ["M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", "M4 21a8 8 0 0 1 16 0"],
-  groups: ["M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"],
-};
-
-function inlineIcon(name, className) {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("class", className);
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("stroke-width", "1.8");
-  svg.setAttribute("stroke-linecap", "round");
-  svg.setAttribute("stroke-linejoin", "round");
-  svg.setAttribute("aria-hidden", "true");
-  for (const pathData of NAV_ICON_PATHS[name] || NAV_ICON_PATHS.more) {
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", pathData);
-    svg.append(path);
-  }
-  return svg;
-}
-
 function quickAction(href, icon, label) {
   const link = document.createElement("a");
   link.className = "ng-sheet-action";
   link.href = href;
   const symbol = document.createElement("span");
   symbol.className = "ng-sheet-icon";
-  symbol.append(inlineIcon(icon, "ng-sheet-icon-svg"));
+  symbol.setAttribute("aria-hidden", "true");
+  symbol.textContent = icon;
   const title = document.createElement("span");
   title.className = "ng-sheet-label";
   title.textContent = label;
@@ -144,21 +113,21 @@ function openActionSheet(titleText, actions) {
 function openQuickActions() {
   const chatID = selectedChatID();
   const actions = [
-    ["https://t.me/NexGuardd_Bot?startgroup=true", "plus", "Add NexGuard to a group"],
-    ["#/groups", "groups", "My Groups"],
+    ["https://t.me/NexGuardd_Bot?startgroup=true", "+", "Add NexGuard to a group"],
+    ["#/groups", "▦", "My Groups"],
   ];
   if (chatID) {
     const chat = encodeURIComponent(chatID);
     actions.push(
-      [`#/chats/${chat}/overview`, "overview", "Group Overview"],
-      [`#/chats/${chat}/settings`, "security", "Security Center"],
-      [`#/chats/${chat}/warnings`, "moderation", "Moderation"],
+      [`#/chats/${chat}/overview`, "◫", "Group Overview"],
+      [`#/chats/${chat}/settings`, "◈", "Security Center"],
+      [`#/chats/${chat}/warnings`, "⚑", "Moderation"],
     );
   } else {
     actions.push(
-      ["#/groups/overview", "overview", "Group Overview"],
-      ["#/groups/settings", "security", "Security Center"],
-      ["#/groups/warnings", "moderation", "Moderation"],
+      ["#/groups/overview", "◫", "Group Overview"],
+      ["#/groups/settings", "◈", "Security Center"],
+      ["#/groups/warnings", "⚑", "Moderation"],
     );
   }
   openActionSheet("Quick actions", actions);
@@ -166,10 +135,10 @@ function openQuickActions() {
 
 function openMoreMenu() {
   openActionSheet("More", [
-    [selectedChatID() ? destination("activity") : "#/activity", "activity", "Activity & Analytics"],
-    [destination("filters"), "filters", "Content Tools"],
-    [destination("commands"), "commands", "All Commands"],
-    ["#/account", "account", "Account"],
+    [selectedChatID() ? destination("activity") : "#/activity", "⌁", "Activity & Analytics"],
+    [destination("filters"), "◈", "Content Tools"],
+    [destination("commands"), "⌘", "All Commands"],
+    ["#/account", "◉", "Account"],
   ]);
 }
 
@@ -195,8 +164,34 @@ function renderNavigation() {
       : isMoreDestination ? "more"
         : "home";
 
+  const iconPaths = {
+    home: ["M3.5 10.5 12 3.5l8.5 7M5.5 9.5v10h13v-10M9.5 19.5v-6h5v6"],
+    security: ["M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"],
+    moderation: ["M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z", "m9 12 2 2 4-4"],
+    more: ["M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"],
+    plus: ["M12 5v14M5 12h14"],
+  };
+
+  function navIcon(name) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "bottom-nav-icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+    for (const pathData of iconPaths[name]) {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", pathData);
+      svg.append(path);
+    }
+    return svg;
+  }
+
   const entries = [
-    { key: "home", icon: "home", label: "Home", href: "#/" },
+    { key: "home", icon: "home", label: "Home", href: "#/groups" },
     { key: "security", icon: "security", label: "Security", href: destination("settings") },
     { key: "add", icon: "plus", label: "Quick actions" },
     { key: "moderation", icon: "moderation", label: "Moderation", href: destination("warnings") },
@@ -209,21 +204,19 @@ function renderNavigation() {
     item.className = "bottom-nav-item" +
       (entry.key === active ? " active" : "") +
       (entry.key === "add" ? " add-tab" : "");
+
     if (isAction) {
       item.type = "button";
       item.setAttribute("aria-label", entry.label);
       item.setAttribute("aria-haspopup", "dialog");
-      item.addEventListener("click", () => {
-        haptic("light");
-        (entry.key === "add" ? openQuickActions : openMoreMenu)();
-      });
+      item.addEventListener("click", entry.key === "add" ? openQuickActions : openMoreMenu);
     } else {
       item.href = entry.href;
       item.setAttribute("aria-label", entry.label);
       if (entry.key === active) item.setAttribute("aria-current", "page");
-      item.addEventListener("click", () => haptic("light"));
     }
-    item.append(inlineIcon(entry.icon, "bottom-nav-icon"));
+
+    item.append(navIcon(entry.icon));
     if (entry.key !== "add") {
       const caption = document.createElement("span");
       caption.textContent = entry.label;
@@ -231,6 +224,7 @@ function renderNavigation() {
     }
     nav.append(item);
   }
+
   document.body.append(nav);
 }
 function render() {
