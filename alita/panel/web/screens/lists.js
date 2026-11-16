@@ -1,8 +1,8 @@
 // Filters, notes and blacklists: live search, paginated rows with delete, and
 // a bulk-import box with per-line results. Server data reaches the DOM only
 // through textContent; replies may contain HTML or newlines verbatim.
-import { api, initData } from "../api.js";
-import { confirmDestructive, emptyState, errorMessage, haptic, loading as loadingStatus, onLeave, showError, textElement, toast } from "../ui.js";
+import { api, initData } from "../api.js?v=2026.11.16-bootfix1";
+import { confirmDestructive, emptyState, errorMessage, haptic, loading as loadingStatus, onLeave, showError, textElement, toast } from "../ui.js?v=2026.11.16-bootfix1";
 
 const PAGE_SIZE = 100;
 const SEARCH_DELAY_MS = 300;
