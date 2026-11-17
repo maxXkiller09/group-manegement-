@@ -64,5 +64,5 @@ export async function renderHome(root, mode = "home") {
   const intro = document.createElement("section");
   intro.className = "home-intro";
   intro.append(textElement("span", "🛡️", "home-shield"), textElement("h2", "Welcome to NexGuard", "home-heading"), textElement("p", "Manage and protect your Telegram groups in a few simple steps.", "home-welcome"), tile("My Groups", "Start here to connect and manage a group", "#/groups", "▦"));
-  root.append(intro, textElement("p", "Start with My Groups. Choose a group to see simple, step-by-step controls.", "section-footer"));
+  root.append(intro, tile("Protection Setup", "Choose a group and review a protection preset", "#/groups/protection-setup", "⛨"), textElement("p", "Start with My Groups. Choose a group to see simple, step-by-step controls.", "section-footer"));
 }
