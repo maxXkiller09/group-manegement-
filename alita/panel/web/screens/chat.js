@@ -1,5 +1,5 @@
 import { api } from "../api.js?v=2026.11.16-bootfix1";
-import { sections } from "../sections.js?v=2026.11.16-bootfix1";
+import { sections } from "../sections.js?v=2026.11.17-phase1a";
 import { backLink, clear, haptic, loading, setHeader, showError, textElement } from "../ui.js?v=2026.11.16-bootfix1";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -180,6 +180,13 @@ export async function renderChat(root, chatID) {
   const security = sections.find((section) => section.key === "settings");
   const moderation = sections.find((section) => section.key === "warnings");
   if (security) {
+    featured.append(featuredLink(chatID, {
+      key: "protection-setup",
+      title: "Protection Setup",
+      description: "Choose a preset with preview and undo",
+      icon: "shield",
+      tone: "blue",
+    }));
     featured.append(featuredLink(chatID, {
       key: security.key,
       title: "Security Center",
