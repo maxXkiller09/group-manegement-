@@ -1,6 +1,22 @@
 import { api } from "../api.js?v=2026.11.16-bootfix1";
 import { clear, loading, showError, textElement } from "../ui.js?v=2026.11.16-bootfix1";
 
+function shieldIcon(className) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.8");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("class", className);
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", "M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z");
+  svg.append(path);
+  return svg;
+}
+
 function tile(title, description, href, symbol) {
   const link = document.createElement("a");
   link.className = "home-tile";
@@ -8,22 +24,8 @@ function tile(title, description, href, symbol) {
   const icon = document.createElement("span");
   icon.className = "home-tile-icon";
   icon.setAttribute("aria-hidden", "true");
-  if (symbol === "shield") {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "1.8");
-    svg.setAttribute("stroke-linecap", "round");
-    svg.setAttribute("stroke-linejoin", "round");
-    svg.setAttribute("class", "home-shield-icon");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", "M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z");
-    svg.append(path);
-    icon.append(svg);
-  } else {
-    icon.textContent = symbol;
-  }
+  if (symbol === "shield") icon.append(shieldIcon("home-shield-icon"));
+  else icon.textContent = symbol;
   const copy = document.createElement("span");
   copy.className = "nav-text";
   copy.append(textElement("strong", title, "nav-title"), textElement("span", description, "nav-subtitle"));
@@ -80,6 +82,12 @@ export async function renderHome(root, mode = "home") {
 
   const intro = document.createElement("section");
   intro.className = "home-intro";
-  intro.append(textElement("span", "🛡️", "home-shield"), textElement("h2", "Welcome to NexGuard", "home-heading"), textElement("p", "Manage and protect your Telegram groups in a few simple steps.", "home-welcome"), tile("My Groups", "Start here to connect and manage a group", "#/groups", "▦"));
-  root.append(intro, tile("Protection Setup", "Choose a group and review a protection preset", "#/groups/protection-setup", "shield"), textElement("p", "Start with My Groups. Choose a group to see simple, step-by-step controls.", "section-footer"));
+  intro.append(shieldIcon("home-shield-icon"), textElement("h2", "Welcome to NexGuard", "home-heading"), textElement("p", "Manage and protect your Telegram groups in a few simple steps.", "home-welcome"));
+  const grid = document.createElement("section");
+  grid.className = "home-grid";
+  grid.append(
+    tile("My Groups", "Start here to connect and manage a group", "#/groups", "▦"),
+    tile("Protection Setup", "Choose a group and review a protection preset", "#/groups/protection-setup", "shield"),
+  );
+  root.append(intro, grid, textElement("p", "Start with My Groups. Choose a group to see simple, step-by-step controls.", "section-footer"));
 }
