@@ -3,7 +3,7 @@ import { clear, loading, setHeader, showError, textElement, toast } from "../ui.
 
 const PRESETS = {
   khula: {
-    label: "Khula group",
+    label: "Low Protection",
     description: "Halka control. Normal chat ke liye.",
     tone: "khula",
     values: {
@@ -23,7 +23,7 @@ const PRESETS = {
     },
   },
   sakht: {
-    label: "Sakht group",
+    label: "Strict Protection",
     description: "Strict rules, naye members par nazar.",
     tone: "sakht",
     values: {
