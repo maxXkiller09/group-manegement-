@@ -346,7 +346,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
       const field = original.get(key);
       if (field && field.writable && !same(field.value, value)) changes.set(key, value);
     }
-    if (state.welcome !== "unchanged") {
+    if (state.welcome === "on" || state.welcome === "off") {
       const key = "greetings.welcome_enabled";
       const value = state.welcome === "on";
       const field = original.get(key);
