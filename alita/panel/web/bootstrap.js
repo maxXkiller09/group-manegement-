@@ -38,14 +38,49 @@ function onQuickKeydown(event) {
   if (event.key === "Escape") closeQuickActions();
 }
 
+const quickIconPaths = {
+  plus: ["M12 5v14", "M5 12h14"],
+  grid: ["M4 4h6v6H4z", "M14 4h6v6h-6z", "M4 14h6v6H4z", "M14 14h6v6h-6z"],
+  overview: ["M4 5h16v14H4z", "M4 10h16", "M10 10v9"],
+  shield: ["M12 3 19 6v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"],
+  flag: ["M5 21V4", "M5 4c5-3 9 3 14 0v10c-5 3-9-3-14 0"],
+  activity: ["M3 12h4l3-8 4 16 3-8h4"],
+  sliders: ["M4 6h16", "M4 12h16", "M4 18h16", "M8 4v4", "M15 10v4", "M10 16v4"],
+  command: ["M9 6V4a2 2 0 1 0-2 2h10a2 2 0 1 0-2-2v16a2 2 0 1 0 2-2H7a2 2 0 1 0 2 2V6Z"],
+  user: ["M20 21a8 8 0 0 0-16 0", "M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"],
+};
+
+function createQuickIcon(name) {
+  const namespace = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(namespace, "svg");
+  svg.classList.add("ng-sheet-icon-svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.8");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+
+  for (const pathData of quickIconPaths[name] ?? quickIconPaths.grid) {
+    const path = document.createElementNS(namespace, "path");
+    path.setAttribute("d", pathData);
+    svg.append(path);
+  }
+
+  return svg;
+}
+
 function quickAction(href, icon, label) {
   const link = document.createElement("a");
   link.className = "ng-sheet-action";
   link.href = href;
+
   const symbol = document.createElement("span");
   symbol.className = "ng-sheet-icon";
   symbol.setAttribute("aria-hidden", "true");
-  symbol.textContent = icon;
+  symbol.append(createQuickIcon(icon));
+
   const title = document.createElement("span");
   title.className = "ng-sheet-label";
   title.textContent = label;
@@ -113,21 +148,21 @@ function openActionSheet(titleText, actions) {
 function openQuickActions() {
   const chatID = selectedChatID();
   const actions = [
-    ["https://t.me/NexGuardd_Bot?startgroup=true", "+", "Add NexGuard to a group"],
-    ["#/groups", "▦", "My Groups"],
+    ["https://t.me/NexGuardd_Bot?startgroup=true", "plus", "Add NexGuard to a group"],
+    ["#/groups", "grid", "My Groups"],
   ];
   if (chatID) {
     const chat = encodeURIComponent(chatID);
     actions.push(
-      [`#/chats/${chat}/overview`, "◫", "Group Overview"],
-      [`#/chats/${chat}/settings`, "◈", "Security Center"],
-      [`#/chats/${chat}/warnings`, "⚑", "Moderation"],
+      [`#/chats/${chat}/overview`, "overview", "Group Overview"],
+      [`#/chats/${chat}/settings`, "shield", "Security Center"],
+      [`#/chats/${chat}/warnings`, "flag", "Moderation"],
     );
   } else {
     actions.push(
-      ["#/groups/overview", "◫", "Group Overview"],
-      ["#/groups/settings", "◈", "Security Center"],
-      ["#/groups/warnings", "⚑", "Moderation"],
+      ["#/groups/overview", "overview", "Group Overview"],
+      ["#/groups/settings", "shield", "Security Center"],
+      ["#/groups/warnings", "flag", "Moderation"],
     );
   }
   openActionSheet("Quick actions", actions);
@@ -135,10 +170,10 @@ function openQuickActions() {
 
 function openMoreMenu() {
   openActionSheet("More", [
-    [selectedChatID() ? destination("activity") : "#/activity", "⌁", "Activity & Analytics"],
-    [destination("filters"), "◈", "Content Tools"],
-    [destination("commands"), "⌘", "All Commands"],
-    ["#/account", "◉", "Account"],
+    [selectedChatID() ? destination("activity") : "#/activity", "activity", "Activity & Analytics"],
+    [destination("filters"), "sliders", "Content Tools"],
+    [destination("commands"), "command", "All Commands"],
+    ["#/account", "user", "Account"],
   ]);
 }
 
