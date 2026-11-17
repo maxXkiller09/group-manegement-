@@ -54,7 +54,7 @@ function lessProtection(key,before,after) {
   if(typeof before==="boolean"&&typeof after==="boolean") return before&&!after;
   if(["antiflood.limit","warns.limit","captcha.timeout","captcha.max_attempts"].includes(key)) return Number(after)>Number(before);
   if(key==="antiraid.auto_threshold") return Number(before)>0&&(Number(after)===0||Number(after)>Number(before));
-  if(key==="warns.expiry") return Number(after)<Number(before);
+  if(key==="warns.expiry") return Number(after)>0&&(Number(before)===0||Number(after)<Number(before));
   if(["antiflood.action_time","warns.action_time"].includes(key)) return Number(after)<Number(before);
   return false;
 }
