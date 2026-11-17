@@ -2702,6 +2702,7 @@ body.ng-protection-setup-active .bottom-nav { display: none !important; }
 .ng-setup-action:disabled { opacity: .5; cursor: not-allowed; }
 .ng-setup-action:focus-visible,.ng-setup-segment:focus-visible,.ng-setup-level-card:focus-within { outline: 2px solid #9db7ff; outline-offset: 3px; }
 .home-shield-icon { display: block; width: 23px; height: 23px; }
+.home-intro > .home-shield-icon { width: 32px; height: 32px; color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   .ng-setup-page *, .ng-setup-page *::before, .ng-setup-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
