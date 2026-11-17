@@ -133,3 +133,5 @@ button {
     animation: none !important;
   }
 }
+
+@media(max-width:600px){.ng-setup-diff{align-items:flex-start;flex-direction:column}.ng-setup-amber{margin-left:0}.ng-setup-card{padding:15px}.ng-setup-title{font-size:1.35rem}}
