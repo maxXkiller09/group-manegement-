@@ -26,7 +26,7 @@ function showBootError(error) {
 
 async function start() {
   try {
-    await import("./bootstrap.js?v=2026.11.17-phase1a2");
+    await import("./bootstrap.js?v=2026.11.17-backstack1");
   } catch (error) {
     showBootError(error);
   }
