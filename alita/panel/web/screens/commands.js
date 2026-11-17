@@ -5,6 +5,8 @@ import { confirmDestructive, haptic, onLeave, textElement, toast, userLabel } fr
 
 const labels={admin:"Sirf Admin",owner:"Sirf Owner",member:"Sabke liye"};
 const direct=new Set(["/ban","/tban","/unban","/kick","/mute","/tmute","/unmute"]);
+const commandSheetDismissers = new Set();
+function closeCommandSheets(){for(const dismiss of Array.from(commandSheetDismissers))dismiss();}
 const route=(id,key)=>`#/chats/${encodeURIComponent(id)}/${key}`;
 const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
 
@@ -72,11 +74,11 @@ function openSheet(command,module,chatID,chat){
  if(!allowed){const blocked=el("div","ng-command-blocked");blocked.append(el("strong","",command.access==="owner"?"Sirf group owner ke liye":"Sirf group admin ke liye"),el("p","","Aapke account ke liye yeh action available nahi hai. Apne group admin se baat karein."));content.append(blocked);for(const b of content.querySelectorAll("button,a")){b.setAttribute("aria-disabled","true");b.addEventListener("click",e=>{e.preventDefault();toast("Is command ke liye admin access chahiye.","error");});}}
  head.append(title,close);sheet.append(grab,head,content);backdrop.append(sheet);
  let open=true;
- const dismiss=()=>{if(!open)return;open=false;backdrop.remove();document.removeEventListener("keydown",key);unregisterBack(dismiss);};
+ const dismiss=()=>{if(!open)return;open=false;backdrop.remove();document.removeEventListener("keydown",key);unregisterBack(dismiss);commandSheetDismissers.delete(dismiss);};
  const key=e=>{if(e.key==="Escape")dismiss();};
  close.addEventListener("click",()=>{haptic("light");dismiss();});
  backdrop.addEventListener("click",e=>{if(e.target===backdrop)dismiss();});
- document.body.append(backdrop);document.addEventListener("keydown",key);registerBack(dismiss);onLeave(dismiss);close.focus();haptic("light");
+ document.body.append(backdrop);document.addEventListener("keydown",key);commandSheetDismissers.add(dismiss);registerBack(dismiss);close.focus();haptic("light");
 }
 function commandRow(command,module,chatID,chat){
  const row=el("button","ng-command-row");row.type="button";row.append(el("span","ng-command-row-name",command.name));
@@ -88,6 +90,7 @@ export function renderCommands(root,chatID,chat){
  let moduleBackHandler=null;
  function clearModuleBack(){if(moduleBackHandler){unregisterBack(moduleBackHandler);moduleBackHandler=null;}}
  onLeave(clearModuleBack);
+ onLeave(closeCommandSheets);
  root.append(el("p","ng-command-intro","Commands samjhein, example copy karein aur zaroori Mini App page kholein."));
  const search=document.createElement("input");search.type="search";search.placeholder="Module ya command search karein…";search.setAttribute("aria-label","Search modules and commands");search.className="ng-command-search";root.append(search,beginnerGuide());
  const back=el("button","ng-command-back","‹ Sabhi modules");back.type="button";back.hidden=true;root.append(back);
