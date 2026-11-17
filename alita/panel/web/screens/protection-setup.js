@@ -141,7 +141,7 @@ export async function renderProtectionSetup(root,chatID,chat={}) {
     root.append(review,button("Apply changes","primary",()=>void apply()),button("Back","secondary",()=>{state.step=2;draw();}));
   }
   async function apply(retryOnly=false){
-    const changes=retryOnly?new Map(Object.entries(state.failed)):planned();if(!changes.size)return;
+    const pending=planned();const changes=retryOnly?new Map(Array.from(pending).filter(([key])=>Object.prototype.hasOwnProperty.call(state.failed,key))):pending;if(!changes.size)return;
     let saved=[],failed={};
     try{const result=await patch(Object.fromEntries(changes));saved=result.saved||Array.from(changes.keys());failed=result.failed||{};}
     catch(error){const payload=error.payload||{};saved=payload.saved||[];failed=payload.failed||{};if(!saved.length&&!Object.keys(failed).length){toast(error.message||"Could not apply settings.","error");draw();return;}}
