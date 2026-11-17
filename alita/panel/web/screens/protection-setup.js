@@ -1,5 +1,6 @@
 import { api } from "../api.js?v=2026.11.16-bootfix1";
-import { clear, loading, setHeader, showError, textElement, toast } from "../ui.js?v=2026.11.16-bootfix1";
+import { registerBack, unregisterBack } from "../back.js?v=2026.11.17-backstack1";
+import { clear, loading, onLeave, setHeader, showError, textElement, toast } from "../ui.js?v=2026.11.16-bootfix1";
 
 const PRESETS = {
   khula: {
@@ -321,6 +322,23 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     undo: null,
   };
 
+  function wizardBack() {
+    if (state.step === 4) {
+      window.location.hash = "#/chats/" + encodeURIComponent(chatID) + "/settings";
+    } else if (state.step === 3) {
+      state.step = 2;
+      draw();
+    } else if (state.step === 2) {
+      state.step = 1;
+      draw();
+    } else {
+      window.location.hash = "#/chats/" + encodeURIComponent(chatID);
+    }
+  }
+
+  registerBack(wizardBack);
+  onLeave(() => unregisterBack(wizardBack));
+
   function planned() {
     const changes = new Map();
     const values = PRESETS[state.preset].values;
@@ -328,7 +346,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
       const field = original.get(key);
       if (field && field.writable && !same(field.value, value)) changes.set(key, value);
     }
-    if (state.welcome !== "unchanged") {
+    if (state.welcome === "on" || state.welcome === "off") {
       const key = "greetings.welcome_enabled";
       const value = state.welcome === "on";
       const field = original.get(key);
@@ -375,12 +393,15 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
       root.append(suggestion);
     }
 
-    actionBar(root, [{
-      label: accessOK ? "Continue" : "Presets disabled",
-      variant: "primary",
-      disabled: !accessOK,
-      onClick: () => { if (accessOK) { state.step = 2; draw(); } },
-    }]);
+    actionBar(root, [
+      { label: "Back", variant: "secondary", onClick: wizardBack },
+      {
+        label: accessOK ? "Continue" : "Presets disabled",
+        variant: "primary",
+        disabled: !accessOK,
+        onClick: () => { if (accessOK) { state.step = 2; draw(); } },
+      },
+    ]);
   }
 
   function renderLevels() {
@@ -430,7 +451,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     root.append(textElement("p", "Locks ke liye Security Center ya /lock command use karo.", "ng-setup-footnote"));
     root.append(textElement("p", "AI Spam ke liye global AI setup chahiye.", "ng-setup-footnote"));
     actionBar(root, [
-      { label: "Back", variant: "secondary", onClick: () => { state.step = 1; draw(); } },
+      { label: "Back", variant: "secondary", onClick: wizardBack },
       { label: "Continue", variant: "primary", onClick: () => { state.targetChanges = planned(); state.step = 3; draw(); } },
     ]);
   }
@@ -469,7 +490,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     }
 
     actionBar(root, [
-      { label: "Back", variant: "secondary", onClick: () => { state.step = 2; draw(); } },
+      { label: "Back", variant: "secondary", onClick: wizardBack },
       { label: "Confirm", variant: "primary", disabled: changes.size === 0, onClick: () => void apply(false) },
     ]);
   }
@@ -520,6 +541,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     }
 
     actionBar(root, [
+      { label: "Back", variant: "secondary", onClick: wizardBack },
       { label: "Retry failed", variant: "primary", disabled: Object.keys(state.failed).length === 0, onClick: () => void apply(true) },
       { label: "Undo saved changes", variant: "secondary", disabled: state.saved.length === 0 || Boolean(state.undo && state.undo.restored.length + state.undo.skipped.length + state.undo.failed.length >= state.saved.length), onClick: () => void undo() },
     ], true);

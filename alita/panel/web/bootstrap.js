@@ -1,6 +1,7 @@
 import { telegram } from "./api.js?v=2026.11.17-phase1a2";
-import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.17-phase1a2";
-import { renderChats } from "./screens/chats.js?v=2026.11.17-phase1a2";
+import { handleBack, hasBackHandler, onBackChange, registerBack, unregisterBack } from "./back.js?v=2026.11.17-backstack1";
+import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.17-backstack1";
+import { renderChats } from "./screens/chats.js?v=2026.11.17-backstack1";
 import { renderHome } from "./screens/home.js?v=2026.11.17-phase1a2";
 import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, supports } from "./ui.js?v=2026.11.17-phase1a2";
 
@@ -25,14 +26,22 @@ function parentRoute(hash) {
 
 function syncBackButton() {
   if (!supports("6.1")) return;
-  if (parentRoute(location.hash)) telegram.BackButton.show();
+  if (hasBackHandler() || parentRoute(location.hash)) telegram.BackButton.show();
   else telegram.BackButton.hide();
 }
+
+let quickActionsBackHandler = null;
 
 function closeQuickActions() {
   document.getElementById("ng-quick-backdrop")?.remove();
   document.removeEventListener("keydown", onQuickKeydown);
+  if (quickActionsBackHandler) {
+    unregisterBack(quickActionsBackHandler);
+    quickActionsBackHandler = null;
+  }
 }
+
+onBackChange(syncBackButton);
 
 function onQuickKeydown(event) {
   if (event.key === "Escape") closeQuickActions();
@@ -142,6 +151,8 @@ function openActionSheet(titleText, actions) {
   backdrop.append(sheet);
   document.body.append(backdrop);
   document.addEventListener("keydown", onQuickKeydown);
+  quickActionsBackHandler = () => closeQuickActions();
+  registerBack(quickActionsBackHandler);
   close.focus();
 }
 
@@ -313,21 +324,8 @@ if (root) {
   }
   if (supports("6.1")) {
     telegram.BackButton.onClick(() => {
-      // Close an open sheet before leaving its screen.
-      const sheetClose = document.querySelector(
-        "#ng-quick-backdrop .ng-sheet-close, .ng-command-backdrop .ng-sheet-close",
-      );
-      if (sheetClose) {
+      if (handleBack()) {
         haptic("light");
-        sheetClose.click();
-        return;
-      }
-
-      // The command guide has its own module -> command-list level.
-      const commandBack = document.querySelector(".ng-command-back:not([hidden])");
-      if (commandBack) {
-        haptic("light");
-        commandBack.click();
         return;
       }
 
