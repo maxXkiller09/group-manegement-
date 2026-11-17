@@ -433,10 +433,11 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     let shown = 0;
     for (const group of GROUPS) {
       const rows = Array.from(changes.entries()).filter(([key]) => fieldGroup(key) === group.key);
-      if (!rows.length) continue;
+      const showRaidPreview = group.key === "antiraid" && PRESETS[state.preset].values["antiraid.auto_threshold"] > 0;
+      if (!rows.length && !showRaidPreview) continue;
       const section = groupCard(group.label, group.description);
       for (const [key, value] of rows) section.card.append(changedRow(key, original.get(key)?.value, value));
-      if (group.key === "antiraid" && changes.has("antiraid.auto_threshold") && changes.get("antiraid.auto_threshold") > 0) {
+      if (showRaidPreview) {
         section.card.append(textElement("strong", "Raid ke dauran naye members kuch der ke liye ban honge", "ng-setup-raid-title"));
         section.card.append(textElement("p", "Raid duration: " + duration(original.get("antiraid.raid_time")?.value) + " (current)", "ng-setup-muted"));
         section.card.append(textElement("p", "New-member ban duration: " + duration(original.get("antiraid.raid_action_time")?.value) + " (current)", "ng-setup-muted"));
