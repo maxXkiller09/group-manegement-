@@ -613,7 +613,6 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     }
 
     state.undo = { restored, skipped, failed: Array.from(new Set(failed)) };
-    await verifyTargets({});
     state.step = 4;
     draw();
   }
