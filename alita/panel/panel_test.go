@@ -121,11 +121,11 @@ type panelFakeClient struct {
 
 func newPanelFakeClient() *panelFakeClient {
 	return &panelFakeClient{
-		chatType:    "supergroup",
-		members:     make(map[int64]json.RawMessage),
-		admins:      make(map[int64]json.RawMessage),
-		botAdmin:    true,
-		rights:      make(map[int64]panelFakeRights),
+		chatType:     "supergroup",
+		members:      make(map[int64]json.RawMessage),
+		admins:       make(map[int64]json.RawMessage),
+		botAdmin:     true,
+		rights:       make(map[int64]panelFakeRights),
 		botRights:    panelFakeRights{canChangeInfo: true, canRestrictMembers: true},
 		memberErrors: make(map[int64]error),
 		statuses:     make(map[int64]string),

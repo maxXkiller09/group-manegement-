@@ -47,7 +47,6 @@ func decodeSettingsResponse(t *testing.T, recorder *httptest.ResponseRecorder) s
 	return body
 }
 
-
 func TestSettingsGetRightsForMemberAndAdministrators(t *testing.T) {
 	t.Run("ordinary member", func(t *testing.T) {
 		fixture := newPanelFixture(t)
