@@ -135,3 +135,11 @@ button {
 }
 
 @media(max-width:600px){.ng-setup-diff{align-items:flex-start;flex-direction:column}.ng-setup-amber{margin-left:0}.ng-setup-card{padding:15px}.ng-setup-title{font-size:1.35rem}}
+
+@media (max-width: 380px) {
+  .app.ng-setup-page { padding: 48px 14px calc(214px + env(safe-area-inset-bottom)); }
+  .ng-setup-page-title { font-size: 28px; }
+  .ng-setup-level-card { grid-template-columns: 40px minmax(0,1fr) 20px; gap: 9px; padding: 12px; }
+  .ng-setup-actionbar { right: 12px; left: 12px; gap: 8px; padding: 10px; }
+  .ng-setup-action { padding-inline: 8px; font-size: 14px; }
+}
