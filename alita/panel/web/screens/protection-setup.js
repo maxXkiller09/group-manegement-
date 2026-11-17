@@ -436,23 +436,17 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
       if (!rows.length) continue;
       const section = groupCard(group.label, group.description);
       for (const [key, value] of rows) section.card.append(changedRow(key, original.get(key)?.value, value));
+      if (group.key === "antiraid" && changes.has("antiraid.auto_threshold") && changes.get("antiraid.auto_threshold") > 0) {
+        section.card.append(textElement("strong", "Raid ke dauran naye members kuch der ke liye ban honge", "ng-setup-raid-title"));
+        section.card.append(textElement("p", "Raid duration: " + duration(original.get("antiraid.raid_time")?.value) + " (current)", "ng-setup-muted"));
+        section.card.append(textElement("p", "New-member ban duration: " + duration(original.get("antiraid.raid_action_time")?.value) + " (current)", "ng-setup-muted"));
+        const info = document.createElement("div");
+        info.className = "ng-setup-info-line";
+        info.append(svgIcon("info"), textElement("span", "Antiraid ke liye Redis chahiye", "ng-setup-muted"));
+        section.card.append(info);
+      }
       root.append(section.wrap);
       shown += rows.length;
-    }
-
-    if (changes.has("antiraid.auto_threshold") && changes.get("antiraid.auto_threshold") > 0) {
-      const raid = glassCard();
-      raid.append(textElement("strong", "Raid ke dauran naye members kuch der ke liye ban honge", "ng-setup-raid-title"));
-      raid.append(textElement("p", "Raid duration: " + duration(original.get("antiraid.raid_time")?.value) + " (current)", "ng-setup-muted"));
-      raid.append(textElement("p", "New-member ban duration: " + duration(original.get("antiraid.raid_action_time")?.value) + " (current)", "ng-setup-muted"));
-      const info = document.createElement("div");
-      info.className = "ng-setup-info-line";
-      info.append(svgIcon("info"), textElement("span", "Antiraid ke liye Redis chahiye", "ng-setup-muted"));
-      raid.append(info);
-      const raidWrap = document.createElement("section");
-      raidWrap.className = "ng-setup-group";
-      raidWrap.append(sectionLabel("ANTIRAID NOTE"), raid);
-      root.append(raidWrap);
     }
 
     if (shown === 0) {
