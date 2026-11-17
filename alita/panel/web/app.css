@@ -2611,3 +2611,97 @@ body.keyboard-open {
 
 /* Protection Setup — Glass Pro */
 .ng-setup-eyebrow{display:block;margin:18px 0 6px;color:var(--muted,#91a0b7);font-size:.72rem;font-weight:800;letter-spacing:.13em}.ng-setup-title{margin:0 0 16px;font-size:1.55rem}.ng-setup-card{margin:12px 0;padding:18px;border:1px solid rgba(139,160,190,.18);border-radius:20px;background:linear-gradient(145deg,rgba(28,43,67,.88),rgba(13,23,40,.94));box-shadow:0 12px 28px rgba(0,0,0,.16)}.ng-setup-card-title{margin:0 0 6px;font-size:1.05rem}.ng-setup-copy{margin:4px 0;color:var(--muted,#a8b4c7);line-height:1.5}.ng-setup-muted{margin:8px 0;color:var(--muted,#91a0b7);font-size:.86rem;line-height:1.45}.ng-setup-checks{display:grid;gap:10px;margin-top:14px}.ng-setup-check-row,.ng-setup-result-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(139,160,190,.12)}.ng-setup-status-icon{width:21px;height:21px;flex:0 0 21px}.ng-setup-status-icon.success{color:#46d6a1}.ng-setup-status-icon.failure{color:#ff7b86}.ng-setup-check-label,.ng-setup-diff-copy{flex:1;min-width:0}.ng-setup-ok{color:#46d6a1}.ng-setup-warn{color:#ffbd69}.ng-setup-presets{display:grid;gap:10px;margin-top:14px}.ng-setup-preset{display:grid;grid-template-columns:20px 1fr;gap:4px 10px;padding:14px;border:1px solid rgba(139,160,190,.2);border-radius:16px;background:rgba(12,23,40,.52)}.ng-setup-preset input{grid-row:span 2;align-self:center;accent-color:#63a9ff}.ng-setup-preset.selected{border-color:#5799f4;background:rgba(47,103,180,.16)}.ng-setup-select{width:100%;margin-top:12px;padding:12px;border:1px solid rgba(139,160,190,.25);border-radius:12px;background:#101d31;color:inherit}.ng-setup-group-title{margin:18px 0 5px;font-size:.98rem}.ng-setup-diff{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid rgba(139,160,190,.12)}.ng-setup-diff-label,.ng-setup-diff-value{display:block}.ng-setup-diff-value{margin-top:4px;color:var(--muted,#a8b4c7);font-size:.9rem}.ng-setup-amber{display:inline-flex;align-items:center;max-width:100%;padding:5px 8px;border:1px solid rgba(255,185,90,.35);border-radius:999px;background:rgba(255,177,71,.12);color:#ffc36e;font-size:.72rem;font-weight:750}.ng-setup-suggestion{margin:12px 0;padding:12px 14px;border:1px solid rgba(81,157,255,.25);border-radius:14px;background:rgba(51,119,210,.1);color:#b8d5ff;font-size:.88rem}
+
+/* Protection Setup — four-step Glass Pro flow */
+body.ng-protection-setup-active {
+  padding: 0;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(31,68,181,.34), transparent 36%),
+    radial-gradient(circle at 100% 100%, rgba(71,32,110,.30), transparent 40%),
+    #0a1128;
+  color: #eef2ff;
+  font-family: system-ui, Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+body.ng-protection-setup-active .header,
+body.ng-protection-setup-active .bottom-nav { display: none !important; }
+.app.ng-setup-page {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 56px 18px calc(220px + env(safe-area-inset-bottom));
+  color: #eef2ff;
+}
+.ng-setup-page-head { display: flex; flex-direction: column; gap: 8px; }
+.ng-setup-step-label { margin: 0; color: #9fb0e6; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.ng-setup-page-title { margin: 0; color: #eef2ff; font-size: 30px; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+.ng-setup-page-subtitle { margin: 0; color: #a9b8e8; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.ng-setup-glass { display: flex; min-width: 0; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid rgba(255,255,255,.13); border-radius: 22px; background: rgba(255,255,255,.07); color: #eef2ff; box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 12px 28px rgba(0,0,0,.16); }
+.ng-setup-section-label { margin: 0 2px 8px; color: #a9b8e8; font-size: 11px; letter-spacing: .12em; }
+.ng-setup-muted { display: block; margin: 4px 0 0; color: #a9b8e8; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.ng-setup-access-row { display: flex; min-width: 0; align-items: center; gap: 12px; padding: 4px 0; }
+.ng-setup-svg { display: block; width: 22px; height: 22px; flex: 0 0 22px; }
+.ng-setup-svg-check { color: #34d399; }
+.ng-setup-svg-cross { color: #f87171; }
+.ng-setup-svg-info { color: #fbbf24; }
+.ng-setup-svg-shield { color: #fff; }
+.ng-setup-access-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.ng-setup-access-title { color: #eef2ff; font-size: 15px; font-weight: 800; overflow-wrap: anywhere; }
+.ng-setup-info-card { flex-direction: row; align-items: center; border-color: rgba(251,191,36,.22); }
+.ng-setup-info-copy { margin: 0; color: #fcd34d; font-size: 13px; line-height: 1.5; }
+.ng-setup-suggestion-card { border-color: rgba(106,139,255,.28); }
+.ng-setup-levels { display: grid; gap: 12px; }
+.ng-setup-level-card { position: relative; display: grid; min-width: 0; min-height: 72px; grid-template-columns: 40px minmax(0,1fr) 22px; align-items: center; gap: 12px; padding: 14px; border: 1px solid rgba(255,255,255,.13); border-radius: 19px; background: rgba(255,255,255,.055); cursor: pointer; }
+.ng-setup-level-card.selected { border: 1.5px solid #6a8bff; background: rgba(96,130,255,.18); }
+.ng-setup-level-card input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.ng-setup-level-icon { width: 40px; height: 40px; flex-basis: 40px; border: 0; border-radius: 13px; }
+.ng-setup-level-icon.tone-khula { background: linear-gradient(145deg,#15803d,#0f766e); }
+.ng-setup-level-icon.tone-balanced { background: linear-gradient(145deg,#2f5bea,#5b3fd6); }
+.ng-setup-level-icon.tone-sakht { background: linear-gradient(145deg,#d9480f,#b91c1c); }
+.ng-setup-level-icon .ng-setup-svg { width: 22px; height: 22px; }
+.ng-setup-level-copy { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.ng-setup-level-title { color: #eef2ff; font-size: 16px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+.ng-setup-radio-visual { display: grid; width: 22px; height: 22px; place-items: center; border: 2px solid #8294c9; border-radius: 50%; }
+.ng-setup-level-card.selected .ng-setup-radio-visual { border-color: #6a8bff; }
+.ng-setup-level-card.selected .ng-setup-radio-visual::after { width: 10px; height: 10px; border-radius: 50%; background: #6a8bff; content: ""; }
+.ng-setup-welcome-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.ng-setup-welcome-title { color: #eef2ff; font-size: 15px; font-weight: 800; }
+.ng-setup-segments { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; padding: 4px; border: 1px solid rgba(255,255,255,.09); border-radius: 14px; background: rgba(4,11,31,.36); }
+.ng-setup-segment { min-width: 0; min-height: 40px; padding: 8px 4px; border: 0; border-radius: 10px; background: transparent; color: #a9b8e8; font-size: 12px; font-weight: 750; }
+.ng-setup-segment.selected { background: rgba(96,130,255,.28); color: #eef2ff; }
+.ng-setup-footnote { margin: 0; color: #a9b8e8; font-size: 12px; line-height: 1.5; }
+.ng-setup-chip { display: inline-flex; width: fit-content; max-width: 100%; align-items: center; padding: 6px 10px; border: 1px solid transparent; border-radius: 999px; font-size: 12px; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+.ng-setup-chip-preset { border-color: rgba(106,139,255,.18); background: rgba(96,130,255,.2); color: #b6c6ff; }
+.ng-setup-chip-amber { border-color: rgba(251,191,36,.12); background: rgba(251,191,36,.15); color: #fcd34d; }
+.ng-setup-chip-saved { background: rgba(52,211,153,.15); color: #6ee7b7; }
+.ng-setup-chip-failed { background: rgba(248,113,113,.15); color: #fca5a5; }
+.ng-setup-group { min-width: 0; }
+.ng-setup-group-description { margin: 0; color: #a9b8e8; font-size: 12px; line-height: 1.45; }
+.ng-setup-diff-row { display: flex; min-width: 0; flex-direction: column; gap: 5px; padding: 12px 0; border-top: 1px solid rgba(255,255,255,.09); }
+.ng-setup-diff-row:first-of-type { border-top: 0; }
+.ng-setup-diff-head { display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.ng-setup-diff-title { color: #eef2ff; font-size: 15px; font-weight: 800; overflow-wrap: anywhere; }
+.ng-setup-values { display: inline-flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: 13px; }
+.ng-setup-old-value { color: #a9b8e8; overflow-wrap: anywhere; }
+.ng-setup-arrow { color: #a9b8e8; }
+.ng-setup-new-value { color: #eef2ff; font-weight: 800; overflow-wrap: anywhere; }
+.ng-setup-raid-title { color: #eef2ff; font-size: 14px; font-weight: 800; line-height: 1.5; }
+.ng-setup-info-line { display: flex; align-items: center; gap: 8px; }
+.ng-setup-info-line .ng-setup-muted { margin: 0; color: #fcd34d; }
+.ng-setup-result-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ng-setup-result-row { display: flex; min-width: 0; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.09); }
+.ng-setup-result-copy { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.ng-setup-result-title { color: #eef2ff; font-size: 14px; font-weight: 800; overflow-wrap: anywhere; }
+.ng-setup-actionbar { position: fixed; z-index: 30; right: 18px; bottom: calc(24px + env(safe-area-inset-bottom)); left: 18px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; max-width: 684px; margin: 0 auto; padding: 12px; border: 1px solid rgba(255,255,255,.13); border-radius: 22px; background: rgba(10,17,40,.88); box-shadow: 0 16px 38px rgba(0,0,0,.34); backdrop-filter: blur(18px); }
+.ng-setup-actionbar.stacked { grid-template-columns: minmax(0,1fr); }
+.ng-setup-action { width: 100%; min-width: 0; min-height: 48px; padding: 10px 14px; border: 1px solid rgba(255,255,255,.13); border-radius: 16px; color: #eef2ff; font-size: 15px; font-weight: 800; overflow-wrap: anywhere; }
+.ng-setup-actionbar .primary { border: 0; background: linear-gradient(110deg,#3b82f6,#7c5cff); color: #fff; }
+.ng-setup-actionbar .secondary { background: rgba(255,255,255,.08); color: #eef2ff; }
+.ng-setup-action:disabled { opacity: .5; cursor: not-allowed; }
+.ng-setup-action:focus-visible,.ng-setup-segment:focus-visible,.ng-setup-level-card:focus-within { outline: 2px solid #9db7ff; outline-offset: 3px; }
+.home-shield-icon { display: block; width: 23px; height: 23px; }
+@media (prefers-reduced-motion: reduce) {
+  .ng-setup-page *, .ng-setup-page *::before, .ng-setup-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
