@@ -107,7 +107,7 @@ function showValue(key, value) {
 }
 
 function lessProtection(key, before, after) {
-  if (typeof before === "boolean" && typeof after === "boolean") return before && !after;
+  if (["captcha.enabled", "antiflood.delete_messages"].includes(key) && typeof before === "boolean" && typeof after === "boolean") return before && !after;
   if (["antiflood.limit", "warns.limit", "captcha.timeout", "captcha.max_attempts"].includes(key)) {
     return Number(after) > Number(before);
   }
