@@ -1,8 +1,8 @@
-import { telegram } from "./api.js?v=2026.11.16-bootfix1";
-import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.16-dashboard1";
-import { renderChats } from "./screens/chats.js?v=2026.11.16-dashboard1";
-import { renderHome } from "./screens/home.js?v=2026.11.16-bootfix1";
-import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, supports } from "./ui.js?v=2026.11.16-bootfix1";
+import { telegram } from "./api.js?v=2026.11.17-phase1a2";
+import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.17-phase1a2";
+import { renderChats } from "./screens/chats.js?v=2026.11.17-phase1a2";
+import { renderHome } from "./screens/home.js?v=2026.11.17-phase1a2";
+import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, supports } from "./ui.js?v=2026.11.17-phase1a2";
 
 telegram?.ready();
 telegram?.expand();
@@ -187,6 +187,9 @@ function renderNavigation() {
   const hash = location.hash;
   const route = routePattern.exec(hash);
   const section = route?.[2] ?? "";
+  const setupActive = section === "protection-setup";
+  document.body.classList.toggle("ng-protection-setup-active", setupActive);
+  root?.classList.toggle("ng-setup-page", setupActive);
   const groupTarget = /^#\/groups\/([a-z-]+)$/.exec(hash)?.[1] ?? "";
   const moreDestinations = [
     "overview", "activity", "filters", "blacklists", "notes", "commands",

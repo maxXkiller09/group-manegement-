@@ -6,10 +6,12 @@ import { renderSettings } from "./screens/settings.js?v=2026.11.16-bootfix1";
 import { renderTimeline } from "./screens/timeline.js?v=2026.11.16-bootfix1";
 import { renderWarnings } from "./screens/warnings.js?v=2026.11.16-bootfix1";
 import { renderReferrals } from "./screens/referrals.js?v=2026.11.16-bootfix1";
+import { renderProtectionSetup } from "./screens/protection-setup.js?v=2026.11.17-phase1a2";
 import { renderCommands } from "./screens/commands.js?v=2026.11.16-bootfix1";
 export const sections=[
 {key:"overview",label:"Group Overview",description:"Group health, member activity and recent actions",render:renderOverview},
 {key:"settings",label:"Security Center",description:"Welcome, captcha, antiflood, locks and protection",render:renderSettings},
+{key:"protection-setup",label:"Protection Setup",description:"Apply a reviewed protection preset",render:renderProtectionSetup},
 {key:"warnings",label:"Moderation",description:"Warnings and member moderation",render:renderWarnings,adminOnly:true},
 {key:"commands",label:"All Commands",description:"Simple guide to commands and quick actions",render:renderCommands},
 {key:"filters",label:"Content Tools · Filters",description:"Automatic keyword replies",render:renderFilters},
