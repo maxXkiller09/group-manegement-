@@ -101,3 +101,35 @@ button {
     animation-iteration-count: 1 !important;
   }
 }
+
+
+/* Glass Pro mobile sizing: keep the floating navigation clear of content. */
+@media (max-width: 380px) {
+  body {
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-left: max(14px, env(safe-area-inset-left));
+  }
+
+  .title {
+    font-size: 27px;
+  }
+
+  .bottom-nav {
+    right: max(14px, env(safe-area-inset-right));
+    left: max(14px, env(safe-area-inset-left));
+  }
+
+  .bottom-nav-item span {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav,
+  .bottom-nav-item,
+  .ng-quick-sheet,
+  .ng-sheet-action {
+    transition: none !important;
+    animation: none !important;
+  }
+}
