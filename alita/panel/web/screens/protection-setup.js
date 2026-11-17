@@ -509,7 +509,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
 
     actionBar(root, [
       { label: "Retry failed", variant: "primary", disabled: Object.keys(state.failed).length === 0, onClick: () => void apply(true) },
-      { label: "Undo saved changes", variant: "secondary", disabled: state.saved.length === 0, onClick: () => void undo() },
+      { label: "Undo saved changes", variant: "secondary", disabled: state.saved.length === 0 || Boolean(state.undo && state.undo.restored.length + state.undo.skipped.length + state.undo.failed.length >= state.saved.length), onClick: () => void undo() },
     ], true);
   }
 
