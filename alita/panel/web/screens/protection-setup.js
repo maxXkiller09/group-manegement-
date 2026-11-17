@@ -108,7 +108,13 @@ function showValue(key, value) {
 
 function lessProtection(key, before, after) {
   if (["captcha.enabled", "antiflood.delete_messages"].includes(key) && typeof before === "boolean" && typeof after === "boolean") return before && !after;
-  if (["antiflood.limit", "warns.limit", "captcha.timeout", "captcha.max_attempts"].includes(key)) {
+  if (key === "antiflood.limit") {
+    const current = Number(before);
+    const next = Number(after);
+    // Zero disables antiflood, so moving from OFF to an enabled limit is safer.
+    return current > 0 && (next === 0 || next > current);
+  }
+  if (["warns.limit", "captcha.timeout", "captcha.max_attempts"].includes(key)) {
     return Number(after) > Number(before);
   }
   if (key === "antiraid.auto_threshold") {
@@ -118,10 +124,15 @@ function lessProtection(key, before, after) {
     return Number(after) > 0 && (Number(before) === 0 || Number(after) < Number(before));
   }
   if (["antiflood.action_time", "warns.action_time"].includes(key)) {
-    return Number(after) < Number(before);
+    return Number(before) > 0 && Number(after) < Number(before);
+  }
+  if (key === "captcha.action") {
+    const strength = { mute: 1, kick: 2, ban: 3 };
+    return strength[before] !== undefined && strength[after] !== undefined && strength[after] < strength[before];
   }
   if (["antiflood.action", "warns.mode"].includes(key)) {
-    return (before === "mute" && after === "tmute") || (before === "ban" && after === "tban");
+    const strength = { tmute: 1, mute: 2, kick: 3, tban: 4, ban: 5 };
+    return strength[before] !== undefined && strength[after] !== undefined && strength[after] < strength[before];
   }
   return false;
 }
