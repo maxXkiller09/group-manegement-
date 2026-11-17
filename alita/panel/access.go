@@ -8,7 +8,7 @@ import (
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 
-	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
+	"github.com/divkix/Alita_Robot/alita/utils/cache"
 )
 
 // Chat roles returned by the chat access helper.
@@ -33,12 +33,23 @@ var (
 	errNotMember = errors.New("user is not a member of the chat")
 )
 
-// chatAccess is one verified chat: its Telegram title and the caller's role.
+// chatRights is a read-only snapshot for UI explanation. It is never used to
+// authorize writes; requirePermission always fetches current Telegram members.
+type chatRights struct {
+	CanChangeInfo      bool `json:"can_change_info"`
+	CanRestrictMembers bool `json:"can_restrict_members"`
+	BotCanRestrict     bool `json:"bot_can_restrict_members"`
+	IsCreator          bool `json:"is_creator"`
+}
+
+// chatAccess is one verified chat: its Telegram title, caller role and the
+// best-effort rights snapshot returned to read-only UI consumers.
 type chatAccess struct {
 	ChatID   int64
 	Title    string
 	Role     string
 	BotAdmin bool
+	Rights   *chatRights
 }
 
 type accessKey struct {
@@ -88,11 +99,23 @@ func (p *Panel) accessChat(ctx context.Context, userID, chatID int64) (chatAcces
 		return chatAccess{}, fmt.Errorf("%w: status %q", errNotMember, status)
 	}
 
+	botAdmin, botCanRestrict, botRightsKnown := p.botAccess(ctx, chatID)
+	var rights *chatRights
+	if botRightsKnown {
+		rights = &chatRights{
+			CanChangeInfo:      memberCan(member, permChangeInfo),
+			CanRestrictMembers: memberCan(member, permRestrict),
+			BotCanRestrict:     botCanRestrict,
+			IsCreator:          member.GetStatus() == gotgbot.ChatMemberStatusCreator,
+		}
+	}
+
 	access := chatAccess{
 		ChatID:   chatID,
 		Title:    info.Title,
 		Role:     role,
-		BotAdmin: chat_status.IsBotAdmin(p.bot, nil, &gotgbot.Chat{Id: info.Id, Type: info.Type, Title: info.Title}),
+		BotAdmin: botAdmin,
+		Rights:   rights,
 	}
 
 	p.accessMu.Lock()
@@ -103,6 +126,24 @@ func (p *Panel) accessChat(ctx context.Context, userID, chatID int64) (chatAcces
 	p.accessMu.Unlock()
 
 	return access, nil
+}
+
+// botAccess reuses the shared Telegram admin cache when possible. On a cache
+// miss it performs the single bot-member lookup previously used by the access
+// check. Failure is deliberately soft: callers still get readable settings,
+// but the UI receives rights:null rather than guessed permissions.
+func (p *Panel) botAccess(ctx context.Context, chatID int64) (isAdmin, canRestrict, known bool) {
+	if found, member := cache.GetAdminCacheUser(chatID, p.bot.Id); found {
+		return member.Status == gotgbot.ChatMemberStatusAdministrator,
+			member.Status == gotgbot.ChatMemberStatusCreator || member.CanRestrictMembers, true
+	}
+
+	member, err := p.bot.GetChatMemberWithContext(ctx, chatID, p.bot.Id, nil)
+	if err != nil || member == nil {
+		return false, false, false
+	}
+	return member.GetStatus() == gotgbot.ChatMemberStatusAdministrator,
+		memberCan(member, permRestrict), true
 }
 
 // memberRole is the panel role for one chat member. It reports false when the

@@ -4,6 +4,7 @@ package panel
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -44,6 +45,128 @@ func decodeSettingsResponse(t *testing.T, recorder *httptest.ResponseRecorder) s
 		t.Fatalf("decode settings: %v", err)
 	}
 	return body
+}
+
+
+func TestSettingsGetRightsForMemberAndAdministrators(t *testing.T) {
+	t.Run("ordinary member", func(t *testing.T) {
+		fixture := newPanelFixture(t)
+		chatID := uniquePanelChatID()
+		seedPanelChat(t, chatID, "Member Rights", fixtureNow)
+		recorder := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), readFixture(t, "initdata_main.txt"), "", "")
+		body := decodeSettingsResponse(t, recorder)
+		want := &chatRights{BotCanRestrict: true}
+		if body.Rights == nil || *body.Rights != *want {
+			t.Fatalf("rights = %+v, want %+v", body.Rights, want)
+		}
+	})
+
+	t.Run("full administrator", func(t *testing.T) {
+		fixture, chatID := newSettingsFixture(t)
+		recorder := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), readFixture(t, "initdata_main.txt"), "", "")
+		body := decodeSettingsResponse(t, recorder)
+		want := &chatRights{CanChangeInfo: true, CanRestrictMembers: true, BotCanRestrict: true}
+		if body.Rights == nil || *body.Rights != *want {
+			t.Fatalf("rights = %+v, want %+v", body.Rights, want)
+		}
+	})
+
+	t.Run("limited administrator", func(t *testing.T) {
+		fixture, chatID := newSettingsFixture(t)
+		fixture.client.rights[settingsFixtureUserID] = panelFakeRights{canRestrictMembers: true}
+		recorder := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), readFixture(t, "initdata_main.txt"), "", "")
+		body := decodeSettingsResponse(t, recorder)
+		want := &chatRights{CanRestrictMembers: true, BotCanRestrict: true}
+		if body.Rights == nil || *body.Rights != *want {
+			t.Fatalf("rights = %+v, want %+v", body.Rights, want)
+		}
+	})
+
+	t.Run("creator", func(t *testing.T) {
+		fixture, chatID := newSettingsFixture(t)
+		fixture.client.statuses[settingsFixtureUserID] = "creator"
+		fixture.client.rights[settingsFixtureUserID] = panelFakeRights{}
+		recorder := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), readFixture(t, "initdata_main.txt"), "", "")
+		body := decodeSettingsResponse(t, recorder)
+		want := &chatRights{CanChangeInfo: true, CanRestrictMembers: true, BotCanRestrict: true, IsCreator: true}
+		if body.Rights == nil || *body.Rights != *want {
+			t.Fatalf("rights = %+v, want %+v", body.Rights, want)
+		}
+	})
+}
+
+func TestSettingsGetRightsReportsBotWithoutRestrict(t *testing.T) {
+	fixture, chatID := newSettingsFixture(t)
+	fixture.client.botRights = panelFakeRights{canChangeInfo: true}
+	recorder := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), readFixture(t, "initdata_main.txt"), "", "")
+	body := decodeSettingsResponse(t, recorder)
+	want := &chatRights{CanChangeInfo: true, CanRestrictMembers: true}
+	if body.Rights == nil || *body.Rights != *want {
+		t.Fatalf("rights = %+v, want %+v", body.Rights, want)
+	}
+}
+
+func TestSettingsGetRightsLookupFailureIsSoft(t *testing.T) {
+	fixture, chatID := newSettingsFixture(t)
+	fixture.client.memberErrors[999] = errors.New("simulated Telegram member lookup failure")
+	recorder := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), readFixture(t, "initdata_main.txt"), "", "")
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("GET status = %d, want 200 when only bot-rights lookup fails (body %s)", recorder.Code, recorder.Body.String())
+	}
+	body := decodeSettingsResponse(t, recorder)
+	if body.Rights != nil {
+		t.Fatalf("rights = %+v, want null when bot-rights lookup fails", body.Rights)
+	}
+}
+
+func TestSettingsGetReusesCachedRightsSnapshot(t *testing.T) {
+	fixture, chatID := newSettingsFixture(t)
+	raw := readFixture(t, "initdata_main.txt")
+	first := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), raw, "", "")
+	decodeSettingsResponse(t, first)
+	callsAfterFirst := fixture.client.countCalls("getChatMember")
+	if callsAfterFirst == 0 {
+		t.Fatal("first GET made no member lookups; expected initial access verification")
+	}
+	second := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), raw, "", "")
+	decodeSettingsResponse(t, second)
+	if calls := fixture.client.countCalls("getChatMember"); calls != callsAfterFirst {
+		t.Fatalf("second cached GET made additional getChatMember calls: before=%d after=%d", callsAfterFirst, calls)
+	}
+}
+
+func TestSettingsRightsPayloadDoesNotAuthorizeWrites(t *testing.T) {
+	t.Run("caller missing change-info", func(t *testing.T) {
+		fixture, chatID := newSettingsFixture(t)
+		fixture.client.rights[settingsFixtureUserID] = panelFakeRights{canRestrictMembers: true}
+		raw := readFixture(t, "initdata_main.txt")
+
+		get := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), raw, "", "")
+		body := decodeSettingsResponse(t, get)
+		if body.Rights == nil || body.Rights.CanChangeInfo {
+			t.Fatalf("rights = %+v, want a visible missing change-info right", body.Rights)
+		}
+
+		write := panelRequest(t, fixture.handler, http.MethodPatch, settingsPath(chatID), raw,
+			`{"changes":{"greetings.clean_welcome":true}}`, "application/json")
+		requireAPIError(t, write, http.StatusForbidden, "missing_permission")
+	})
+
+	t.Run("bot missing restrict", func(t *testing.T) {
+		fixture, chatID := newSettingsFixture(t)
+		fixture.client.botRights = panelFakeRights{canChangeInfo: true}
+		raw := readFixture(t, "initdata_main.txt")
+
+		get := panelRequest(t, fixture.handler, http.MethodGet, settingsPath(chatID), raw, "", "")
+		body := decodeSettingsResponse(t, get)
+		if body.Rights == nil || body.Rights.BotCanRestrict {
+			t.Fatalf("rights = %+v, want bot_can_restrict_members=false", body.Rights)
+		}
+
+		write := panelRequest(t, fixture.handler, http.MethodPatch, settingsPath(chatID), raw,
+			`{"changes":{"reports.mute_threshold":2}}`, "application/json")
+		requireAPIError(t, write, http.StatusConflict, "bot_missing_permission")
+	})
 }
 
 func findSettingsField(t *testing.T, body settingsResponse, key string) settingsField {

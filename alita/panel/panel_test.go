@@ -113,6 +113,7 @@ type panelFakeClient struct {
 	blockUser      int64
 	rights         map[int64]panelFakeRights
 	botRights      panelFakeRights
+	memberErrors   map[int64]error
 	statuses       map[int64]string
 	memberCount    int64
 	memberCountErr error
@@ -125,8 +126,9 @@ func newPanelFakeClient() *panelFakeClient {
 		admins:      make(map[int64]json.RawMessage),
 		botAdmin:    true,
 		rights:      make(map[int64]panelFakeRights),
-		botRights:   panelFakeRights{canChangeInfo: true, canRestrictMembers: true},
-		statuses:    make(map[int64]string),
+		botRights:    panelFakeRights{canChangeInfo: true, canRestrictMembers: true},
+		memberErrors: make(map[int64]error),
+		statuses:     make(map[int64]string),
 		memberCount: 42,
 	}
 }
@@ -164,6 +166,9 @@ func (c *panelFakeClient) RequestWithContext(ctx context.Context, _ string, meth
 		if userID == c.blockUser {
 			<-ctx.Done()
 			return nil, ctx.Err()
+		}
+		if err, ok := c.memberErrors[userID]; ok {
+			return nil, err
 		}
 		if response, ok := c.members[userID]; ok {
 			return response, nil

@@ -45,6 +45,7 @@ type settingsResponse struct {
 	Modules        []settingsModule `json:"modules"`
 	ReadOnly       bool             `json:"read_only"`
 	ReadOnlyReason string           `json:"read_only_reason"`
+	Rights         *chatRights      `json:"rights"`
 }
 
 type settingsPatchRequest struct {
@@ -204,7 +205,7 @@ func panelSettings(ctx context.Context, access chatAccess) settingsResponse {
 		}},
 	}
 
-	response := settingsResponse{Modules: modules}
+	response := settingsResponse{Modules: modules, Rights: access.Rights}
 	if access.Role != RoleAdmin {
 		response.ReadOnly = true
 		response.ReadOnlyReason = "not_admin"
