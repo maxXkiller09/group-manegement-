@@ -382,7 +382,7 @@ function changedRow(key, before, after, meta = {}) {
   }
   if (meta.skip) {
     const prefix = meta.skip.kind === "right" ? "Skip (right nahi): " : "Skip: ";
-    row.append(textElement("span", prefix + meta.skip.reason, "ng-setup-chip ng-setup-chip-skip"));
+    row.append(textElement("span", prefix + meta.skip.reason, "ng-setup-chip"));
   } else if (meta.already) {
     row.append(textElement("span", "Already set — PATCH nahi bheja", "ng-setup-chip"));
   }
@@ -595,8 +595,8 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
         }));
       }
       if (group.key === "antispam" && state.preset !== "low") {
-        section.card.append(textElement("p", "CAS mein listed known spammers permanently ban honge. LOLS is preset se change nahi hota; woh alag optional toggle hai.", "ng-setup-muted"));
-        if (state.preset === "strict" && original.get("antispam.spamdb_lols")?.value === true) {
+        section.card.append(textElement("p", "CAS mein listed known spammers permanently ban honge. LOLS/Shared ke separate toggles is preset se change nahi hote; agar ON hain to BAN action un par bhi lagega.", "ng-setup-muted"));
+        if (original.get("antispam.spamdb_lols")?.value === true) {
           section.card.append(textElement("span", "LOLS abhi ON hai; false-positive ka risk ho sakta hai. LOLS-listed users par bhi BAN action lagega.", "ng-setup-chip ng-setup-chip-amber"));
         }
       }
