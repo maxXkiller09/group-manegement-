@@ -10,6 +10,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 
 	"github.com/divkix/Alita_Robot/alita/config"
+	"github.com/divkix/Alita_Robot/alita/i18n"
 )
 
 func withPanelConfig(t *testing.T, enabled bool, publicURL string, shortName string) {
