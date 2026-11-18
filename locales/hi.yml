@@ -2006,7 +2006,7 @@ help_configuration_step-2: "ठीक है, बहुत अच्छा!
 
   ▫️ पुष्टि करें"
 help_configuration_step-3: "बहुत बढ़िया!\n\nअब बॉट उपयोग के लिए तैयार है!\nसभी कमांड / से शुरू होते हैं"
-help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
+help_donatetext: "अभी donation का कोई option नहीं है। NexGuard free है।"
 help_pm_questions: "हेलो :) अगर आपके पास मेरे उपयोग के बारे में कोई सवाल है तो मुझे PM करें!"
 help_config_private_only: कॉन्फ़िगरेशन केवल प्राइवेट में काम करता है
 help_info_about_header: "जानकारी और बारे में\n\nयहां NexGuard के बारे में कुछ FAQs हैं।"

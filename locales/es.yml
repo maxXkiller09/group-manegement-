@@ -679,7 +679,7 @@ help_configuration_step-2: "¡Ok, bien hecho!
 
   ▫️ Confirma"
 help_configuration_step-3: "¡Excelente!\n\n¡Ahora el Bot está listo para usar!\n\nTodos los comandos empiezan con /"
-help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
+help_donatetext: "Ahora mismo no hay opción de donación. NexGuard es gratis."
 language_flag: 🇪🇸
 language_name: Español
 help_help_msg:

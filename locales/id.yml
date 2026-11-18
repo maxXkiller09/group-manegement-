@@ -673,7 +673,7 @@ help_configuration_step-2: "Ok, bagus!
 
   ▫️ Konfirmasi"
 help_configuration_step-3: "Sangat bagus!\n\nSekarang Bot siap digunakan!\n\nSemua perintah diawali dengan /"
-help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
+help_donatetext: "Saat ini belum ada opsi donasi. NexGuard gratis."
 help_help_msg:
   "Titik masuk utama dan sistem navigasi untuk NexGuard Robot.
 

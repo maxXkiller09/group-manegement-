@@ -512,7 +512,7 @@ help_configuration_step-2: "Хорошо, молодец!
 
   ▫️ Подтвердите"
 help_configuration_step-3: "Отлично!\n\nТеперь бот готов к использованию!\n\nВсе команды начинаются с /"
-help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
+help_donatetext: "Сейчас возможности для пожертвований нет. NexGuard бесплатен."
 help_info_about_header: "Информация и О нас\n\nВот некоторые часто задаваемые вопросы об NexGuard."
 help_news_channel_text: ""
 help_all_commands_usage: "Все команды начинаются с /"

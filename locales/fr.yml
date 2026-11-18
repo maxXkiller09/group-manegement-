@@ -1147,7 +1147,7 @@ help_configuration_step-2: "Ok, bien joué !
 
   ▫️ Confirmez"
 help_configuration_step-3: "Excellent !\n\nMaintenant le Bot est prêt à l'emploi !\n\nToutes les commandes commencent par /"
-help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
+help_donatetext: "Aucune option de don n'est disponible pour le moment. NexGuard est gratuit."
 help_pm_questions: "Salut :) Envoyez-moi un MP si vous avez des questions sur mon utilisation !"
 help_config_private_only: La configuration ne fonctionne qu'en privé
 help_info_about_header: "Info & À propos\n\nVoici quelques FAQ sur NexGuard."

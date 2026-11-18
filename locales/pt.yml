@@ -649,7 +649,7 @@ help_configuration_step-2: "Ok, muito bem!
 
   ▫️ Confirmar"
 help_configuration_step-3: "Excelente!\n\nAgora o Bot está pronto para usar!\n\nTodos os comandos começam com /"
-help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
+help_donatetext: "No momento, não há opção de doação. O NexGuard é gratuito."
 help_help_msg:
   "O ponto de entrada principal e sistema de navegação do NexGuard Robot.
 

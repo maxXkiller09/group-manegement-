@@ -112,8 +112,9 @@ func TestNexGuardDefaultHinglishCopy(t *testing.T) {
 		t.Errorf("/donate copy = %q, want %q", got, want)
 	}
 	for _, code := range localeCodes {
-		if got := getHelpLocaleText(t, code, "help_donatetext"); got != "Abhi koi donation option nahi hai. NexGuard free hai." {
-			t.Errorf("%s.yml /donate copy = %q", code, got)
+		value := strings.ToLower(getHelpLocaleText(t, code, "help_donatetext"))
+		if strings.Contains(value, "nexguard team") || strings.Contains(value, "http://") || strings.Contains(value, "https://") {
+			t.Errorf("%s.yml /donate copy still contains owner contact or an external link: %q", code, value)
 		}
 	}
 	about := getHelpLocaleText(t, "en", "help_about")
