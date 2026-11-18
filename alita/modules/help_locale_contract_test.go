@@ -29,6 +29,7 @@ func getHelpLocaleText(t *testing.T, code, key string) string {
 }
 
 func TestNexGuardHelpLocaleKeyParityAndPlaceholders(t *testing.T) {
+	useRealLocales(t)
 	for _, code := range localeCodes {
 		for _, key := range nexGuardHelpLocaleKeys {
 			if _, err := i18n.MustNewTranslator(code).GetString(key); err != nil {
@@ -48,6 +49,7 @@ func TestNexGuardHelpLocaleKeyParityAndPlaceholders(t *testing.T) {
 }
 
 func TestNexGuardHelpHTMLUsesOnlyApprovedTelegramTags(t *testing.T) {
+	useRealLocales(t)
 	allowed := regexp.MustCompile(`^(?i:b|i|u|s|code|pre|a)$`)
 	htmlKeys := []string{
 		"help_bot_intro", "help_pm_questions", "help_about", "help_donatetext",
@@ -73,6 +75,7 @@ func TestNexGuardHelpHTMLUsesOnlyApprovedTelegramTags(t *testing.T) {
 }
 
 func TestNexGuardHelpCopyHasNoRemovedLinksOrClaims(t *testing.T) {
+	useRealLocales(t)
 	noLinkKeys := []string{
 		"help_bot_intro", "help_pm_questions", "help_about", "help_help_msg",
 		"help_pm_intro", "help_configuration_step-3", "help_donatetext",
@@ -105,6 +108,7 @@ func TestNexGuardHelpCopyHasNoRemovedLinksOrClaims(t *testing.T) {
 }
 
 func TestNexGuardDefaultHinglishCopy(t *testing.T) {
+	useRealLocales(t)
 	wantStart := "🛡️ <b>NexGuard</b>\n<i>Aapke group ki suraksha, bina jhanjhat.</i>\n\n✅ Spam, raid aur bots se bachao\n✅ Welcome, rules, warnings, notes, sab ek jagah\n✅ Mini App me tap karke settings badlo\n\n<b>Shuru kaise karein:</b>\n1️⃣ Mujhe apne group me add karo\n2️⃣ Mujhe admin banao\n3️⃣ Neeche <b>Open admin panel</b> dabao"
 	if got := getHelpLocaleText(t, "en", "help_bot_intro"); got != wantStart {
 		t.Errorf("PM /start copy = %q, want %q", got, wantStart)
