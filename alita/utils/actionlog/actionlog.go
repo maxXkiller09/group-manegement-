@@ -11,6 +11,7 @@ import (
 	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/db/logchannels"
 	"github.com/divkix/Alita_Robot/alita/db/models"
+	"github.com/divkix/Alita_Robot/alita/utils/cache"
 	"github.com/divkix/Alita_Robot/alita/utils/formatting"
 	"github.com/divkix/Alita_Robot/alita/utils/helpers"
 )
@@ -34,9 +35,6 @@ func logTo(b *gotgbot.Bot, chat *gotgbot.Chat, settings *models.LogChannel, cate
 	if b == nil || chat == nil || htmlText == "" || chat.Type == "channel" {
 		return
 	}
-	if settings == nil || !logchannels.CategoryEnabled(settings, category) {
-		return
-	}
 	title := chat.Title
 	if title == "" {
 		// A button from PM names its group by ID alone; the header takes the
@@ -50,9 +48,46 @@ func logTo(b *gotgbot.Bot, chat *gotgbot.Chat, settings *models.LogChannel, cate
 	if markup != nil {
 		opts.ReplyMarkup = *markup
 	}
-	if _, err := helpers.SendMessageWithErrorHandling(b, settings.LogChannelID, header+htmlText, opts); err != nil {
-		log.Debugf("[ActionLog] failed to send %s log for chat %d: %v", category, chat.Id, err)
+	message := header + htmlText
+	var localLogChatID int64
+	if settings != nil {
+		localLogChatID = settings.LogChannelID
+		if logchannels.CategoryEnabled(settings, category) {
+			if _, err := helpers.SendMessageWithErrorHandling(b, localLogChatID, message, opts); err != nil {
+				log.Debugf("[ActionLog] failed to send %s log for chat %d: %v", category, chat.Id, err)
+			}
+		}
 	}
+
+	// Mirror existing action-log events to the owner-configured global log group.
+	// Keep the per-group /setlog destination and category preferences unchanged.
+	if globalChatID, err := getGlobalLogChatID(); err == nil &&
+		globalChatID != localLogChatID && globalChatID != chat.Id {
+		globalMessage := fmt.Sprintf(
+			"<b>GROUP EVENT</b>\nGroup: %s (<code>%d</code>)\nCategory: <code>%s</code>\n%s",
+			html.EscapeString(title), chat.Id, html.EscapeString(category), htmlText,
+		)
+		if _, err := helpers.SendMessageWithErrorHandling(b, globalChatID, globalMessage, opts); err != nil {
+			log.Debugf("[ActionLog] failed to mirror %s log for chat %d to global log group: %v", category, chat.Id, err)
+		}
+	}
+}
+
+const globalLogChatKey = "alita:ops:global_log_chat"
+
+func getGlobalLogChatID() (int64, error) {
+	m := cache.GetMarshal()
+	if m == nil {
+		return 0, fmt.Errorf("persistent cache is unavailable")
+	}
+	var chatID int64
+	if _, err := m.Get(cache.Context, globalLogChatKey, &chatID); err != nil {
+		return 0, err
+	}
+	if chatID >= 0 {
+		return 0, fmt.Errorf("global log group is not configured")
+	}
+	return chatID, nil
 }
 
 func Admin(b *gotgbot.Bot, chat *gotgbot.Chat, actor *gotgbot.User, action string, targetID int64, reason string) {
