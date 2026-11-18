@@ -595,7 +595,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
         }));
       }
       if (group.key === "antispam" && state.preset !== "low") {
-        section.card.append(textElement("p", "CAS mein listed known spammers permanently ban honge. LOLS/Shared ke separate toggles is preset se change nahi hote; agar ON hain to BAN action un par bhi lagega.", "ng-setup-muted"));
+        section.card.append(textElement("p", "New member join par CAS mein listed known spammer permanently ban hoga. LOLS/Shared ke separate toggles is preset se change nahi hote; agar ON hain to BAN action un par bhi lagega.", "ng-setup-muted"));
         if (original.get("antispam.spamdb_lols")?.value === true) {
           section.card.append(textElement("span", "LOLS abhi ON hai; false-positive ka risk ho sakta hai. LOLS-listed users par bhi BAN action lagega.", "ng-setup-chip ng-setup-chip-amber"));
         }
@@ -748,7 +748,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
       const response = await patch(Object.fromEntries(pending));
       patchErrors = response.failed || {};
     } catch (error) {
-      patchErrors = error.payload?.failed || {};
+      patchErrors = error.payload?.failed || error.payload?.errors || {};
       if (!Object.keys(patchErrors).length) {
         for (const key of pending.keys()) patchErrors[key] = error.message || "Save request failed";
       }
