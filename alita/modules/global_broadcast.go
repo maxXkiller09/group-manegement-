@@ -107,10 +107,6 @@ func (moduleStruct) broadcastPreviewCommand(c *helpers.CommandContext) error {
 		_, _ = c.Msg.Reply(c.Bot, "Owner identity could not be verified. Please retry.", nil)
 		return ext.EndGroups
 	}
-	if c.User == nil {
-		_, _ = c.Msg.Reply(c.Bot, "Owner identity could not be verified. Please retry.", nil)
-		return ext.EndGroups
-	}
 	ownerID := c.User.Id
 	broadcastState.Lock()
 	broadcastState.previews[ownerID] = broadcastPreview{
@@ -131,6 +127,10 @@ func (moduleStruct) broadcastPreviewCommand(c *helpers.CommandContext) error {
 }
 
 func (moduleStruct) confirmBroadcast(c *helpers.CommandContext) error {
+	if c.User == nil {
+		_, _ = c.Msg.Reply(c.Bot, "Owner identity could not be verified. Please retry.", nil)
+		return ext.EndGroups
+	}
 	ownerID := c.User.Id
 	broadcastState.Lock()
 	if broadcastState.running {
