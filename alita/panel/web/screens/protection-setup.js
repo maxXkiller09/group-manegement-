@@ -203,8 +203,8 @@ function actionBar(root, buttons, stacked = false) {
 
 function statusRow(title, detail, ok) {
   const row = document.createElement("div");
-  row.className = "ng-setup-access-row";
-  row.append(svgIcon(ok ? "check" : "cross"));
+  row.className = "ng-setup-access-row" + (ok === null ? " is-unknown" : "");
+  row.append(svgIcon(ok === null ? "info" : ok ? "check" : "cross"));
   const copy = document.createElement("span");
   copy.className = "ng-setup-access-copy";
   copy.append(textElement("strong", title, "ng-setup-access-title"), textElement("span", detail, "ng-setup-muted"));
@@ -355,9 +355,21 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
   function renderAccess() {
     root.append(pageHeader(1, "Access check", "Presets sirf group admin apply kar sakte hain."));
     const card = glassCard();
+    const rights = initial.rights ?? null;
+    const isAdmin = chat.role === "admin";
+    const isCreator = rights?.is_creator === true;
+    const restrict = typeof rights?.can_restrict_members === "boolean" ? rights.can_restrict_members : null;
+    const changeInfo = typeof rights?.can_change_info === "boolean" ? rights.can_change_info : null;
+    const botRestrict = !rights
+      ? null
+      : !chat.bot_admin
+        ? false
+        : typeof rights.bot_can_restrict_members === "boolean" ? rights.bot_can_restrict_members : null;
     card.append(
-      statusRow("Admin access", chat.role === "admin" ? "Aap group admin ho." : "Aap group admin nahi ho.", chat.role === "admin"),
-      statusRow("NexGuard bot admin hai", Boolean(chat.bot_admin) ? "Bot ko group mein admin access mila hai." : "NexGuard ko group admin banana zaroori hai.", Boolean(chat.bot_admin)),
+      statusRow("Admin", isCreator ? "Aap group ke creator ho." : isAdmin ? "Aap group admin ho." : "Aap group admin nahi ho.", isAdmin || isCreator),
+      statusRow("Restrict members", restrict === null ? "Telegram se permission status abhi nahi mila." : restrict ? "Aap members ko restrict kar sakte ho." : "Aapke paas Restrict members permission nahi hai.", restrict),
+      statusRow("Change info", changeInfo === null ? "Telegram se permission status abhi nahi mila." : changeInfo ? "Aap group info change kar sakte ho." : "Aapke paas Change group info permission nahi hai.", changeInfo),
+      statusRow("Bot can restrict", botRestrict === null ? "Bot ki permission status abhi unknown hai." : botRestrict ? "NexGuard members ko restrict kar sakta hai." : chat.bot_admin ? "NexGuard ko Restrict members permission nahi mili." : "NexGuard bot admin nahi hai.", botRestrict),
     );
     root.append(card);
 

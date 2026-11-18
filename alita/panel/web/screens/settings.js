@@ -2,8 +2,8 @@ import { api, telegram } from "../api.js?v=2026.11.16-bootfix1";
 import { clear, errorMessage, haptic, leaveScreen, loading, onLeave, setLeaveGuard, showError, supports, textElement, toast } from "../ui.js?v=2026.11.16-bootfix1";
 
 const readOnlyMessages = {
-	not_admin: "You are not an admin in this chat, so settings are read-only.",
-	bot_not_admin: "I am not an admin in this chat, so settings are read-only. Promote me to change them.",
+	not_admin: "Aap is group ke admin nahi ho, isliye settings sirf dekh sakte ho.",
+	bot_not_admin: "NexGuard bot ko group mein admin access nahi mila. Settings badalne ke liye bot ko admin banao.",
 };
 
 // fieldInfo supplies labels, hints and display units, never setting policy.
@@ -233,6 +233,50 @@ function securityIcon(moduleKey, fieldKey = "") {
 	return tile;
 }
 
+function settingLockIcon(reason) {
+	const ns = "http://www.w3.org/2000/svg";
+	const svg = document.createElementNS(ns, "svg");
+	svg.setAttribute("viewBox", "0 0 24 24");
+	svg.setAttribute("fill", "none");
+	svg.setAttribute("stroke", "currentColor");
+	svg.setAttribute("stroke-width", "2");
+	svg.setAttribute("stroke-linecap", "round");
+	svg.setAttribute("stroke-linejoin", "round");
+	svg.setAttribute("class", "ng-setting-lock-icon");
+	svg.setAttribute("role", "img");
+	svg.setAttribute("aria-label", reason);
+	svg.setAttribute("focusable", "false");
+	const body = document.createElementNS(ns, "rect");
+	body.setAttribute("x", "4");
+	body.setAttribute("y", "10");
+	body.setAttribute("width", "16");
+	body.setAttribute("height", "11");
+	body.setAttribute("rx", "2");
+	const shackle = document.createElementNS(ns, "path");
+	shackle.setAttribute("d", "M8 10V7a4 4 0 0 1 8 0v3");
+	svg.append(body, shackle);
+	return svg;
+}
+
+function fieldLockReason(moduleKey, fieldKey, rights, botAdmin) {
+	if (!rights) return "";
+	if (moduleKey === "antispam" && fieldKey.startsWith("probation_") && !rights.can_restrict_members) {
+		return "Is setting ke liye aapko Telegram par Restrict members permission chahiye.";
+	}
+	if (moduleKey === "reports" && fieldKey === "mute_threshold" &&
+		(!rights.can_restrict_members || !rights.bot_can_restrict_members)) {
+		return "Auto-mute ke liye aap aur NexGuard dono ko Restrict members permission chahiye.";
+	}
+	if (moduleKey === "timezone" && fieldKey === "name" && !rights.can_change_info) {
+		return "Timezone badalne ke liye aapko Telegram par Change group info permission chahiye.";
+	}
+	if (moduleKey === "greetings" && fieldKey.startsWith("clean_") &&
+		(!rights.can_change_info || (fieldKey === "clean_service" && !botAdmin))) {
+		return "Clean settings ke liye Change group info permission aur zaroori bot admin access chahiye.";
+	}
+	return "";
+}
+
 function securityMiniStat(label, value, symbol, tone) {
 	const item = document.createElement("div");
 	item.className = "ng-mini-stat";
@@ -400,7 +444,8 @@ function drawSettings(root, chatID, data, chat = {}) {
 		for (const field of module.fields) {
 			const key = `${module.key}.${field.key}`;
 			const info = infoFor(module.key, field);
-			const writable = field.writable && !readOnly;
+			const lockReason = fieldLockReason(module.key, field.key, data.rights, chat.bot_admin);
+			const writable = field.writable && !readOnly && !lockReason;
 			const row = document.createElement("div");
 			row.className = "setting-row ng-setting-row";
 			if (field.type === "list" || (!field.writable && field.type === "string")) {
@@ -414,10 +459,14 @@ function drawSettings(root, chatID, data, chat = {}) {
 				control.id = `setting-${key}`;
 				label.htmlFor = control.id;
 			}
+			if (lockReason) label.append(settingLockIcon(lockReason));
 
 			const text = document.createElement("div");
 			text.className = "setting-text-block";
 			text.append(label);
+			if (lockReason) {
+				text.append(textElement("span", lockReason, "setting-lock-note"));
+			}
 			if (info.hint) {
 				text.append(textElement("span", info.hint, "setting-hint"));
 			}
@@ -574,6 +623,7 @@ function drawSettings(root, chatID, data, chat = {}) {
 		leaveScreen();
 		return drawSettings(root, chatID, {
 			modules: result.modules,
+			rights: result.rights ?? data.rights ?? null,
 			read_only: result.read_only,
 			read_only_reason: result.read_only_reason,
 		}, chat);

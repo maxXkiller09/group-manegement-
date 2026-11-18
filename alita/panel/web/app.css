@@ -459,6 +459,25 @@ textarea {
 	box-shadow: inset 3px 0 0 var(--button);
 }
 
+.setting-name {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.ng-setting-lock-icon {
+	width: 14px;
+	height: 14px;
+	flex: none;
+	color: var(--hint);
+}
+
+.setting-lock-note {
+	color: var(--hint);
+	font-size: 12px;
+	line-height: 1.4;
+}
+
 .setting-head {
 	display: flex;
 	align-items: center;
@@ -1310,6 +1329,23 @@ body{background:var(--bg);padding-bottom:calc(92px + env(safe-area-inset-bottom)
 .group-search{width:100%;min-height:48px;margin:2px 0 10px;padding:11px 14px;border:1px solid var(--separator);border-radius:13px;background:var(--field);color:var(--text);font:inherit}
 .group-search::placeholder{color:var(--hint)}
 .group-card{min-height:66px;padding-block:12px}
+
+.ng-group-role-chip {
+	align-self: flex-start;
+	margin-top: 5px;
+	padding: 3px 8px;
+	border: 1px solid var(--ng-border);
+	border-radius: 999px;
+	color: var(--hint);
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.ng-group-role-chip.is-admin {
+	border-color: color-mix(in srgb, var(--button) 40%, var(--ng-border));
+	color: var(--button);
+}
 .search-empty{margin-top:10px}
 
 
@@ -2642,6 +2678,7 @@ body.ng-protection-setup-active .bottom-nav { display: none !important; }
 .ng-setup-section-label { margin: 0 2px 8px; color: #a9b8e8; font-size: 11px; letter-spacing: .12em; }
 .ng-setup-muted { display: block; margin: 4px 0 0; color: #a9b8e8; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 .ng-setup-access-row { display: flex; min-width: 0; align-items: center; gap: 12px; padding: 4px 0; }
+.ng-setup-access-row.is-unknown { opacity: .78; }
 .ng-setup-svg { display: block; width: 22px; height: 22px; flex: 0 0 22px; }
 .ng-setup-svg-check { color: #34d399; }
 .ng-setup-svg-cross { color: #f87171; }
