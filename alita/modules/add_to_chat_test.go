@@ -55,7 +55,7 @@ func TestStartAddToChatButtonRequestsAdminRights(t *testing.T) {
 	t.Parallel()
 
 	startKb := getStartMarkup(helpTestTranslator(t), "AlitaTestBot")
-	assertAddToChatRequestsAdminRights(t, startKb.InlineKeyboard[1][0].Url)
+	assertAddToChatRequestsAdminRights(t, startKb.InlineKeyboard[0][0].Url)
 }
 
 func TestConfigurationAddToChatButtonRequestsAdminRights(t *testing.T) {
