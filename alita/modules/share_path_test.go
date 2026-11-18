@@ -4,7 +4,6 @@ package modules
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -15,9 +14,8 @@ import (
 	"github.com/divkix/Alita_Robot/alita/utils/helpers"
 )
 
-// The private /about screen is where a member can hand the bot to a group
-// admin, so it carries the docs page's add-to-group URL plus a share sheet.
-func TestAboutOffersAddToGroupAndShare(t *testing.T) {
+// The private /about screen keeps the add-to-group action but no longer offers sharing.
+func TestAboutOffersAddToGroupWithoutShare(t *testing.T) {
 	useRealLocales(t)
 	tr := i18n.MustNewTranslator("en")
 	shareButtonText, err := tr.GetString("help_button_share")
@@ -39,8 +37,8 @@ func TestAboutOffersAddToGroupAndShare(t *testing.T) {
 	}
 
 	markup := markupOf(t, client.onlyCall(t, "sendMessage"))
-	if len(markup.InlineKeyboard) == 0 || len(markup.InlineKeyboard[0]) != 2 {
-		t.Fatalf("first keyboard row = %+v, want the add-to-group and share buttons", markup.InlineKeyboard)
+	if len(markup.InlineKeyboard) == 0 || len(markup.InlineKeyboard[0]) != 1 {
+		t.Fatalf("first keyboard row = %+v, want only the add-to-group button", markup.InlineKeyboard)
 	}
 
 	add := markup.InlineKeyboard[0][0]
@@ -49,27 +47,16 @@ func TestAboutOffersAddToGroupAndShare(t *testing.T) {
 	}
 	assertAddToChatRequestsAdminRights(t, add.Url)
 
-	share := markup.InlineKeyboard[0][1]
-	if share.Text != shareButtonText {
-		t.Errorf("share button text = %q, want %q", share.Text, shareButtonText)
-	}
-	shared, err := url.Parse(share.Url)
-	if err != nil {
-		t.Fatalf("parse share url %q: %v", share.Url, err)
-	}
-	if shared.Scheme != "https" || shared.Host != "t.me" || shared.Path != "/share/url" {
-		t.Fatalf("share url = %q, want a t.me share link", share.Url)
-	}
-	if got := shared.Query().Get("url"); got != "https://t.me/AlitaTestBot" {
-		t.Errorf("shared url = %q, want the bot's t.me link", got)
-	}
-	if got := shared.Query().Get("text"); got != shareText {
-		t.Errorf("share text = %q, want %q", got, shareText)
+	for _, row := range markup.InlineKeyboard {
+		for _, button := range row {
+			if strings.Contains(strings.ToLower(button.Text), "share") || strings.Contains(button.Url, "t.me/share") {
+				t.Errorf("About keyboard still contains a share action: %+v", button)
+			}
+		}
 	}
 }
 
-// The dashboard is optional, so its mention follows PANEL_ENABLED while the
-// add-to-group and share buttons stay on both variants.
+// The dashboard hint follows PANEL_ENABLED; the add-to-group action stays on both variants.
 func TestAboutMentionsDashboardOnlyWhenPanelEnabled(t *testing.T) {
 	useRealLocales(t)
 	hint, err := i18n.MustNewTranslator("en").GetString("help_about_panel_hint")
@@ -96,8 +83,8 @@ func TestAboutMentionsDashboardOnlyWhenPanelEnabled(t *testing.T) {
 				t.Errorf("about text mentions the dashboard = %v, want %v; text = %q", got, enabled, text)
 			}
 			markup := markupOf(t, call)
-			if len(markup.InlineKeyboard) == 0 || len(markup.InlineKeyboard[0]) != 2 {
-				t.Fatalf("first keyboard row = %+v, want the add-to-group and share buttons", markup.InlineKeyboard)
+			if len(markup.InlineKeyboard) == 0 || len(markup.InlineKeyboard[0]) != 1 {
+				t.Fatalf("first keyboard row = %+v, want only the add-to-group button", markup.InlineKeyboard)
 			}
 		})
 	}

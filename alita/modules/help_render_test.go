@@ -76,38 +76,64 @@ func TestHelpTextRendering(t *testing.T) {
 }
 
 func TestHelpKeyboardsUseCallbackCodecAndBotUsername(t *testing.T) {
-	t.Parallel()
-
+	withPanelConfig(t, false, "", "")
 	tr := helpTestTranslator(t)
+
 	aboutKb := getAboutKb(tr, "NexGuardd_Bot")
 	if len(aboutKb.InlineKeyboard) != 4 {
 		t.Fatalf("getAboutKb() rows = %d, want 4", len(aboutKb.InlineKeyboard))
 	}
-	if aboutKb.InlineKeyboard[0][0].Text != "Add" {
-		t.Fatalf("add-to-chat button text = %q", aboutKb.InlineKeyboard[0][0].Text)
+	if len(aboutKb.InlineKeyboard[0]) != 1 || aboutKb.InlineKeyboard[0][0].Text != "Add" {
+		t.Fatalf("about add row = %+v", aboutKb.InlineKeyboard[0])
 	}
-	if aboutKb.InlineKeyboard[0][1].Text != "Share" {
-		t.Fatalf("share button text = %q", aboutKb.InlineKeyboard[0][1].Text)
+	if aboutKb.InlineKeyboard[1][0].Text != "About me" ||
+		!strings.HasPrefix(aboutKb.InlineKeyboard[1][0].CallbackData, "about|v1|") {
+		t.Fatalf("about details row = %+v", aboutKb.InlineKeyboard[1])
 	}
-	if aboutKb.InlineKeyboard[1][0].Text != "About me" {
-		t.Fatalf("about button text = %q", aboutKb.InlineKeyboard[1][0].Text)
-	}
-	if !strings.HasPrefix(aboutKb.InlineKeyboard[1][0].CallbackData, "about|v1|") {
-		t.Fatalf("about callback = %q, want encoded about callback", aboutKb.InlineKeyboard[1][0].CallbackData)
+	for _, row := range aboutKb.InlineKeyboard {
+		for _, button := range row {
+			if strings.Contains(strings.ToLower(button.Text), "share") || strings.Contains(button.Url, "t.me/share") {
+				t.Fatalf("share button remains in About keyboard: %+v", button)
+			}
+		}
 	}
 
 	startKb := getStartMarkup(tr, "NexGuardd_Bot")
-	if len(startKb.InlineKeyboard) != 4 {
-		t.Fatalf("getStartMarkup() rows = %d, want 4", len(startKb.InlineKeyboard))
+	if len(startKb.InlineKeyboard) != 2 {
+		t.Fatalf("getStartMarkup() rows = %d, want add + commands/language rows", len(startKb.InlineKeyboard))
 	}
-	if got := startKb.InlineKeyboard[1][0].Url; !strings.HasPrefix(got, "https://t.me/NexGuardd_Bot?startgroup=botstart&") {
+	if got := startKb.InlineKeyboard[0][0].Url; !strings.HasPrefix(got, "https://t.me/NexGuardd_Bot?startgroup=botstart&") {
 		t.Fatalf("add-to-chat URL = %q", got)
 	}
-	if !strings.HasPrefix(startKb.InlineKeyboard[2][0].CallbackData, "helpq|v1|") {
-		t.Fatalf("commands callback = %q, want encoded help callback", startKb.InlineKeyboard[2][0].CallbackData)
+	if len(startKb.InlineKeyboard[1]) != 2 ||
+		!strings.HasPrefix(startKb.InlineKeyboard[1][0].CallbackData, "helpq|v1|") ||
+		!strings.HasPrefix(startKb.InlineKeyboard[1][1].CallbackData, "helpq|v1|") {
+		t.Fatalf("commands/language row = %+v", startKb.InlineKeyboard[1])
+	}
+	for _, row := range startKb.InlineKeyboard {
+		for _, button := range row {
+			if strings.HasPrefix(button.CallbackData, "about|") {
+				t.Fatalf("About must live inside Help, not the start keyboard: %+v", button)
+			}
+		}
 	}
 }
 
+func TestHelpMenuIncludesAboutEntry(t *testing.T) {
+	useRealLocales(t)
+	kb := initHelpButtonsFrom(newHelpRegistry(), "en")
+	found := false
+	for _, row := range kb.InlineKeyboard {
+		for _, button := range row {
+			if strings.HasPrefix(button.CallbackData, "about|v1|") {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Fatal("Help keyboard is missing its About entry")
+	}
+}
 func resetCachedBotUsername() {
 	cachedBotUsernameMu.Lock()
 	cachedBotUsername = ""

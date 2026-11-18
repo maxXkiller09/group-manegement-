@@ -38,6 +38,11 @@ func initHelpButtonsFrom(registry *moduleStruct, langCode string) gotgbot.Inline
 	}
 	zb := slices.Collect(slices.Chunk(kb, 3))
 	tr := i18n.MustNewTranslator(langCode)
+	aboutText, _ := tr.GetString("help_button_about")
+	zb = append(zb, []gotgbot.InlineKeyboardButton{{
+		Text:         aboutText,
+		CallbackData: encodeCallbackData("about", map[string]string{"a": "me"}),
+	}})
 	backText, _ := tr.GetString("helpers_back_button")
 	zb = append(zb, []gotgbot.InlineKeyboardButton{{
 		Text:         backText,
