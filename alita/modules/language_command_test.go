@@ -159,21 +159,13 @@ func TestLanguageCallbackPropagatesAnswerAndEditErrors(t *testing.T) {
 	}
 }
 
-// The "help translate" button on /lang is labelled in the reader's language.
-func TestChangeLanguageHelpTranslateButtonFollowsReadersLanguage(t *testing.T) {
+// The language keyboard does not include an external translation-promotion button.
+func TestChangeLanguageOmitsHelpTranslateButton(t *testing.T) {
 	useRealLocales(t)
 	client := newModuleBotClient()
 	bot := newModuleTestBot(client)
-	user := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Lector"}
-	chat := gotgbot.Chat{Id: user.Id, Type: "private", FirstName: "Lector"}
-	if err := lang.ChangeUserLanguage(user.Id, "es"); err != nil {
-		t.Fatalf("ChangeUserLanguage: %v", err)
-	}
-	want, _ := i18n.MustNewTranslator("es").GetString("language_help_translate")
-	en, _ := i18n.MustNewTranslator("en").GetString("language_help_translate")
-	if want == "" || want == en {
-		t.Fatal("the test needs an es translation of language_help_translate")
-	}
+	user := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Member"}
+	chat := gotgbot.Chat{Id: user.Id, Type: "private", FirstName: "Member"}
 
 	if err := languagesModule.changeLanguage(bot, newModuleMessageContext(bot, chat, user, "/lang")); err != ext.EndGroups {
 		t.Fatalf("changeLanguage() error = %v, want EndGroups", err)
@@ -186,16 +178,15 @@ func TestChangeLanguageHelpTranslateButtonFollowsReadersLanguage(t *testing.T) {
 	if !ok {
 		t.Fatalf("reply_markup = %#v, want an inline keyboard", calls[0].Params["reply_markup"])
 	}
-	var label string
 	for _, row := range kb.InlineKeyboard {
 		for _, button := range row {
 			if button.Url != "" {
-				label = button.Text
+				t.Errorf("unexpected external button %q -> %q", button.Text, button.Url)
 			}
 		}
 	}
-	if label != want {
-		t.Errorf("help translate button = %q, want the es language_help_translate %q", label, want)
+	if len(kb.InlineKeyboard) == 0 {
+		t.Fatal("language selection keyboard is empty")
 	}
 }
 

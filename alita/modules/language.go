@@ -21,23 +21,8 @@ import (
 var languagesModule = moduleStruct{moduleName: "Languages"}
 var languageGroupSettingChecks = declaredGroupSettingChecks(chatsettings.Language)
 
-func (moduleStruct) genFullLanguageKb(langCode string) [][]gotgbot.InlineKeyboardButton {
-	return withHelpTranslateRow(keyboard.MakeLanguageKeyboard(), langCode)
-}
-
-// withHelpTranslateRow appends the Crowdin "help translate" link row, labelled in langCode.
-func withHelpTranslateRow(kb [][]gotgbot.InlineKeyboardButton, langCode string) [][]gotgbot.InlineKeyboardButton {
-	tr := i18n.MustNewTranslator(langCode)
-	helpTranslateText, _ := tr.GetString("language_help_translate")
-	return append(
-		kb,
-		[]gotgbot.InlineKeyboardButton{
-			{
-				Text: helpTranslateText,
-				Url:  "https://crowdin.com/project/alita_robot",
-			},
-		},
-	)
+func (moduleStruct) genFullLanguageKb(_ string) [][]gotgbot.InlineKeyboardButton {
+	return keyboard.MakeLanguageKeyboard()
 }
 
 func (m moduleStruct) changeLanguage(b *gotgbot.Bot, ctx *ext.Context) error {
@@ -57,7 +42,7 @@ func (m moduleStruct) changeLanguage(b *gotgbot.Bot, ctx *ext.Context) error {
 		// lang.GetLanguage(ctx) answers in the PM's language; name the group's.
 		groupLang := chatsettings.Language.ReadContext(tracing.UpdateContext(ctx), group.Id).Value.(string)
 		replyString, _ = tr.GetString("language_current_group", i18n.TranslationParams{"s": keyboard.GetLangFormat(groupLang)})
-		langKb = withHelpTranslateRow(keyboard.MakeGroupLanguageKeyboard(group.Id), cLang)
+		langKb = keyboard.MakeGroupLanguageKeyboard(group.Id)
 	} else if msg.Chat.Type == "private" {
 		replyString, _ = tr.GetString("language_current_user", i18n.TranslationParams{"s": keyboard.GetLangFormat(cLang)})
 	} else {
