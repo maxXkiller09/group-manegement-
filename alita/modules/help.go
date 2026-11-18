@@ -3,7 +3,6 @@ package modules
 import (
 	"fmt"
 	"html"
-	"net/url"
 	"slices"
 	"strings"
 	"sync"
@@ -86,91 +85,57 @@ func getMainHelp(tr *i18n.Translator, firstName string) string {
 func getAboutKb(tr *i18n.Translator, botUsername string) gotgbot.InlineKeyboardMarkup {
 	aboutMeText, _ := tr.GetString("help_button_about_me")
 	addToChatText, _ := tr.GetString("help_button_add_to_chat")
-	shareText, _ := tr.GetString("help_button_share")
-	shareSummary, _ := tr.GetString("help_share_text")
 	configurationText, _ := tr.GetString("help_button_configuration")
 	backText, _ := tr.GetString("common_back_arrow_alt")
 
 	return gotgbot.InlineKeyboardMarkup{
 		InlineKeyboard: [][]gotgbot.InlineKeyboardButton{
-			{
-				{
-					Text: addToChatText,
-					Url:  helpers.AddToGroupURL(botUsername),
-				},
-				{
-					Text: shareText,
-					Url:  shareBotURL(botUsername, shareSummary),
-				},
-			},
-			{
-				{
-					Text:         aboutMeText,
-					CallbackData: encodeCallbackData("about", map[string]string{"a": "me"}),
-				},
-			},
-			{
-				{
-					Text:         configurationText,
-					CallbackData: encodeCallbackData("configuration", map[string]string{"s": "step1"}),
-				},
-			},
-			{
-				{
-					Text:         backText,
-					CallbackData: encodeCallbackData("helpq", map[string]string{"m": "BackStart"}),
-				},
-			},
+			{{Text: addToChatText, Url: helpers.AddToGroupURL(botUsername)}},
+			{{Text: aboutMeText, CallbackData: encodeCallbackData("about", map[string]string{"a": "me"})}},
+			{{Text: configurationText, CallbackData: encodeCallbackData("configuration", map[string]string{"s": "step1"})}},
+			{{Text: backText, CallbackData: encodeCallbackData("helpq", map[string]string{"m": "BackStart"})}},
 		},
 	}
 }
 
-// shareBotURL opens Telegram's share sheet on the bot's t.me link. The pitch is
-// localized; the link stays a t.me link because the bot cannot know its own
-// deployment URL.
-func shareBotURL(botUsername, text string) string {
-	params := url.Values{}
-	params.Set("url", "https://t.me/"+botUsername)
-	params.Set("text", text)
-	return "https://t.me/share/url?" + params.Encode()
-}
-
 func getStartMarkup(tr *i18n.Translator, botUsername string) gotgbot.InlineKeyboardMarkup {
-	aboutText, _ := tr.GetString("help_button_about")
 	addToChatText, _ := tr.GetString("help_button_add_to_chat")
 	commandsHelpText, _ := tr.GetString("help_button_commands_help")
 	languageText, _ := tr.GetString("help_button_language")
 
-	addToChatUrl := helpers.AddToGroupURL(botUsername)
-
-	return gotgbot.InlineKeyboardMarkup{
-		InlineKeyboard: [][]gotgbot.InlineKeyboardButton{
-			{
-				{
-					Text:         aboutText,
-					CallbackData: encodeCallbackData("about", map[string]string{"a": "main"}),
-				},
-			},
-			{
-				{
-					Text: addToChatText,
-					Url:  addToChatUrl,
-				},
-			},
-			{
-				{
-					Text:         commandsHelpText,
-					CallbackData: encodeCallbackData("helpq", map[string]string{"m": "Help"}),
-				},
-			},
-			{
-				{
-					Text:         languageText,
-					CallbackData: encodeCallbackData("helpq", map[string]string{"m": "Languages"}),
-				},
-			},
-		},
+	rows := [][]gotgbot.InlineKeyboardButton{
+		{{Text: addToChatText, Url: helpers.AddToGroupURL(botUsername)}},
 	}
+	if config.AppConfig != nil && config.AppConfig.PanelEnabled {
+		panelText, _ := tr.GetString("panel_open_button")
+		rows = append(rows, []gotgbot.InlineKeyboardButton{{
+			Text:   panelText,
+			WebApp: &gotgbot.WebAppInfo{Url: config.AppConfig.PanelPublicURL},
+		}})
+	}
+	rows = append(rows, []gotgbot.InlineKeyboardButton{
+		{Text: commandsHelpText, CallbackData: encodeCallbackData("helpq", map[string]string{"m": "Help"})},
+		{Text: languageText, CallbackData: encodeCallbackData("helpq", map[string]string{"m": "Languages"})},
+	})
+
+	return gotgbot.InlineKeyboardMarkup{InlineKeyboard: rows}
+}
+
+func getGroupStartMarkup(tr *i18n.Translator, botUsername string, chatID int64) gotgbot.InlineKeyboardMarkup {
+	rows := make([][]gotgbot.InlineKeyboardButton, 0, 2)
+	if config.AppConfig != nil && config.AppConfig.PanelEnabled {
+		panelText, _ := tr.GetString("panel_open_button")
+		rows = append(rows, []gotgbot.InlineKeyboardButton{{
+			Text: panelText,
+			Url:  panel.EntryURL(botUsername, config.AppConfig.PanelMiniAppShortName, chatID),
+		}})
+	}
+	helpText, _ := tr.GetString("help_click_here")
+	rows = append(rows, []gotgbot.InlineKeyboardButton{{
+		Text: helpText,
+		Url:  fmt.Sprintf("https://t.me/%s?start=help_help", botUsername),
+	}})
+	return gotgbot.InlineKeyboardMarkup{InlineKeyboard: rows}
 }
 
 func (moduleStruct) about(b *gotgbot.Bot, ctx *ext.Context) error {
@@ -206,14 +171,9 @@ func (moduleStruct) about(b *gotgbot.Bot, ctx *ext.Context) error {
 			currText = fmt.Sprintf(temp, b.Username, config.AppConfig.BotVersion)
 			backText, _ := tr.GetString("common_back")
 			currKb = gotgbot.InlineKeyboardMarkup{
-				InlineKeyboard: [][]gotgbot.InlineKeyboardButton{
-					{
-						{
-							Text:         backText,
-							CallbackData: encodeCallbackData("about", map[string]string{"a": "main"}),
-						},
-					},
-				},
+				InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
+					{Text: backText, CallbackData: encodeCallbackData("helpq", map[string]string{"m": "Help"})},
+				}},
 			}
 		default:
 			return answerInvalidCallback(b, ctx, query)
@@ -387,7 +347,12 @@ func (moduleStruct) start(b *gotgbot.Bot, ctx *ext.Context) error {
 	} else {
 		tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
 		text, _ := tr.GetString("help_pm_questions")
-		_, err := msg.Reply(b, text, formatting.Shtml())
+		markup := getGroupStartMarkup(tr, getBotUsername(b), ctx.EffectiveChat.Id)
+		_, err := msg.Reply(b, text, &gotgbot.SendMessageOpts{
+			ParseMode:          formatting.HTML,
+			LinkPreviewOptions: &gotgbot.LinkPreviewOptions{IsDisabled: true},
+			ReplyMarkup:        &markup,
+		})
 		if err != nil {
 			return err
 		}
