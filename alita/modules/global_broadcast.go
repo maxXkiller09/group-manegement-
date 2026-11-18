@@ -15,7 +15,6 @@ import (
 
 	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
-	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
 	"github.com/divkix/Alita_Robot/alita/utils/helpers"
 )
 
@@ -56,7 +55,7 @@ func getGlobalLogChat() (int64, error) {
 	if _, err := m.Get(cache.Context, globalLogChatKey, &chatID); err != nil {
 		return 0, err
 	}
-	if chatID >= 0 || chat_status.IsChannelId(chatID) {
+	if chatID >= 0 {
 		return 0, fmt.Errorf("global log group is not configured")
 	}
 	return chatID, nil
@@ -72,7 +71,7 @@ func activeBroadcastTargets() []int64 {
 	all := chats.GetAllChats()
 	targets := make([]int64, 0, len(all))
 	for id, chat := range all {
-		if id < 0 && !chat_status.IsChannelId(id) && !chat.IsInactive {
+		if id < 0 && !chat.IsInactive {
 			targets = append(targets, id)
 		}
 	}
