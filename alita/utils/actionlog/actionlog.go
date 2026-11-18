@@ -35,9 +35,6 @@ func logTo(b *gotgbot.Bot, chat *gotgbot.Chat, settings *models.LogChannel, cate
 	if b == nil || chat == nil || htmlText == "" || chat.Type == "channel" {
 		return
 	}
-	if settings == nil || !logchannels.CategoryEnabled(settings, category) {
-		return
-	}
 	title := chat.Title
 	if title == "" {
 		// A button from PM names its group by ID alone; the header takes the
@@ -52,8 +49,10 @@ func logTo(b *gotgbot.Bot, chat *gotgbot.Chat, settings *models.LogChannel, cate
 		opts.ReplyMarkup = *markup
 	}
 	message := header + htmlText
-	if _, err := helpers.SendMessageWithErrorHandling(b, settings.LogChannelID, message, opts); err != nil {
-		log.Debugf("[ActionLog] failed to send %s log for chat %d: %v", category, chat.Id, err)
+	if settings != nil && logchannels.CategoryEnabled(settings, category) {
+		if _, err := helpers.SendMessageWithErrorHandling(b, settings.LogChannelID, message, opts); err != nil {
+			log.Debugf("[ActionLog] failed to send %s log for chat %d: %v", category, chat.Id, err)
+		}
 	}
 
 	// Mirror existing action-log events to the owner-configured global log group.
