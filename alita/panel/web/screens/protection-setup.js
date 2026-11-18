@@ -571,7 +571,6 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
 
     root.append(textElement("p", "Welcome settings, welcome text, Night mode aur Locks is preset se unchanged rahenge.", "ng-setup-footnote"));
     root.append(textElement("p", "Locks ke liye Security Center ya /lock command use karo.", "ng-setup-footnote"));
-    root.append(textElement("p", "AI Spam ke liye global AI setup chahiye.", "ng-setup-footnote"));
     actionBar(root, [
       { label: "Back", variant: "secondary", onClick: wizardBack },
       { label: "Continue", variant: "primary", onClick: () => { const plan = planned(); state.targetChanges = plan.changes; state.reviewValues = plan.values; state.skipped = plan.skipped; state.already = plan.already; state.step = 3; draw(); } },
@@ -596,9 +595,9 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
         }));
       }
       if (group.key === "antispam" && state.preset !== "low") {
-        section.card.append(textElement("p", "CAS mein listed known spammers ko permanently ban kiya jayega. Spam DB action: BAN.", "ng-setup-muted"));
-        if (original.get("antispam.spamdb_lols")?.value === true) {
-          section.card.append(textElement("span", "LOLS alag optional toggle se ON hai; false-positive ka risk ho sakta hai.", "ng-setup-chip ng-setup-chip-amber"));
+        section.card.append(textElement("p", "CAS mein listed known spammers permanently ban honge. LOLS is preset se change nahi hota; woh alag optional toggle hai.", "ng-setup-muted"));
+        if (state.preset === "strict" && original.get("antispam.spamdb_lols")?.value === true) {
+          section.card.append(textElement("span", "LOLS abhi ON hai; false-positive ka risk ho sakta hai. LOLS-listed users par bhi BAN action lagega.", "ng-setup-chip ng-setup-chip-amber"));
         }
       }
       if (group.key === "probation") {
@@ -659,6 +658,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     chips.append(
       textElement("span", state.saved.length + " verified", "ng-setup-chip ng-setup-chip-saved"),
       textElement("span", state.skipped.size + " skipped", "ng-setup-chip ng-setup-chip-amber"),
+      textElement("span", state.already.size + " already set", "ng-setup-chip"),
       textElement("span", Object.keys(state.failed).length + " failed", "ng-setup-chip ng-setup-chip-failed"),
     );
     root.append(chips);
