@@ -1184,7 +1184,6 @@ help_pm_intro: |
   Commandes utiles :
   - /start : Me démarre ! Vous avez probablement déjà utilisé cette commande.
   - /help : Envoie ce message ; je vous en dirai plus sur moi-même !
-  - /donate : Vous donne des infos sur comment me soutenir ainsi que mon créateur.
 
 
 # Misc module strings
