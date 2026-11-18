@@ -5,7 +5,7 @@ import {
   backOneProtectionStep,
   createProtectionSetupState,
 } from "../web/preset-state.mjs";
-import { classifyGroupAccess, singleEligibleGroup } from "../web/group-access.mjs";
+import { classifyGroupAccess, singleEligibleGroup, GROUP_ACCESS_CACHE_MS } from "../web/group-access.mjs";
 
 test("first Protection Setup render starts with Balanced selected", () => {
   const state = createProtectionSetupState();
@@ -25,6 +25,10 @@ test("Back moves one step and preserves the selected preset", () => {
   assert.equal(state.step, 1);
   assert.equal(state.preset, "strict");
   assert.equal(backOneProtectionStep(state), false);
+});
+
+test("group access cache is display-only short lived", () => {
+  assert.equal(GROUP_ACCESS_CACHE_MS, 45_000);
 });
 
 test("only a verified admin with a bot admin is selectable", () => {
