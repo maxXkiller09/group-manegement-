@@ -672,7 +672,7 @@ greetings_help_msg:
   × /cleangoodbye `<yes/no/on/off>`: Delete the old goodbye message, whenever a member leaves.
 
   × /autoapprove `<yes/no/on/off>`: Automatically approve chat join requests."
-help_about: "🛡️ <b>NexGuard</b> (@%s)\n\n<i>Aapke group ki suraksha, bina jhanjhat.</i>\n\n<b>Simple:</b> Mini App se tap karke control\n<b>Fast:</b> Go me bana\n<b>Safe:</b> captcha, antiflood, antiraid, warns\n\nVersion: %s"
+help_about: "🛡️ <b>NexGuard</b> (@%s)\n\n<i>Aapke group ki suraksha, bina jhanjhat.</i>\n\n• <b>Simple:</b> Mini App se tap karke control\n• <b>Fast:</b> Go me bana\n• <b>Safe:</b> captcha, antiflood, antiraid, warns\n\nVersion: %s"
 help_configuration_step-1: "Welcome to the NexGuard Configuration
 
 

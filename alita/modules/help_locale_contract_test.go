@@ -125,8 +125,8 @@ func TestNexGuardDefaultHinglishCopy(t *testing.T) {
 	about := getHelpLocaleText(t, "en", "help_about")
 	if !strings.Contains(about, "🛡️ <b>NexGuard</b> (@%s)") ||
 		!strings.Contains(about, "<i>Aapke group ki suraksha, bina jhanjhat.</i>") ||
-		!strings.Contains(about, "<b>Simple:</b>") || !strings.Contains(about, "<b>Fast:</b>") ||
-		!strings.Contains(about, "<b>Safe:</b>") || !strings.HasSuffix(about, "Version: %s") {
+		!strings.Contains(about, "• <b>Simple:</b>") || !strings.Contains(about, "• <b>Fast:</b>") ||
+		!strings.Contains(about, "• <b>Safe:</b>") || !strings.HasSuffix(about, "Version: %s") {
 		t.Errorf("About copy does not match the approved brand and placeholders: %q", about)
 	}
 	if got, want := getHelpLocaleText(t, "en", "help_extend_hint"), "\n\nSab commands ek list mein dekhne ke liye /extend bhejo."; got != want {
