@@ -7,9 +7,9 @@ import (
 
 func TestValidBroadcastMessageUsesTelegramUTF16Limit(t *testing.T) {
 	tests := []struct {
-		name string
+		name    string
 		message string
-		want bool
+		want    bool
 	}{
 		{name: "empty", message: "", want: false},
 		{name: "plain text", message: "NexGuard update", want: true},
