@@ -54,38 +54,38 @@ const PRESETS = {
   },
 };
 
-// Rights are mirrored from alita/settings declarations through
-// alita/panel/permissions.go. AdminBot and Admin both require caller+bot admin
-// at the panel boundary; RestrictUser needs caller can_restrict_members;
-// Restrict needs both caller and bot can_restrict_members.
+// Exact declaration rights mirrored from alita/settings and
+// alita/panel/permissions.go. The settings PATCH envelope additionally requires
+// caller+bot admin for every field; RestrictUser adds caller can_restrict_members;
+// Restrict adds both caller and bot can_restrict_members.
 const FIELD_RIGHTS = Object.freeze({
-  "captcha.enabled": "admin_bot",
-  "captcha.mode": "admin_bot",
-  "captcha.timeout": "admin_bot",
-  "captcha.action": "admin_bot",
-  "captcha.max_attempts": "admin_bot",
-  "antiflood.limit": "admin_bot",
-  "antiflood.action": "admin_bot",
-  "antiflood.action_time": "admin_bot",
-  "antiflood.delete_messages": "admin_bot",
-  "warns.limit": "admin_bot",
-  "warns.mode": "admin_bot",
-  "warns.action_time": "admin_bot",
-  "warns.expiry": "admin_bot",
-  "antiraid.auto_threshold": "admin_bot",
-  "antispam.spamdb_enabled": "admin_bot",
-  "antispam.spamdb_action": "admin_bot",
-  "antispam.spamdb_cas": "admin_bot",
-  "antispam.probation_enabled": "restrict_user",
-  "antispam.probation_time": "restrict_user",
-  "antispam.probation_messages": "restrict_user",
-  "antispam.probation_min_length": "restrict_user",
-  "antispam.probation_block_links": "restrict_user",
-  "antispam.probation_block_forwards": "restrict_user",
-  "antispam.probation_block_media": "restrict_user",
-  "antispam.probation_notice": "restrict_user",
-  "reports.enabled": "admin_bot",
-  "reports.mute_threshold": "restrict_both",
+  "captcha.enabled": "AdminBot",
+  "captcha.mode": "Admin",
+  "captcha.timeout": "Admin",
+  "captcha.action": "Admin",
+  "captcha.max_attempts": "AdminBot",
+  "antiflood.limit": "AdminBot",
+  "antiflood.action": "AdminBot",
+  "antiflood.action_time": "AdminBot",
+  "antiflood.delete_messages": "AdminBot",
+  "warns.limit": "AdminBot",
+  "warns.mode": "AdminBot",
+  "warns.action_time": "AdminBot",
+  "warns.expiry": "AdminBot",
+  "antiraid.auto_threshold": "AdminBot",
+  "antispam.spamdb_enabled": "Admin",
+  "antispam.spamdb_action": "Admin",
+  "antispam.spamdb_cas": "Admin",
+  "antispam.probation_enabled": "RestrictUser",
+  "antispam.probation_time": "RestrictUser",
+  "antispam.probation_messages": "RestrictUser",
+  "antispam.probation_min_length": "RestrictUser",
+  "antispam.probation_block_links": "RestrictUser",
+  "antispam.probation_block_forwards": "RestrictUser",
+  "antispam.probation_block_media": "RestrictUser",
+  "antispam.probation_notice": "RestrictUser",
+  "reports.enabled": "AdminBot",
+  "reports.mute_threshold": "Restrict",
 });
 
 const GROUPS = [
@@ -444,7 +444,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     if (chat.role !== "admin" || !chat.bot_admin || initial.read_only) {
       return { allowed: false, kind: "right", reason: "Group admin aur bot admin required." };
     }
-    if (required === "admin_bot") return { allowed: true };
+    if (required === "Admin" || required === "AdminBot") return { allowed: true };
     const rights = initial.rights ?? null;
     if (!rights) {
       return { allowed: false, kind: "right", reason: "Telegram rights unknown hain; settings dobara open karo." };
@@ -452,7 +452,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     if (rights.can_restrict_members !== true) {
       return { allowed: false, kind: "right", reason: "Aapke paas Restrict members right nahi hai." };
     }
-    if (required === "restrict_both" && rights.bot_can_restrict_members !== true) {
+    if (required === "Restrict" && rights.bot_can_restrict_members !== true) {
       return { allowed: false, kind: "right", reason: "NexGuard ke paas Restrict members right nahi hai." };
     }
     return { allowed: true };
