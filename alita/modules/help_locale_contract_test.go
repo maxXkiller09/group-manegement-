@@ -74,8 +74,9 @@ func TestNexGuardHelpHTMLUsesOnlyApprovedTelegramTags(t *testing.T) {
 
 func TestNexGuardHelpCopyHasNoRemovedLinksOrClaims(t *testing.T) {
 	noLinkKeys := []string{
-		"help_about", "help_help_msg", "help_pm_intro", "help_configuration_step-3",
-		"help_donatetext", "help_contact_pm", "help_contact_pm_module",
+		"help_bot_intro", "help_pm_questions", "help_about", "help_help_msg",
+		"help_pm_intro", "help_configuration_step-3", "help_donatetext",
+		"help_extend_hint", "help_contact_pm", "help_contact_pm_module",
 	}
 	for _, code := range localeCodes {
 		for _, key := range noLinkKeys {
@@ -93,8 +94,12 @@ func TestNexGuardHelpCopyHasNoRemovedLinksOrClaims(t *testing.T) {
 			}
 		}
 		about := strings.ToLower(getHelpLocaleText(t, code, "help_about"))
-		if strings.Contains(about, "2020") {
-			t.Errorf("%s.yml help_about still contains the old 2020 claim", code)
+		oldClaims := map[string]string{
+			"en": "thousands", "es": "miles", "fr": "milliers",
+			"hi": "हजारों", "id": "ribuan", "pt": "milhares", "ru": "тысячи",
+		}
+		if strings.Contains(about, "2020") || strings.Contains(about, oldClaims[code]) {
+			t.Errorf("%s.yml help_about still contains an old activity claim", code)
 		}
 	}
 }
