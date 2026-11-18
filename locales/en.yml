@@ -672,27 +672,7 @@ greetings_help_msg:
   × /cleangoodbye `<yes/no/on/off>`: Delete the old goodbye message, whenever a member leaves.
 
   × /autoapprove `<yes/no/on/off>`: Automatically approve chat join requests."
-help_about: "@%s  is one of the fastest and most feature-filled group managers.
-
-
-  
-
-
-  NexGuard has been online since 2020 and has served thousands of groups with hundreds
-  of thousands of users!
-
-
-  <b>Why NexGuard:</b>
-
-  - Simple: Easy usage and compatible with many bot commands.
-
-  - Featured: Many features which other group management bots don't have.
-
-  - Fast: Guess what? It's not made using Python, we use Go
-  as our core programming language.
-
-
-  <b>Current Version:</b> %s"
+help_about: "🛡️ <b>NexGuard</b> (@%s)\n\n<i>Aapke group ki suraksha, bina jhanjhat.</i>\n\n<b>Simple:</b> Mini App se tap karke control\n<b>Fast:</b> Go me bana\n<b>Safe:</b> captcha, antiflood, antiraid, warns\n\nVersion: %s"
 help_configuration_step-1: "Welcome to the NexGuard Configuration
 
 
@@ -720,45 +700,11 @@ help_configuration_step-2: "Ok, well done!
   ▫️ Search @%s
 
   ▫️ Confirm"
-help_configuration_step-3: "Excellent!
-
-
-  Now the Bot is ready to use!
-
-  All commands start with /
-
-
-  If you're facing any difficulties in setting up me in your group, so don't hesitate
-  to come in NexGuard support.
-
-  We would love to help you."
-help_donatetext: "So you want to donate? Amazing!
-
-  When you donate, all the fund goes towards my development which makes on fast and
-  responsive.
-
-  Your donation might also get me a new feature or two, which I wasn't able to get
-  due to server limitations.
-
-  All the funds would be put into my services such as database, storage, and hosting!
-
-  You can donate by contacting my owner here: NexGuard team"
+help_configuration_step-3: "Excellent!\n\nNexGuard ab use ke liye ready hai.\n\nAll commands / se start hote hain."
+help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
 language_flag: 🇺🇸
 language_name: English
-help_help_msg:
-  "The main entry point and navigation system for NexGuard Robot.
-
-  *Navigation Commands:*
-
-  × /start: Show the welcome message with navigation menu.
-
-  × /help: Show help menu with module list; use /help <module> for details.
-
-  × /about: Show bot information, version, and useful links.
-
-  × /donate: Show donation information for supporting the project.
-
-  × /extend: Send every command of every module in one list; in groups, sends a button to get it in PM."
+help_help_msg: "🛡️ NexGuard ke main commands.\n\n<b>Commands:</b>\n\n× /start: Welcome message aur menu kholo.\n\n× /help: Help menu aur modules dekho; details ke liye /help <module>.\n\n× /about: Bot info aur version dekho.\n\n× /extend: Sab commands ek list mein dekho; group mein PM button milta hai."
 languages_help_msg: "Not able to change language of the bot?
 
   Easily change by using this module!
@@ -1087,7 +1033,7 @@ captcha_max_attempts_invalid: "Invalid value. Please specify a number between 1 
 captcha_max_attempts_set: "Maximum verification attempts set to <b>%d</b>"
 
 # Help module strings
-help_pm_questions: "Hey :) PM me if you have any questions on how to use me!"
+help_pm_questions: "🛡️ <b>NexGuard active hai.</b>\nSettings ke liye admin panel kholo, commands ke liye /help."
 help_config_private_only: Configuration only works in private
 
 # Rules/helpers module strings
@@ -1523,25 +1469,25 @@ main_bot_command_start: "Starts the Bot"
 main_bot_command_help: "Check Help section of bot"
 
 # Help module strings
-help_info_about_header: "Info & About\n\nHere are some of the FAQs about NexGuard."
+help_info_about_header: "About NexGuard"
 help_news_channel_text: ""
 help_all_commands_usage: "All commands start with /"
 help_button_about_me: "About me 👨‍💻"
 help_button_news_channel: ""
 help_button_support_group: ""
 help_button_configuration: "Configuration ⚙️"
-help_button_about: "About ✨"
-help_button_add_to_chat: "➕ Add me to chat!"
+help_button_about: "ℹ️ About"
+help_button_add_to_chat: "➕ Group me add karo"
 help_button_add_alita: "➕ Add NexGuard to chat!"
 help_button_share: "📤 Share"
 help_share_text: "NexGuard Robot — a free, open-source Telegram group management bot."
 help_about_panel_hint: "\n\n📊 Admins: open the dashboard any time from the menu button next to the message box."
 help_button_commands_help: "📚 Commands & Help"
-help_button_language: "Language 🌏"
+help_button_language: "🌐 Language"
 help_click_button_info: "Click on the button below to get info about me!"
-help_click_here: "Click here for help!"
-help_contact_pm: "Contact me in PM for help!"
-help_contact_pm_module: "Contact me in PM for help regarding <code>{module}</code>!"
+help_click_here: "📚 Help in PM"
+help_contact_pm: "Open Help in PM."
+help_contact_pm_module: "Open <code>{module}</code> help in PM."
 help_markdown_help_button: "Markdown Help"
 help_markdown_formatting_button: "Markdown Formatting"
 help_fillings_button: "Fillings"
@@ -1672,21 +1618,8 @@ formatting_press_button: "Press the button below to get Markdown Help!"
 formatting_large_options: "NexGuard supports a large number of formatting options to make your messages more expressive. Take a look!"
 
 # Help module additional strings
-help_bot_intro: "Hey there! My name is NexGuard 🛡️.\nI'm here to help you manage your groups!\nHit /help to find out more about how to use me to my full potential.\n\nSmart Protection. Better Communities."
-help_pm_intro: |
-  Hey %s!
-  My name is NexGuard 🛡️.
-
-  I am a group management bot, here to help you get around and keep the order in your groups!
-  I have lots of handy features, such as flood control, a warning system, a note keeping system, and even predetermined replies on certain keywords.
-
-  Helpful commands:
-  - /start: Starts me! You've probably already used this.
-  - /help: Sends this message; I'll tell you more about myself!
-  - /donate: Gives you info on how to support me and my creator.
-
-  If you have any bugs or questions on how to use me, have a look at my <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">website</a>, or head to NexGuard support.
-
+help_bot_intro: "🛡️ <b>NexGuard</b>\n<i>Aapke group ki suraksha, bina jhanjhat.</i>\n\n✅ Spam, raid aur bots se bachao\n✅ Welcome, rules, warnings, notes, sab ek jagah\n✅ Mini App me tap karke settings badlo\n\n<b>Shuru kaise karein:</b>\n1️⃣ Mujhe apne group me add karo\n2️⃣ Mujhe admin banao\n3️⃣ Neeche <b>Open admin panel</b> dabao"
+help_pm_intro: "Namaste %s!\n🛡️ Main NexGuard hoon.\n\nAapke group ko simple aur safe rakhne mein help karta hoon.\nSpam, raid aur unwanted bots ko manage karne ke tools milte hain.\n\n<b>Useful commands:</b>\n- /start: Welcome menu kholo.\n- /help: Commands aur settings dekho.\n- /about: NexGuard ke features dekho."
 # Captcha module additional strings
 captcha_settings_header: "<b>Captcha Settings:</b>"
 captcha_settings_status: "Status: <code>%s</code>"
@@ -2911,7 +2844,7 @@ chat_status_bot_change_info_error: "I can't change group info here! Make sure I'
 # /extend: every help-menu command, one line each ("/command — description")
 main_bot_command_extend: "All commands in one list"
 main_bot_command_commands: "Commands by section, for members or admins"
-help_extend_hint: "\n\nSend /extend to see every command in one list."
+help_extend_hint: "\n\nSab commands ek list mein dekhne ke liye /extend bhejo."
 help_extend_header: "📋 <b>All commands</b>\nArguments and examples: /help → module."
 help_extend_pm: "The full command list is long, so I'll send it in PM."
 help_extend_button: "📋 All commands"
@@ -3245,4 +3178,4 @@ settings_toggle_saved: "✅ Saved: {command} → {value}"
 
 # Admin panel (Telegram Mini App) PM deep link
 panel_open_message: "Tap the button below to open the admin panel for this chat."
-panel_open_button: "Open admin panel"
+panel_open_button: "🛡️ Open admin panel"

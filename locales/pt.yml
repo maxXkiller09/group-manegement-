@@ -620,7 +620,7 @@ greetings_help_msg:
   × /cleangoodbye `<yes/no/on/off>`: Deleta a mensagem de despedida antiga, sempre que um membro sair.
 
   × /autoapprove `<yes/no/on/off>`: Aprova automaticamente pedidos de entrada."
-help_about: "@%s  é um dos gerenciadores de grupo mais rápidos e cheios de recursos.\n\nNexGuard está online desde 2020 e serviu milhares de grupos com centenas de milhares de usuários!\n\n<b>Por que NexGuard:</b>\n- Simples: Uso fácil e compatível com muitos comandos de bot.\n- Completo: Muitos recursos que outros bots de gerenciamento de grupo não têm.\n- Rápido: Adivinhe? Não é feito usando Python, usamos Go como nossa linguagem de programação principal.\n\n<b>Versão Atual:</b> %s"
+help_about: "@%s  é um dos gerenciadores de grupo mais rápidos e cheios de recursos.\n\n\n\n<b>Por que NexGuard:</b>\n- Simples: Uso fácil e compatível com muitos comandos de bot.\n- Completo: Muitos recursos que outros bots de gerenciamento de grupo não têm.\n- Rápido: Adivinhe? Não é feito usando Python, usamos Go como nossa linguagem de programação principal.\n\n<b>Versão Atual:</b> %s"
 help_configuration_step-1: "Bem-vindo à Configuração do NexGuard
 
 
@@ -648,29 +648,8 @@ help_configuration_step-2: "Ok, muito bem!
   ▫️ Pesquise @%s
 
   ▫️ Confirmar"
-help_configuration_step-3: "Excelente!
-
-
-  Agora o Bot está pronto para usar!
-
-  Todos os comandos começam com /
-
-
-  Se você estiver enfrentando dificuldades para configurar-me em seu grupo, não hesite
-  em entrar em NexGuard support.
-
-  Teremos prazer em ajudá-lo."
-help_donatetext: "Então você quer doar? Incrível!
-
-  Quando você doa, todo o fundo vai para meu desenvolvimento que me torna rápida e
-  responsiva.
-
-  Sua doação pode também me trazer um novo recurso ou dois, que não consegui
-  obter devido a limitações de servidor.
-
-  Todos os fundos serão colocados em meus serviços como banco de dados, armazenamento e hospedagem!
-
-  Você pode doar contatando meu dono aqui: NexGuard team"
+help_configuration_step-3: "Excelente!\n\nAgora o Bot está pronto para usar!\n\nTodos os comandos começam com /"
+help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
 help_help_msg:
   "O ponto de entrada principal e sistema de navegação do NexGuard Robot.
 
@@ -680,9 +659,8 @@ help_help_msg:
 
   × /help: Mostrar menu de ajuda com lista de módulos; use /help <módulo> para detalhes.
 
-  × /about: Mostrar informações do bot, versão e links úteis.
+  × /about: Mostrar informações do bot e versão.
 
-  × /donate: Mostrar informações de doação para apoiar o projeto.
 
   × /extend: Envia todos os comandos de todos os módulos em uma só lista; em grupos, envia um botão para recebê-la no privado."
 languages_help_msg: "Não consegue mudar o idioma do bot?
@@ -1464,8 +1442,8 @@ help_button_commands_help: "📚 Comandos & Ajuda"
 help_button_language: "Idioma 🌏"
 help_click_button_info: "Clique no botão abaixo para obter informações sobre mim!"
 help_click_here: "Clique aqui para ajuda!"
-help_contact_pm: "Contate-me no PM para ajuda!"
-help_contact_pm_module: "Contate-me no PM para ajuda sobre <code>{module}</code>!"
+help_contact_pm: "Abra a ajuda no privado."
+help_contact_pm_module: "Abra a ajuda de <code>{module}</code> no privado."
 help_markdown_help_button: "Ajuda Markdown"
 help_markdown_formatting_button: "Formatação Markdown"
 help_fillings_button: "Preenchedores"
@@ -1607,9 +1585,7 @@ help_pm_intro: |
   Comandos úteis:
   - /start: Me inicia! Você provavelmente já usou isso.
   - /help: Envia esta mensagem; Eu vou contar mais sobre mim!
-  - /donate: Dá informações sobre como me apoiar e meu criador.
 
-  Se você tiver bugs ou dúvidas sobre como me usar, dê uma olhada no meu <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">site</a>, ou vá para NexGuard support.
 
 # Captcha module additional strings
 captcha_settings_header: "<b>Configurações de Captcha:</b>"

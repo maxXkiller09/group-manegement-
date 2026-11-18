@@ -631,13 +631,9 @@ greetings_help_msg:
   × /autoapprove `<yes/no/on/off>`: Setujui permintaan bergabung secara otomatis."
 help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur.
 
-
   
 
-
-  NexGuard telah online sejak 2020 dan telah melayani ribuan grup dengan ratusan
-  ribu pengguna!
-
+  
 
   <b>Mengapa NexGuard:</b>
 
@@ -647,7 +643,6 @@ help_about: "@%s  adalah salah satu manajer grup tercepat dan paling penuh fitur
 
   - Cepat: Tebak apa? Ini tidak dibuat menggunakan Python, kami menggunakan Go
   sebagai bahasa pemrograman inti kami.
-
 
   <b>Versi Saat Ini:</b> %s"
 help_configuration_step-1: "Selamat datang di Konfigurasi NexGuard
@@ -677,29 +672,8 @@ help_configuration_step-2: "Ok, bagus!
   ▫️ Cari @%s
 
   ▫️ Konfirmasi"
-help_configuration_step-3: "Sangat bagus!
-
-
-  Sekarang Bot siap digunakan!
-
-  Semua perintah diawali dengan /
-
-
-  Jika Anda menghadapi kesulitan dalam menyiapkan saya di grup Anda, jangan ragu
-  untuk datang ke NexGuard support.
-
-  Kami akan dengan senang hati membantu Anda."
-help_donatetext: "Jadi Anda ingin donasi? Luar biasa!
-
-  Ketika Anda berdonasi, semua dana masuk ke pengembangan saya yang membuat cepat dan
-  responsif.
-
-  Donasi Anda mungkin juga memberi saya fitur baru, yang tidak dapat saya dapatkan
-  karena keterbatasan server.
-
-  Semua dana akan dimasukkan ke layanan saya seperti database, penyimpanan, dan hosting!
-
-  Anda dapat berdonasi dengan menghubungi pemilik saya di sini: NexGuard team"
+help_configuration_step-3: "Sangat bagus!\n\nSekarang Bot siap digunakan!\n\nSemua perintah diawali dengan /"
+help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
 help_help_msg:
   "Titik masuk utama dan sistem navigasi untuk NexGuard Robot.
 
@@ -709,9 +683,8 @@ help_help_msg:
 
   × /help: Tampilkan menu bantuan dengan daftar modul; gunakan /help <modul> untuk detail.
 
-  × /about: Tampilkan informasi bot, versi, dan tautan berguna.
+  × /about: Tampilkan informasi bot dan versi.
 
-  × /donate: Tampilkan informasi donasi untuk mendukung proyek.
 
   × /extend: Kirim semua perintah dari semua modul dalam satu daftar; di grup, mengirim tombol untuk mendapatkannya di PM."
 languages_help_msg: "Tidak dapat mengubah bahasa bot?
@@ -1494,8 +1467,8 @@ help_button_commands_help: "📚 Perintah & Bantuan"
 help_button_language: "Bahasa 🌏"
 help_click_button_info: "Klik tombol di bawah untuk mendapatkan info tentang saya!"
 help_click_here: "Klik di sini untuk bantuan!"
-help_contact_pm: "Hubungi saya di PM untuk bantuan!"
-help_contact_pm_module: "Hubungi saya di PM untuk bantuan tentang <code>{module}</code>!"
+help_contact_pm: "Buka bantuan di PM."
+help_contact_pm_module: "Buka bantuan <code>{module}</code> di PM."
 help_markdown_help_button: "Bantuan Markdown"
 help_markdown_formatting_button: "Pemformatan Markdown"
 help_fillings_button: "Isian"
@@ -1671,9 +1644,7 @@ help_pm_intro: |
   Perintah yang berguna:
   - /start: Memulai saya! Anda mungkin sudah menggunakan ini.
   - /help: Mengirim pesan ini; Saya akan memberi tahu Anda lebih banyak tentang diri saya!
-  - /donate: Memberi Anda info tentang cara mendukung saya dan kreator saya.
 
-  Jika Anda memiliki bug atau pertanyaan tentang cara menggunakan saya, lihat <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">situs web saya</a>, atau pergi ke NexGuard support.
 
 # Captcha module strings
 captcha_settings_header: "<b>Pengaturan Captcha:</b>"

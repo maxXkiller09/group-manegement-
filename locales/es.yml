@@ -637,13 +637,9 @@ greetings_help_msg:
 help_about:
   "@%s es uno de los administradores de grupos más rápidos y con más funciones.
 
-
   
 
-
-  ¡NexGuard ha estado en línea desde 2020 y ha servido a miles de grupos con cientos
-  de miles de usuarios!
-
+  
 
   <b>Por qué NexGuard:</b>
 
@@ -653,7 +649,6 @@ help_about:
 
   - Rápido: ¿Adivina qué? No está hecho usando Python, usamos Go
   como nuestro lenguaje de programación principal.
-
 
   <b>Versión actual:</b> %s"
 help_configuration_step-1: "Bienvenido a la Configuración de NexGuard
@@ -683,28 +678,8 @@ help_configuration_step-2: "¡Ok, bien hecho!
   ▫️ Busca @%s
 
   ▫️ Confirma"
-help_configuration_step-3: "¡Excelente!
-
-  ¡Ahora el Bot está listo para usar!
-
-  Todos los comandos empiezan con /
-
-
-  Si tienes alguna dificultad configurándome en tu grupo, no dudes
-  en venir a NexGuard support.
-
-  Nos encantaría ayudarte."
-help_donatetext: "¿Así que quieres donar? ¡Increíble!
-
-  Cuando donas, todos los fondos van hacia mi desarrollo lo que me hace rápido y
-  receptivo.
-
-  Tu donación también podría conseguirme una o dos funciones nuevas, que no pude obtener
-  debido a limitaciones del servidor.
-
-  ¡Todos los fondos se destinarían a mis servicios como base de datos, almacenamiento y alojamiento!
-
-  Puedes donar contactando a mi propietario aquí: NexGuard team"
+help_configuration_step-3: "¡Excelente!\n\n¡Ahora el Bot está listo para usar!\n\nTodos los comandos empiezan con /"
+help_donatetext: "Abhi koi donation option nahi hai. NexGuard free hai."
 language_flag: 🇪🇸
 language_name: Español
 help_help_msg:
@@ -716,9 +691,8 @@ help_help_msg:
 
   × /help: Mostrar menú de ayuda con lista de módulos; usa /help <módulo> para más detalles.
 
-  × /about: Mostrar información del bot, versión y enlaces útiles.
+  × /about: Mostrar información del bot y versión.
 
-  × /donate: Mostrar información de donación para apoyar el proyecto.
 
   × /extend: Envía todos los comandos de todos los módulos en una sola lista; en grupos, envía un botón para recibirla por privado."
 languages_help_msg: "¿No puedes cambiar el idioma del bot?
@@ -1499,8 +1473,8 @@ help_button_commands_help: "📚 Comandos y Ayuda"
 help_button_language: "Idioma 🌏"
 help_click_button_info: "¡Haz clic en el botón de abajo para obtener información sobre mí!"
 help_click_here: "¡Haz clic aquí para ayuda!"
-help_contact_pm: "¡Contáctame en PM para ayuda!"
-help_contact_pm_module: "¡Contáctame en PM para ayuda sobre <code>{module}</code>!"
+help_contact_pm: "Abre la ayuda en PM."
+help_contact_pm_module: "Abre la ayuda de <code>{module}</code> en PM."
 help_markdown_help_button: "Ayuda de Markdown"
 help_markdown_formatting_button: "Formato Markdown"
 help_fillings_button: "Rellenos"
@@ -1644,9 +1618,7 @@ help_pm_intro: |
   Comandos útiles:
   - /start: ¡Me inicia! Probablemente ya has usado esto.
   - /help: Te envía este mensaje; ¡Te contaré más sobre mí!
-  - /donate: Te da información sobre cómo apoyarme y a mi creador.
 
-  Si tienes algún error o preguntas sobre cómo usarme, echa un vistazo a mi <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">sitio web</a>, o dirígete a NexGuard support.
 
 # Captcha module additional strings
 captcha_settings_header: "<b>Configuración de Captcha:</b>"
