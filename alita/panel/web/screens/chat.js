@@ -1,5 +1,5 @@
 import { api } from "../api.js?v=2026.11.16-bootfix1";
-import { sections } from "../sections.js?v=2026.11.18-backstack-rights1";
+import { sections } from "../sections.js?v=2026.11.18-pr1";
 import { backLink, clear, haptic, loading, setHeader, showError, textElement } from "../ui.js?v=2026.11.16-bootfix1";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
