@@ -108,6 +108,9 @@ jobs:
           done < <(find alita/panel/web -type f -name '*.js' -print0)
           echo "Parsed $count Mini App JavaScript files successfully."
 
+      - name: Run Mini App frontend state tests
+        run: node --test alita/panel/web-tests/*.test.mjs
+
       - name: Set up Go
         id: go
         uses: actions/setup-go@v7
