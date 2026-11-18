@@ -1,6 +1,6 @@
 import { telegram } from "./api.js?v=2026.11.17-phase1a2";
-import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.17-phase1a2";
-import { renderChats } from "./screens/chats.js?v=2026.11.18-backstack-rights1";
+import { renderChat, renderSection } from "./screens/chat.js?v=2026.11.18-pr1";
+import { renderChats } from "./screens/chats.js?v=2026.11.18-groups1";
 import { renderHome } from "./screens/home.js?v=2026.11.17-phase1a2";
 import { blocksLeave, confirmDestructive, haptic, leaveScreen, setLeaveGuard, supports } from "./ui.js?v=2026.11.17-phase1a2";
 
