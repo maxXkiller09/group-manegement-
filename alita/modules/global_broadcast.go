@@ -20,17 +20,17 @@ import (
 )
 
 const (
-	globalLogChatKey     = "alita:ops:global_log_chat"
-	broadcastPreviewTTL  = 2 * time.Minute
-	broadcastRateLimit   = 40 * time.Millisecond
+	globalLogChatKey    = "alita:ops:global_log_chat"
+	broadcastPreviewTTL = 2 * time.Minute
+	broadcastRateLimit  = 40 * time.Millisecond
 )
 
 type broadcastPreview struct {
-	ownerID int64
+	ownerID     int64
 	originChatID int64
-	message string
+	message     string
 	targetCount int
-	expiresAt time.Time
+	expiresAt   time.Time
 }
 
 var broadcastState = struct {
