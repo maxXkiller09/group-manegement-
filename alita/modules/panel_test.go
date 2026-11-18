@@ -11,6 +11,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 
 	"github.com/divkix/Alita_Robot/alita/config"
+	"github.com/divkix/Alita_Robot/alita/i18n"
 )
 
 func withPanelConfig(t *testing.T, enabled bool, publicURL string, shortName string) {
@@ -77,8 +78,12 @@ func TestPanelDeepLinkRepliesWithWebAppButton(t *testing.T) {
 	if button.WebApp.Url != "https://panel.example.com?chat=-1001234567890" {
 		t.Fatalf("web_app url = %q", button.WebApp.Url)
 	}
-	if button.Text != "Open admin panel" {
-		t.Fatalf("button text = %q, want the localized label", button.Text)
+	wantButton, err := i18n.MustNewTranslator("en").GetString("panel_open_button")
+	if err != nil {
+		t.Fatalf("panel_open_button translation: %v", err)
+	}
+	if button.Text != wantButton {
+		t.Fatalf("button text = %q, want localized label %q", button.Text, wantButton)
 	}
 	if calls[0].Params["text"] != "Tap the button below to open the admin panel for this chat." {
 		t.Fatalf("reply text = %v, want the localized message", calls[0].Params["text"])

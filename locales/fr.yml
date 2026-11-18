@@ -1105,13 +1105,9 @@ extraction_invalid_time_format: "Format de temps invalide spécifié."
 # Help module strings
 help_about: "@%s est l'un des gestionnaires de groupe les plus rapides et les plus complets.
 
-
   
 
-
-  NexGuard est en ligne depuis 2020 et a servi des milliers de groupes avec des centaines
-  de milliers d'utilisateurs !
-
+  
 
   <b>Pourquoi NexGuard :</b>
 
@@ -1121,7 +1117,6 @@ help_about: "@%s est l'un des gestionnaires de groupe les plus rapides et les pl
 
   - Rapide : Devinez quoi ? Il n'est pas fait en Python, nous utilisons Go
   comme langage de programmation principal.
-
 
   <b>Version actuelle :</b> %s"
 help_configuration_step-1: "Bienvenue dans la configuration d'NexGuard
@@ -1151,29 +1146,8 @@ help_configuration_step-2: "Ok, bien joué !
   ▫️ Recherchez @%s
 
   ▫️ Confirmez"
-help_configuration_step-3: "Excellent !
-
-
-  Maintenant le Bot est prêt à l'emploi !
-
-  Toutes les commandes commencent par /
-
-
-  Si vous rencontrez des difficultés pour me configurer dans votre groupe, n'hésitez pas
-  à venir sur NexGuard support.
-
-  Nous serons ravis de vous aider."
-help_donatetext: "Vous voulez faire un don ? Incroyable !
-
-  Quand vous faites un don, tous les fonds vont vers mon développement, ce qui me rend rapide et
-  réactif.
-
-  Votre don pourrait aussi me permettre d'obtenir une ou deux nouvelles fonctionnalités, que je n'étais pas en mesure d'avoir
-  en raison des limitations du serveur.
-
-  Tous les fonds seront utilisés pour mes services tels que la base de données, le stockage et l'hébergement !
-
-  Vous pouvez faire un don en contactant mon propriétaire ici : NexGuard team"
+help_configuration_step-3: "Excellent !\n\nMaintenant le Bot est prêt à l'emploi !\n\nToutes les commandes commencent par /"
+help_donatetext: "Aucune option de don n'est disponible pour le moment. NexGuard est gratuit."
 help_pm_questions: "Salut :) Envoyez-moi un MP si vous avez des questions sur mon utilisation !"
 help_config_private_only: La configuration ne fonctionne qu'en privé
 help_info_about_header: "Info & À propos\n\nVoici quelques FAQ sur NexGuard."
@@ -1193,8 +1167,8 @@ help_button_commands_help: "📚 Commandes & Aide"
 help_button_language: "Langue 🌏"
 help_click_button_info: "Cliquez sur le bouton ci-dessous pour obtenir des infos sur moi !"
 help_click_here: "Cliquez ici pour de l'aide !"
-help_contact_pm: "Contactez-moi en MP pour de l'aide !"
-help_contact_pm_module: "Contactez-moi en MP pour de l'aide sur <code>{module}</code> !"
+help_contact_pm: "Ouvrez l'aide en MP."
+help_contact_pm_module: "Ouvrez l'aide de <code>{module}</code> en MP."
 help_markdown_help_button: "Aide Markdown"
 help_markdown_formatting_button: "Formatage Markdown"
 help_fillings_button: "Remplissages"
@@ -1210,9 +1184,7 @@ help_pm_intro: |
   Commandes utiles :
   - /start : Me démarre ! Vous avez probablement déjà utilisé cette commande.
   - /help : Envoie ce message ; je vous en dirai plus sur moi-même !
-  - /donate : Vous donne des infos sur comment me soutenir ainsi que mon créateur.
 
-  Si vous avez des bugs ou des questions sur comment m'utiliser, consultez mon <a href="https://github.com/maxXkiller09/group-manegement-/tree/main/docs">site web</a>, ou rendez-vous sur NexGuard support.
 
 # Misc module strings
 misc_help_msg:
@@ -1532,9 +1504,8 @@ help_help_msg:
 
   × /help: Afficher le menu d'aide avec la liste des modules; utilisez /help <module> pour plus de détails.
 
-  × /about: Afficher les informations du bot, la version et les liens utiles.
+  × /about: Afficher les informations du bot et la version.
 
-  × /donate: Afficher les informations de don pour soutenir le projet.
 
   × /extend: Envoyer toutes les commandes de tous les modules en une seule liste ; dans les groupes, envoie un bouton pour la recevoir en MP."
 languages_help_msg: "Vous n'arrivez pas à changer la langue du bot ?

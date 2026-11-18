@@ -640,8 +640,8 @@ func TestHelpDescriptorsPreserveDeepLinksAndModuleRouting(t *testing.T) {
 		command string
 		want    string
 	}{
-		{"/start", "Hey there! My name is NexGuard"},
-		{"/start about", "Info & About"},
+		{"/start", "🛡️ <b>NexGuard</b>"},
+		{"/start about", "About NexGuard"},
 		{"/start extend", "/promote"},
 		{"/start help_admin", "/promote"},
 		{"/help admin", "/promote"},
