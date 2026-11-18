@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf16"
 	"unicode/utf8"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
@@ -55,10 +56,16 @@ func getGlobalLogChat() (int64, error) {
 	if _, err := m.Get(cache.Context, globalLogChatKey, &chatID); err != nil {
 		return 0, err
 	}
-	if chatID >= 0 {
+	if chatID >= 0 || chat_status.IsChannelId(chatID) {
 		return 0, fmt.Errorf("global log group is not configured")
 	}
 	return chatID, nil
+}
+
+// validBroadcastMessage enforces Telegram's text limit in UTF-16 code units,
+// which differs from rune count for supplementary-plane characters.
+func validBroadcastMessage(message string) bool {
+	return message != "" && utf8.ValidString(message) && len(utf16.Encode([]rune(message))) <= 4000
 }
 
 func activeBroadcastTargets() []int64 {
@@ -94,7 +101,7 @@ func (moduleStruct) broadcastPreviewCommand(c *helpers.CommandContext) error {
 		return ext.EndGroups
 	}
 	messageText := strings.TrimSpace(strings.Join(args[1:], " "))
-	if messageText == "" || !utf8.ValidString(messageText) || utf8.RuneCountInString(messageText) > 4000 {
+	if !validBroadcastMessage(messageText) {
 		_, _ = c.Msg.Reply(c.Bot, "Message must contain text and be no longer than 4,000 characters.", nil)
 		return ext.EndGroups
 	}
