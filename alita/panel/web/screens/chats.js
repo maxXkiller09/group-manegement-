@@ -134,7 +134,7 @@ function groupRow(chat, pinned, targetSection, access) {
   copy.append(textElement("strong", title, "ng-group-title"));
   const subtitle = pinned ? "Opened from this group" : chat.last_activity ? "Active " + relativeTime(chat.last_activity) : "Open group dashboard";
   copy.append(textElement("span", subtitle, "ng-group-description"));
-  copy.append(textElement("span", access.label, "ng-status-chip " + (selectable ? "ok" : "warn")));
+  copy.append(textElement("span", access.label, "ng-status-chip " + (access.status === "full" ? "ok" : "warn")));
   if (access.hint) {
     copy.append(textElement("span", access.hint, "ng-group-description"));
   }
