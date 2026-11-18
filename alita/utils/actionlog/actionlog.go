@@ -49,16 +49,20 @@ func logTo(b *gotgbot.Bot, chat *gotgbot.Chat, settings *models.LogChannel, cate
 		opts.ReplyMarkup = *markup
 	}
 	message := header + htmlText
-	if settings != nil && logchannels.CategoryEnabled(settings, category) {
-		if _, err := helpers.SendMessageWithErrorHandling(b, settings.LogChannelID, message, opts); err != nil {
-			log.Debugf("[ActionLog] failed to send %s log for chat %d: %v", category, chat.Id, err)
+	var localLogChatID int64
+	if settings != nil {
+		localLogChatID = settings.LogChannelID
+		if logchannels.CategoryEnabled(settings, category) {
+			if _, err := helpers.SendMessageWithErrorHandling(b, localLogChatID, message, opts); err != nil {
+				log.Debugf("[ActionLog] failed to send %s log for chat %d: %v", category, chat.Id, err)
+			}
 		}
 	}
 
 	// Mirror existing action-log events to the owner-configured global log group.
 	// Keep the per-group /setlog destination and category preferences unchanged.
 	if globalChatID, err := getGlobalLogChatID(); err == nil &&
-		globalChatID != settings.LogChannelID && globalChatID != chat.Id {
+		globalChatID != localLogChatID && globalChatID != chat.Id {
 		globalMessage := fmt.Sprintf(
 			"<b>GROUP EVENT</b>\nGroup: %s (<code>%d</code>)\nCategory: <code>%s</code>\n%s",
 			html.EscapeString(title), chat.Id, html.EscapeString(category), htmlText,
