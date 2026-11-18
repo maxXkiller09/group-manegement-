@@ -7,10 +7,13 @@ export function classifyGroupAccess(chat) {
   if (chat.role !== "admin") {
     return { status: "limited", label: "Limited rights", selectable: false };
   }
-  if (chat.bot_admin !== true) {
+  if (chat.bot_admin === true) {
+    return { status: "full", label: "Full rights", selectable: true };
+  }
+  if (chat.bot_admin === false && chat.bot_rights_known === true) {
     return { status: "bot_missing", label: "Bot admin nahi hai", selectable: false };
   }
-  return { status: "full", label: "Full rights", selectable: true };
+  return { status: "unknown", label: "Unknown", selectable: false };
 }
 
 export function singleEligibleGroup(entries) {
