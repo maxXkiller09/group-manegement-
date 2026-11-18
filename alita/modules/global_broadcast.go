@@ -116,11 +116,11 @@ func (moduleStruct) broadcastPreviewCommand(c *helpers.CommandContext) error {
 	ownerID := c.User.Id
 	broadcastState.Lock()
 	broadcastState.previews[ownerID] = broadcastPreview{
-		ownerID: ownerID,
+		ownerID:      ownerID,
 		originChatID: c.Chat.Id,
-		message: messageText,
-		targetCount: targetCount,
-		expiresAt: time.Now().Add(broadcastPreviewTTL),
+		message:      messageText,
+		targetCount:  targetCount,
+		expiresAt:    time.Now().Add(broadcastPreviewTTL),
 	}
 	broadcastState.Unlock()
 
