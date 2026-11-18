@@ -2,6 +2,7 @@ package modules
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
+	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
 	"github.com/divkix/Alita_Robot/alita/utils/helpers"
 )
 
@@ -63,10 +65,11 @@ func activeBroadcastTargets() []int64 {
 	all := chats.GetAllChats()
 	targets := make([]int64, 0, len(all))
 	for id, chat := range all {
-		if id < 0 && !chat.IsInactive {
+		if id < 0 && !chat_status.IsChannelId(id) && !chat.IsInactive {
 			targets = append(targets, id)
 		}
 	}
+	sort.Slice(targets, func(i, j int) bool { return targets[i] < targets[j] })
 	return targets
 }
 
@@ -98,6 +101,14 @@ func (moduleStruct) broadcastPreviewCommand(c *helpers.CommandContext) error {
 	targetCount := len(activeBroadcastTargets())
 	if targetCount == 0 {
 		_, _ = c.Msg.Reply(c.Bot, "There are no active registered groups to broadcast to.", nil)
+		return ext.EndGroups
+	}
+	if c.User == nil {
+		_, _ = c.Msg.Reply(c.Bot, "Owner identity could not be verified. Please retry.", nil)
+		return ext.EndGroups
+	}
+	if c.User == nil {
+		_, _ = c.Msg.Reply(c.Bot, "Owner identity could not be verified. Please retry.", nil)
 		return ext.EndGroups
 	}
 	ownerID := c.User.Id
