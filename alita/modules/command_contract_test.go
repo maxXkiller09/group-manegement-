@@ -48,7 +48,7 @@ func TestEveryCommandHonoursReplayAndDisableContract(t *testing.T) {
 		names = append(names, name)
 	}
 	slices.Sort(names)
-	if len(names) != 229 {
+	if len(names) != 233 {
 		t.Fatalf("LoadAllModules registered %d names, want 233: %v", len(names), names)
 	}
 	disable, ok := byName["disable"]
