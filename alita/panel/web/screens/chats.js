@@ -112,7 +112,7 @@ function firstUseGuide(onAddGroup) {
 function groupRow(chat, pinned, targetSection, access) {
   const item = document.createElement("li");
   item.dataset.chatId = String(chat.id);
-  const selectable = access.status === "full";
+  const selectable = access.selectable === true;
   const link = document.createElement(selectable ? "a" : "div");
   link.className = "nav-row group-card ng-group-row";
   if (selectable) {
@@ -135,8 +135,8 @@ function groupRow(chat, pinned, targetSection, access) {
   const subtitle = pinned ? "Opened from this group" : chat.last_activity ? "Active " + relativeTime(chat.last_activity) : "Open group dashboard";
   copy.append(textElement("span", subtitle, "ng-group-description"));
   copy.append(textElement("span", access.label, "ng-status-chip " + (selectable ? "ok" : "warn")));
-  if (access.status === "unknown") {
-    copy.append(textElement("span", "Telegram se access verify nahi ho paya. Refresh karke retry karo.", "ng-group-description"));
+  if (access.hint) {
+    copy.append(textElement("span", access.hint, "ng-group-description"));
   }
   link.append(avatar, copy);
   if (selectable) {
@@ -279,16 +279,20 @@ export async function renderChats(root, targetSection = "") {
         let access;
         try {
           let details = await api("chats/" + encodeURIComponent(entry.chat.id));
-          if (details.role === "admin" && details.bot_admin !== true) {
+          if (details.role === "admin") {
             try {
               const settings = await api("chats/" + encodeURIComponent(entry.chat.id) + "/settings");
+              const rights = settings.rights;
+              const rightsKnown = rights !== null && rights !== undefined && typeof rights === "object";
               details = {
                 ...details,
-                bot_rights_known: settings.rights !== null && settings.rights !== undefined &&
-                  typeof settings.rights === "object",
+                bot_rights_known: rightsKnown,
+                rights_known: rightsKnown,
+                can_restrict_members: rightsKnown && rights.can_restrict_members === true,
+                bot_can_restrict_members: rightsKnown && rights.bot_can_restrict_members === true,
               };
             } catch (error) {
-              details = { ...details, bot_rights_known: false };
+              details = { ...details, bot_rights_known: false, rights_known: false };
             }
           }
           access = classifyGroupAccess(details);
