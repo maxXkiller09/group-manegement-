@@ -216,17 +216,17 @@ func LoadGlobalBroadcast(dispatcher *ext.Dispatcher) {
 	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
 		Name: "setloggc",
 		RequiredChecks: []helpers.CheckFunc{helpers.RequireBotOwner(), helpers.RequireGroup()},
-	}, pipelineHandler(logChannelsModule.setGlobalLogChat))
+	}, logChannelsModule.setGlobalLogChat)
 	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
 		Name: "broadcast",
 		RequiredChecks: ownerOnly,
-	}, pipelineHandler(logChannelsModule.broadcastPreviewCommand))
+	}, logChannelsModule.broadcastPreviewCommand)
 	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
 		Name: "broadcast_confirm",
 		RequiredChecks: ownerOnly,
-	}, pipelineHandler(logChannelsModule.confirmBroadcast))
+	}, logChannelsModule.confirmBroadcast)
 	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
 		Name: "broadcastlist",
 		RequiredChecks: ownerOnly,
-	}, pipelineHandler(logChannelsModule.broadcastList))
+	}, logChannelsModule.broadcastList)
 }
