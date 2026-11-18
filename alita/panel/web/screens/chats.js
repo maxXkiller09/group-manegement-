@@ -201,6 +201,10 @@ export async function renderChats(root, targetSection = "") {
 
   function renderGroups(data) {
     const listRequestID = requestID;
+    accessObserver?.disconnect();
+    accessObserver = null;
+    if (fallbackScrollHandler) window.removeEventListener("scroll", fallbackScrollHandler);
+    fallbackScrollHandler = null;
     clear(root);
     if (data.user?.first_name) setHeader("My Groups", "Hello, " + data.user.first_name);
     const chats = Array.isArray(data.chats) ? data.chats.slice(0, 50) : [];
@@ -298,13 +302,6 @@ export async function renderChats(root, targetSection = "") {
         empty.hidden = visible !== 0;
       });
       root.append(intro, search, list, empty);
-
-      accessObserver?.disconnect();
-      accessObserver = null;
-      if (fallbackScrollHandler) {
-        window.removeEventListener("scroll", fallbackScrollHandler);
-        fallbackScrollHandler = null;
-      }
 
       if (chats.length === 1) {
         void verifyEntry(entries[0]);
