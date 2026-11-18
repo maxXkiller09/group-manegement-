@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	globalLogChatKey = "alita:ops:global_log_chat"
-	broadcastPreviewTTL = 2 * time.Minute
-	broadcastRateLimit = 40 * time.Millisecond
+	globalLogChatKey     = "alita:ops:global_log_chat"
+	broadcastPreviewTTL  = 2 * time.Minute
+	broadcastRateLimit   = 40 * time.Millisecond
 )
 
 type broadcastPreview struct {
