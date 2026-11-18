@@ -278,7 +278,19 @@ export async function renderChats(root, targetSection = "") {
         updateEntry(entry);
         let access;
         try {
-          const details = await api("chats/" + encodeURIComponent(entry.chat.id));
+          let details = await api("chats/" + encodeURIComponent(entry.chat.id));
+          if (details.role === "admin" && details.bot_admin !== true) {
+            try {
+              const settings = await api("chats/" + encodeURIComponent(entry.chat.id) + "/settings");
+              details = {
+                ...details,
+                bot_rights_known: settings.rights !== null && settings.rights !== undefined &&
+                  typeof settings.rights === "object",
+              };
+            } catch (error) {
+              details = { ...details, bot_rights_known: false };
+            }
+          }
           access = classifyGroupAccess(details);
         } catch (error) {
           access = classifyGroupAccess(null);
