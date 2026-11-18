@@ -33,6 +33,6 @@ export function singleEligibleGroup(entries) {
       entry.access.status === "checking" || entry.access.status === "unknown")) {
     return null;
   }
-  const eligible = entries.filter(entry => entry.access.status === "full");
+  const eligible = entries.filter(entry => entry.access.selectable === true);
   return eligible.length === 1 ? String(eligible[0].chat.id) : null;
 }
