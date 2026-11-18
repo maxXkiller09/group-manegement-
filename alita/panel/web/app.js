@@ -26,7 +26,7 @@ function showBootError(error) {
 
 async function start() {
   try {
-    await import("./bootstrap.js?v=2026.11.18-backstack-rights1");
+    await import("./bootstrap.js?v=2026.11.18-pr1");
   } catch (error) {
     showBootError(error);
   }

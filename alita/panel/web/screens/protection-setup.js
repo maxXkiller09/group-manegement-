@@ -1,46 +1,101 @@
 import { api } from "../api.js?v=2026.11.16-bootfix1";
 import { registerBack, unregisterBack } from "../back.js?v=2026.11.17-backstack1";
+import { createProtectionSetupState, backOneProtectionStep } from "../preset-state.mjs?v=2026.11.18-preset1";
 import { clear, loading, onLeave, setHeader, showError, textElement, toast } from "../ui.js?v=2026.11.16-bootfix1";
 
 const PRESETS = {
-  khula: {
+  low: {
     label: "Low Protection",
-    description: "Halka control. Normal chat ke liye.",
+    description: "Basic control. Kuch automatic protections OFF rahengi.",
     tone: "khula",
     values: {
-      "captcha.enabled": false, "captcha.mode": "math", "captcha.timeout": 2, "captcha.action": "kick", "captcha.max_attempts": 3,
+      "captcha.enabled": false,
       "antiflood.limit": 10, "antiflood.action": "tmute", "antiflood.action_time": 3600, "antiflood.delete_messages": false,
-      "warns.limit": 5, "warns.mode": "tmute", "warns.action_time": 3600, "warns.expiry": 604800, "antiraid.auto_threshold": 0,
+      "warns.limit": 5, "warns.mode": "tmute", "warns.action_time": 3600, "warns.expiry": 604800,
+      "antiraid.auto_threshold": 0,
+      "antispam.spamdb_enabled": false,
+      "antispam.probation_enabled": false,
+      "reports.enabled": true, "reports.mute_threshold": 0,
     },
   },
   balanced: {
     label: "Balanced - Recommended",
-    description: "Spam aur flood par control.",
+    description: "Daily group ke liye balanced protection.",
     tone: "balanced",
     values: {
       "captcha.enabled": true, "captcha.mode": "math", "captcha.timeout": 2, "captcha.action": "kick", "captcha.max_attempts": 3,
       "antiflood.limit": 7, "antiflood.action": "tmute", "antiflood.action_time": 3600, "antiflood.delete_messages": true,
-      "warns.limit": 3, "warns.mode": "tmute", "warns.action_time": 3600, "warns.expiry": 604800, "antiraid.auto_threshold": 0,
+      "warns.limit": 3, "warns.mode": "tmute", "warns.action_time": 3600, "warns.expiry": 604800,
+      "antiraid.auto_threshold": 0,
+      "antispam.spamdb_enabled": true, "antispam.spamdb_action": "ban", "antispam.spamdb_cas": true,
+      "antispam.probation_enabled": true, "antispam.probation_time": 86400, "antispam.probation_messages": 5,
+      "antispam.probation_min_length": 20, "antispam.probation_block_links": true,
+      "antispam.probation_block_forwards": true, "antispam.probation_block_media": false,
+      "antispam.probation_notice": false,
+      "reports.enabled": true, "reports.mute_threshold": 0,
     },
   },
-  sakht: {
+  strict: {
     label: "Strict Protection",
-    description: "Strict rules, naye members par nazar.",
+    description: "Tighter limits aur automatic raid trigger.",
     tone: "sakht",
     values: {
-      "captcha.enabled": true, "captcha.mode": "math", "captcha.timeout": 2, "captcha.action": "kick", "captcha.max_attempts": 3,
+      "captcha.enabled": true, "captcha.mode": "math", "captcha.timeout": 2, "captcha.action": "kick", "captcha.max_attempts": 2,
       "antiflood.limit": 5, "antiflood.action": "tmute", "antiflood.action_time": 21600, "antiflood.delete_messages": true,
-      "warns.limit": 2, "warns.mode": "tmute", "warns.action_time": 21600, "warns.expiry": 259200, "antiraid.auto_threshold": 10,
+      "warns.limit": 2, "warns.mode": "tmute", "warns.action_time": 21600, "warns.expiry": 259200,
+      "antiraid.auto_threshold": 15,
+      "antispam.spamdb_enabled": true, "antispam.spamdb_action": "ban", "antispam.spamdb_cas": true,
+      "antispam.probation_enabled": true, "antispam.probation_time": 86400, "antispam.probation_messages": 5,
+      "antispam.probation_min_length": 20, "antispam.probation_block_links": true,
+      "antispam.probation_block_forwards": true, "antispam.probation_block_media": false,
+      "antispam.probation_notice": false,
+      "reports.enabled": true, "reports.mute_threshold": 0,
     },
   },
 };
+
+// Exact declaration rights mirrored from alita/settings and
+// alita/panel/permissions.go. The settings PATCH envelope additionally requires
+// caller+bot admin for every field; RestrictUser adds caller can_restrict_members;
+// Restrict adds both caller and bot can_restrict_members.
+const FIELD_RIGHTS = Object.freeze({
+  "captcha.enabled": "AdminBot",
+  "captcha.mode": "Admin",
+  "captcha.timeout": "Admin",
+  "captcha.action": "Admin",
+  "captcha.max_attempts": "AdminBot",
+  "antiflood.limit": "AdminBot",
+  "antiflood.action": "AdminBot",
+  "antiflood.action_time": "AdminBot",
+  "antiflood.delete_messages": "AdminBot",
+  "warns.limit": "AdminBot",
+  "warns.mode": "AdminBot",
+  "warns.action_time": "AdminBot",
+  "warns.expiry": "AdminBot",
+  "antiraid.auto_threshold": "AdminBot",
+  "antispam.spamdb_enabled": "Admin",
+  "antispam.spamdb_action": "Admin",
+  "antispam.spamdb_cas": "Admin",
+  "antispam.probation_enabled": "RestrictUser",
+  "antispam.probation_time": "RestrictUser",
+  "antispam.probation_messages": "RestrictUser",
+  "antispam.probation_min_length": "RestrictUser",
+  "antispam.probation_block_links": "RestrictUser",
+  "antispam.probation_block_forwards": "RestrictUser",
+  "antispam.probation_block_media": "RestrictUser",
+  "antispam.probation_notice": "RestrictUser",
+  "reports.enabled": "AdminBot",
+  "reports.mute_threshold": "Restrict",
+});
 
 const GROUPS = [
   { key: "captcha", label: "CAPTCHA", description: "Naye members ki verification." },
   { key: "antiflood", label: "FLOOD", description: "Ek member ke message burst par control." },
   { key: "warns", label: "WARNINGS", description: "Warning threshold aur action." },
   { key: "antiraid", label: "ANTIRAID", description: "Tez aur unique joins par raid protection." },
-  { key: "greetings", label: "WELCOME MESSAGE", description: "New members ke welcome toggle." },
+  { key: "antispam", label: "SPAM DATABASE", description: "Known spammer database check." },
+  { key: "probation", label: "PROBATION", description: "Naye members ke initial messages par limits." },
+  { key: "reports", label: "REPORTS", description: "Member reports aur automatic mute threshold." },
 ];
 
 const LABELS = {
@@ -58,7 +113,19 @@ const LABELS = {
   "warns.action_time": "Warning action duration",
   "warns.expiry": "Warning expiry",
   "antiraid.auto_threshold": "Automatic raid threshold",
-  "greetings.welcome_enabled": "Welcome message",
+  "antispam.spamdb_enabled": "Spam DB check",
+  "antispam.spamdb_action": "Listed member action",
+  "antispam.spamdb_cas": "CAS database",
+  "antispam.probation_enabled": "New-member probation",
+  "antispam.probation_time": "Probation time",
+  "antispam.probation_messages": "Probation messages",
+  "antispam.probation_min_length": "Minimum message length",
+  "antispam.probation_block_links": "Block links during probation",
+  "antispam.probation_block_forwards": "Block forwards during probation",
+  "antispam.probation_block_media": "Block media during probation",
+  "antispam.probation_notice": "Probation notice",
+  "reports.enabled": "Reports",
+  "reports.mute_threshold": "Report auto-mute threshold",
 };
 
 function indexFields(data) {
@@ -91,16 +158,20 @@ function duration(seconds) {
 
 function showValue(key, value) {
   if (value === null || value === undefined) return "Unavailable";
-  if (key.endsWith(".enabled") || key.endsWith(".delete_messages")) return value ? "ON" : "OFF";
+  if (typeof value === "boolean") return value ? "ON" : "OFF";
   if (key === "captcha.timeout") return value + " min";
   if (key === "antiflood.limit") return value === 0 ? "OFF" : value + " messages";
   if (key === "antiraid.auto_threshold") return value === 0 ? "OFF" : value + " joins / 60 sec";
-  if (key === "antiraid.raid_time" || key === "antiraid.raid_action_time" ||
-      key === "antiflood.action_time" || key === "warns.action_time" || key === "warns.expiry") {
+  if (key === "reports.mute_threshold") return value === 0 ? "OFF" : value + " reports";
+  if (key === "antispam.probation_time" || key === "antiflood.action_time" ||
+      key === "warns.action_time" || key === "warns.expiry" ||
+      key === "antiraid.raid_time" || key === "antiraid.raid_action_time") {
     return value === 0 && key === "warns.expiry" ? "Never" : duration(value);
   }
-  if (key === "antiflood.action" || key === "warns.mode" || key === "captcha.action") {
-    const labels = { tmute: "Timed mute", mute: "Mute", kick: "Kick", tban: "Timed ban", ban: "Ban" };
+  if (key === "antispam.probation_messages") return value + " messages";
+  if (key === "antispam.probation_min_length") return value + " characters";
+  if (key === "antiflood.action" || key === "warns.mode" || key === "captcha.action" || key === "antispam.spamdb_action") {
+    const labels = { tmute: "Timed mute", mute: "Mute", kick: "Kick", tban: "Timed ban", ban: "Permanent ban", log: "Log only" };
     return labels[value] || String(value);
   }
   if (key === "captcha.mode") return value === "math" ? "Math" : String(value);
@@ -108,19 +179,27 @@ function showValue(key, value) {
 }
 
 function lessProtection(key, before, after) {
-  if (["captcha.enabled", "antiflood.delete_messages"].includes(key) && typeof before === "boolean" && typeof after === "boolean") return before && !after;
+  if (typeof before === "boolean" && typeof after === "boolean") {
+    if (before && !after && [
+      "captcha.enabled", "antiflood.delete_messages", "antispam.spamdb_enabled",
+      "antispam.spamdb_cas", "antispam.probation_enabled", "antispam.probation_block_links",
+      "antispam.probation_block_forwards", "antispam.probation_block_media", "reports.enabled",
+    ].includes(key)) return true;
+  }
   if (key === "antiflood.limit") {
     const current = Number(before);
     const next = Number(after);
-    // Zero disables antiflood, so moving from OFF to an enabled limit is safer.
     return current > 0 && (next === 0 || next > current);
   }
-  if (["warns.limit", "captcha.timeout", "captcha.max_attempts"].includes(key)) {
-    return Number(after) > Number(before);
+  if (["warns.limit", "captcha.timeout", "captcha.max_attempts", "antispam.probation_messages", "antispam.probation_min_length"].includes(key)) {
+    return Number(after) > Number(before) && ["warns.limit", "captcha.timeout", "captcha.max_attempts"].includes(key) ||
+      Number(after) < Number(before) && ["antispam.probation_messages", "antispam.probation_min_length"].includes(key);
   }
+  if (key === "antispam.probation_time") return Number(before) > 0 && Number(after) < Number(before);
   if (key === "antiraid.auto_threshold") {
     return Number(before) > 0 && (Number(after) === 0 || Number(after) > Number(before));
   }
+  if (key === "reports.mute_threshold") return Number(before) > 0 && Number(after) === 0;
   if (key === "warns.expiry") {
     return Number(after) > 0 && (Number(before) === 0 || Number(after) < Number(before));
   }
@@ -129,6 +208,10 @@ function lessProtection(key, before, after) {
   }
   if (key === "captcha.action") {
     const strength = { mute: 1, kick: 2, ban: 3 };
+    return strength[before] !== undefined && strength[after] !== undefined && strength[after] < strength[before];
+  }
+  if (key === "antispam.spamdb_action") {
+    const strength = { log: 1, mute: 2, ban: 3 };
     return strength[before] !== undefined && strength[after] !== undefined && strength[after] < strength[before];
   }
   if (["antiflood.action", "warns.mode"].includes(key)) {
@@ -237,7 +320,10 @@ function fieldGroup(key) {
   if (key.startsWith("antiflood.")) return "antiflood";
   if (key.startsWith("warns.")) return "warns";
   if (key.startsWith("antiraid.")) return "antiraid";
-  return "greetings";
+  if (key.startsWith("antispam.probation_")) return "probation";
+  if (key.startsWith("antispam.spamdb_")) return "antispam";
+  if (key.startsWith("reports.")) return "reports";
+  return "other";
 }
 
 function descriptionFor(key, value) {
@@ -255,7 +341,19 @@ function descriptionFor(key, value) {
     "warns.action_time": "Warning action itni der tak rahega.",
     "warns.expiry": "Warnings is duration ke baad expire hongi.",
     "antiraid.auto_threshold": value === 0 ? "Automatic raid trigger band rahega." : value + " unique joins in 60 seconds par raid trigger hoga.",
-    "greetings.welcome_enabled": value ? "New members ke liye welcome message enabled hoga." : "Welcome message disabled rahega.",
+    "antispam.spamdb_enabled": value ? "New members ko selected spam database se check kiya jayega." : "Spam database check band rahega.",
+    "antispam.spamdb_action": "Database mein listed member par ye action hoga.",
+    "antispam.spamdb_cas": value ? "CAS database check hoga." : "CAS database check nahi hoga.",
+    "antispam.probation_enabled": value ? "Naye members probation rules follow karenge." : "Probation band rahega.",
+    "antispam.probation_time": "Member itne samay tak probation mein rahega.",
+    "antispam.probation_messages": "Itne qualifying messages ke baad probation complete hoga.",
+    "antispam.probation_min_length": "Probation message ki minimum length.",
+    "antispam.probation_block_links": value ? "Probation mein links block honge." : "Probation mein links allowed honge.",
+    "antispam.probation_block_forwards": value ? "Probation mein forwards block honge." : "Probation mein forwards allowed honge.",
+    "antispam.probation_block_media": value ? "Probation mein media block hoga." : "Probation mein media allowed hoga.",
+    "antispam.probation_notice": value ? "Member ko probation notice milega." : "Probation notice nahi bheja jayega.",
+    "reports.enabled": value ? "Members report bhej sakenge." : "Reports band rahenge.",
+    "reports.mute_threshold": value === 0 ? "Automatic report-mute threshold OFF rahega." : value + " reports par auto-mute trigger hoga.",
   };
   if (key === "antiflood.limit") {
     return value === 0
@@ -265,7 +363,7 @@ function descriptionFor(key, value) {
   return descriptions[key] || "Ye setting update hogi.";
 }
 
-function changedRow(key, before, after) {
+function changedRow(key, before, after, meta = {}) {
   const row = document.createElement("div");
   row.className = "ng-setup-diff-row";
   const head = document.createElement("div");
@@ -281,6 +379,12 @@ function changedRow(key, before, after) {
   row.append(head, textElement("p", descriptionFor(key, after), "ng-setup-muted"));
   if (lessProtection(key, before, after)) {
     row.append(textElement("span", "Protection kam hogi", "ng-setup-chip ng-setup-chip-amber"));
+  }
+  if (meta.skip) {
+    const prefix = meta.skip.kind === "right" ? "Skip (right nahi): " : "Skip: ";
+    row.append(textElement("span", prefix + meta.skip.reason, "ng-setup-chip"));
+  } else if (meta.already) {
+    row.append(textElement("span", "Already set — PATCH nahi bheja", "ng-setup-chip"));
   }
   return row;
 }
@@ -312,10 +416,11 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
   const original = indexFields(initial);
   const accessOK = chat.role === "admin" && Boolean(chat.bot_admin) && !initial.read_only;
   const state = {
-    step: 1,
-    preset: "balanced",
-    welcome: "unchanged",
+    ...createProtectionSetupState(),
     targetChanges: new Map(),
+    reviewValues: new Map(),
+    skipped: new Map(),
+    already: new Map(),
     saved: [],
     failed: {},
     applied: {},
@@ -323,36 +428,59 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
   };
 
   function wizardBack() {
-    if (state.step === 4) {
-      window.location.hash = "#/chats/" + encodeURIComponent(chatID) + "/settings";
-    } else if (state.step === 3) {
-      state.step = 2;
+    if (backOneProtectionStep(state)) {
       draw();
-    } else if (state.step === 2) {
-      state.step = 1;
-      draw();
-    } else {
-      window.location.hash = "#/chats/" + encodeURIComponent(chatID);
+      return;
     }
+    window.location.hash = "#/chats/" + encodeURIComponent(chatID);
   }
 
   registerBack(wizardBack);
   onLeave(() => unregisterBack(wizardBack));
 
+  function fieldPermission(key) {
+    const required = FIELD_RIGHTS[key];
+    if (!required) return { allowed: false, kind: "unavailable", reason: "Permission mapping missing." };
+    if (chat.role !== "admin" || !chat.bot_admin || initial.read_only) {
+      return { allowed: false, kind: "right", reason: "Group admin aur bot admin required." };
+    }
+    if (required === "Admin" || required === "AdminBot") return { allowed: true };
+    const rights = initial.rights ?? null;
+    if (!rights) {
+      return { allowed: false, kind: "right", reason: "Telegram rights unknown hain; settings dobara open karo." };
+    }
+    if (rights.can_restrict_members !== true) {
+      return { allowed: false, kind: "right", reason: "Aapke paas Restrict members right nahi hai." };
+    }
+    if (required === "Restrict" && rights.bot_can_restrict_members !== true) {
+      return { allowed: false, kind: "right", reason: "NexGuard ke paas Restrict members right nahi hai." };
+    }
+    return { allowed: true };
+  }
+
   function planned() {
+    const values = new Map(Object.entries(PRESETS[state.preset].values));
     const changes = new Map();
-    const values = PRESETS[state.preset].values;
-    for (const [key, value] of Object.entries(values)) {
+    const skipped = new Map();
+    const already = new Map();
+    for (const [key, value] of values) {
       const field = original.get(key);
-      if (field && field.writable && !same(field.value, value)) changes.set(key, value);
+      if (!field || !field.writable) {
+        skipped.set(key, { kind: "unavailable", reason: "Setting abhi PATCH ke liye writable nahi hai." });
+        continue;
+      }
+      if (same(field.value, value)) {
+        already.set(key, true);
+        continue;
+      }
+      const permission = fieldPermission(key);
+      if (!permission.allowed) {
+        skipped.set(key, permission);
+        continue;
+      }
+      changes.set(key, value);
     }
-    if (state.welcome === "on" || state.welcome === "off") {
-      const key = "greetings.welcome_enabled";
-      const value = state.welcome === "on";
-      const field = original.get(key);
-      if (field && field.writable && !same(field.value, value)) changes.set(key, value);
-    }
-    return changes;
+    return { values, changes, skipped, already };
   }
 
   const settingsURL = "chats/" + encodeURIComponent(chatID) + "/settings";
@@ -441,53 +569,56 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     }
     root.append(choices);
 
-    const welcome = glassCard();
-    const welcomeHead = document.createElement("div");
-    welcomeHead.className = "ng-setup-welcome-head";
-    welcomeHead.append(
-      textElement("strong", "Welcome message", "ng-setup-welcome-title"),
-      textElement("span", "Optional. Abhi: " + (original.get("greetings.welcome_enabled")?.value ? "ON" : "OFF"), "ng-setup-muted"),
-    );
-    welcome.append(welcomeHead);
-    const segments = document.createElement("div");
-    segments.className = "ng-setup-segments";
-    for (const [value, label] of [["unchanged", "Unchanged"], ["on", "ON"], ["off", "OFF"]]) {
-      const button = textElement("button", label, "ng-setup-segment" + (state.welcome === value ? " selected" : ""));
-      button.type = "button";
-      button.setAttribute("aria-pressed", String(state.welcome === value));
-      button.addEventListener("click", () => { state.welcome = value; draw(); });
-      segments.append(button);
-    }
-    welcome.append(segments);
-    root.append(welcome);
+    root.append(textElement("p", "Welcome settings, welcome text, Night mode aur Locks is preset se unchanged rahenge.", "ng-setup-footnote"));
     root.append(textElement("p", "Locks ke liye Security Center ya /lock command use karo.", "ng-setup-footnote"));
-    root.append(textElement("p", "AI Spam ke liye global AI setup chahiye.", "ng-setup-footnote"));
     actionBar(root, [
       { label: "Back", variant: "secondary", onClick: wizardBack },
-      { label: "Continue", variant: "primary", onClick: () => { state.targetChanges = planned(); state.step = 3; draw(); } },
+      { label: "Continue", variant: "primary", onClick: () => { const plan = planned(); state.targetChanges = plan.changes; state.reviewValues = plan.values; state.skipped = plan.skipped; state.already = plan.already; state.step = 3; draw(); } },
     ]);
   }
 
   function renderReview() {
-    root.append(pageHeader(3, "Review changes", "Confirm karne se pehle har change check kar lo."));
-    const presetChip = textElement("span", PRESETS[state.preset].label, "ng-setup-chip ng-setup-chip-preset");
-    root.append(presetChip);
+    root.append(pageHeader(3, "Review changes", "Har feature ka change, permission skip aur effect check karo."));
+    root.append(textElement("span", PRESETS[state.preset].label, "ng-setup-chip ng-setup-chip-preset"));
 
-    const changes = state.targetChanges;
     let shown = 0;
     for (const group of GROUPS) {
-      const rows = Array.from(changes.entries()).filter(([key]) => fieldGroup(key) === group.key);
-      const showRaidPreview = group.key === "antiraid" && PRESETS[state.preset].values["antiraid.auto_threshold"] > 0;
-      if (!rows.length && !showRaidPreview) continue;
+      const rows = Array.from(state.reviewValues.entries()).filter(([key]) => fieldGroup(key) === group.key);
+      const showRaidPreview = group.key === "antiraid" && state.preset === "strict";
+      const showSpamWarnings = group.key === "antispam" && state.preset !== "low";
+      if (!rows.length && !showRaidPreview && !showSpamWarnings) continue;
       const section = groupCard(group.label, group.description);
-      for (const [key, value] of rows) section.card.append(changedRow(key, original.get(key)?.value, value));
+      for (const [key, value] of rows) {
+        section.card.append(changedRow(key, original.get(key)?.value, value, {
+          skip: state.skipped.get(key),
+          already: state.already.has(key),
+        }));
+      }
+      if (group.key === "antispam" && state.preset !== "low") {
+        section.card.append(textElement("p", "New member join par CAS mein listed known spammer permanently ban hoga. LOLS/Shared ke separate toggles is preset se change nahi hote; agar ON hain to BAN action un par bhi lagega.", "ng-setup-muted"));
+        if (original.get("antispam.spamdb_lols")?.value === true) {
+          section.card.append(textElement("span", "LOLS abhi ON hai; false-positive ka risk ho sakta hai. LOLS-listed users par bhi BAN action lagega.", "ng-setup-chip ng-setup-chip-amber"));
+        }
+      }
+      if (group.key === "probation") {
+        const builtInTime = original.get("antispam.probation_time")?.default;
+        const builtInMessages = original.get("antispam.probation_messages")?.default;
+        const selectedTime = state.reviewValues.get("antispam.probation_time");
+        const selectedMessages = state.reviewValues.get("antispam.probation_messages");
+        section.card.append(textElement(
+          "p",
+          "Built-in: " + duration(builtInTime) + " / " + builtInMessages + " messages. Selected: " +
+            duration(selectedTime) + " / " + selectedMessages + " messages.",
+          "ng-setup-muted",
+        ));
+      }
       if (showRaidPreview) {
-        section.card.append(textElement("strong", "Raid ke dauran naye members kuch der ke liye ban honge", "ng-setup-raid-title"));
+        section.card.append(textElement("span", "15 joins / 60 sec par raid trigger ho sakta hai; genuine join burst bhi affect ho sakta hai.", "ng-setup-chip ng-setup-chip-amber"));
         section.card.append(textElement("p", "Raid duration: " + duration(original.get("antiraid.raid_time")?.value) + " (current)", "ng-setup-muted"));
         section.card.append(textElement("p", "New-member ban duration: " + duration(original.get("antiraid.raid_action_time")?.value) + " (current)", "ng-setup-muted"));
         const info = document.createElement("div");
         info.className = "ng-setup-info-line";
-        info.append(svgIcon("info"), textElement("span", "Antiraid ke liye Redis chahiye", "ng-setup-muted"));
+        info.append(svgIcon("info"), textElement("span", "Antiraid ke liye Redis chahiye.", "ng-setup-muted"));
         section.card.append(info);
       }
       root.append(section.wrap);
@@ -497,27 +628,37 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     if (shown === 0) {
       const empty = glassCard();
       empty.append(textElement("strong", "Koi setting change nahi hogi", "ng-setup-access-title"));
-      empty.append(textElement("p", "Current values is preset ke saath already match karti hain.", "ng-setup-muted"));
+      empty.append(textElement("p", "Selected values already current settings se match karti hain.", "ng-setup-muted"));
       root.append(empty);
     }
 
+    const pendingCount = Array.from(state.targetChanges.keys()).filter(key => !state.saved.includes(key)).length;
     actionBar(root, [
       { label: "Back", variant: "secondary", onClick: wizardBack },
-      { label: "Confirm", variant: "primary", disabled: changes.size === 0, onClick: () => void apply(false) },
+      {
+        label: pendingCount > 0 ? "Confirm & apply" : "Back to result",
+        variant: "primary",
+        onClick: () => {
+          if (pendingCount > 0) void apply(false);
+          else { state.step = 4; draw(); }
+        },
+      },
     ]);
   }
 
   function resultGroups() {
-    const keys = Array.from(state.targetChanges.keys());
+    const keys = Array.from(state.reviewValues.keys());
     return GROUPS.map(group => ({ group, keys: keys.filter(key => fieldGroup(key) === group.key) })).filter(item => item.keys.length);
   }
 
   function renderResult() {
-    root.append(pageHeader(4, "Apply result", "Settings ka latest GET result verify kiya gaya hai."));
+    root.append(pageHeader(4, "Apply result", "Har permitted field ko fresh GET se verify kiya gaya hai."));
     const chips = document.createElement("div");
     chips.className = "ng-setup-result-chips";
     chips.append(
-      textElement("span", state.saved.length + " saved", "ng-setup-chip ng-setup-chip-saved"),
+      textElement("span", state.saved.length + " verified", "ng-setup-chip ng-setup-chip-saved"),
+      textElement("span", state.skipped.size + " skipped", "ng-setup-chip ng-setup-chip-amber"),
+      textElement("span", state.already.size + " already set", "ng-setup-chip"),
       textElement("span", Object.keys(state.failed).length + " failed", "ng-setup-chip ng-setup-chip-failed"),
     );
     root.append(chips);
@@ -525,11 +666,18 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     for (const item of resultGroups()) {
       const section = groupCard(item.group.label, item.group.description);
       for (const key of item.keys) {
-        const ok = state.saved.includes(key);
         const row = document.createElement("div");
         row.className = "ng-setup-result-row";
-        row.append(svgIcon(ok ? "check" : "cross"));
-        const detail = ok ? "Saved" : "Save nahi hua. Dobara try karo.";
+        const saved = state.saved.includes(key);
+        const skipped = state.skipped.get(key);
+        const already = state.already.has(key);
+        const failed = state.failed[key];
+        const icon = saved || already ? "check" : skipped ? "info" : "cross";
+        row.append(svgIcon(icon));
+        let detail = "Failed: " + (failed || "GET value expected value se match nahi hui");
+        if (saved) detail = "Saved — fresh GET mein value confirm hui.";
+        else if (already) detail = "Already set — koi PATCH nahi bheja.";
+        else if (skipped) detail = (skipped.kind === "right" ? "Skip (right nahi): " : "Skip: ") + skipped.reason;
         const copy = document.createElement("span");
         copy.className = "ng-setup-result-copy";
         copy.append(textElement("strong", LABELS[key] || key, "ng-setup-result-title"), textElement("span", detail, "ng-setup-muted"));
@@ -555,7 +703,7 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     actionBar(root, [
       { label: "Back", variant: "secondary", onClick: wizardBack },
       { label: "Retry failed", variant: "primary", disabled: Object.keys(state.failed).length === 0, onClick: () => void apply(true) },
-      { label: "Undo saved changes", variant: "secondary", disabled: state.saved.length === 0 || Boolean(state.undo && state.undo.restored.length + state.undo.skipped.length + state.undo.failed.length >= state.saved.length), onClick: () => void undo() },
+      { label: "Undo verified changes", variant: "secondary", disabled: state.saved.length === 0 || Boolean(state.undo && state.undo.restored.length + state.undo.skipped.length + state.undo.failed.length >= state.saved.length), onClick: () => void undo() },
     ], true);
   }
 
@@ -588,15 +736,19 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
   async function apply(retryOnly) {
     const pending = retryOnly
       ? new Map(Array.from(state.targetChanges).filter(([key]) => Object.prototype.hasOwnProperty.call(state.failed, key)))
-      : new Map(state.targetChanges);
-    if (!pending.size) return;
+      : new Map(Array.from(state.targetChanges).filter(([key]) => !state.saved.includes(key)));
+    if (!pending.size) {
+      state.step = 4;
+      draw();
+      return;
+    }
 
     let patchErrors = {};
     try {
       const response = await patch(Object.fromEntries(pending));
       patchErrors = response.failed || {};
     } catch (error) {
-      patchErrors = error.payload?.failed || {};
+      patchErrors = error.payload?.failed || error.payload?.errors || {};
       if (!Object.keys(patchErrors).length) {
         for (const key of pending.keys()) patchErrors[key] = error.message || "Save request failed";
       }

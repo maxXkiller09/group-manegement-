@@ -1,8 +1,28 @@
 import { api } from "../api.js?v=2026.11.16-bootfix1";
+import { classifyGroupAccess, singleEligibleGroup, GROUP_ACCESS_CACHE_MS } from "../group-access.mjs?v=2026.11.18-groups1";
 import { clear, errorMessage, haptic, initials, loading, onLeave, relativeTime, setHeader, showError, textElement } from "../ui.js?v=2026.11.16-bootfix1";
 
 const ADD_GROUP_URL = "https://t.me/NexGuardd_Bot?startgroup=true";
 const SVG_NS = "http://www.w3.org/2000/svg";
+const groupAccessCache = new Map();
+
+function cachedGroupAccess(chatID) {
+  const entry = groupAccessCache.get(String(chatID));
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    groupAccessCache.delete(String(chatID));
+    return null;
+  }
+  return entry.access;
+}
+
+function cacheGroupAccess(chatID, access) {
+  if (access.status === "unknown" || access.status === "checking") return;
+  groupAccessCache.set(String(chatID), {
+    access,
+    expiresAt: Date.now() + GROUP_ACCESS_CACHE_MS,
+  });
+}
 
 function groupIcon() {
   const svg = document.createElementNS(SVG_NS, "svg");
@@ -52,10 +72,11 @@ function groupRefreshGuide(onRefresh, statusText, refreshing) {
   refresh.setAttribute("aria-label", "Refresh group list");
   refresh.addEventListener("click", onRefresh);
   refresh.dataset.groupRefresh = "true";
+  const limit = textElement("p", "Session mein latest 50 active groups tak hi dikhte hain. Group list mein nahi hai to group mein message ya /start bhejkar Refresh karo.", "guide-footnote");
   const status = textElement("p", statusText, "guide-footnote");
   status.setAttribute("role", "status");
   status.dataset.groupRefreshStatus = "true";
-  guide.append(steps, refresh, status);
+  guide.append(steps, refresh, limit, status);
   return guide;
 }
 
@@ -88,11 +109,21 @@ function firstUseGuide(onAddGroup) {
   return guide;
 }
 
-function groupRow(chat, pinned, targetSection) {
+function groupRow(chat, pinned, targetSection, access) {
   const item = document.createElement("li");
-  const link = document.createElement("a");
+  item.dataset.chatId = String(chat.id);
+  const selectable = access.selectable === true;
+  const link = document.createElement(selectable ? "a" : "div");
   link.className = "nav-row group-card ng-group-row";
-  link.href = targetSection ? `#/chats/${encodeURIComponent(chat.id)}/${targetSection}` : `#/chats/${encodeURIComponent(chat.id)}`;
+  if (selectable) {
+    link.href = targetSection
+      ? "#/chats/" + encodeURIComponent(chat.id) + "/" + targetSection
+      : "#/chats/" + encodeURIComponent(chat.id);
+  } else {
+    link.setAttribute("aria-disabled", "true");
+    link.setAttribute("aria-busy", String(access.status === "checking"));
+  }
+
   const title = chat.title || "Telegram group";
   const avatar = document.createElement("span");
   avatar.className = "ng-tool-icon tone-blue";
@@ -101,14 +132,17 @@ function groupRow(chat, pinned, targetSection) {
   const copy = document.createElement("span");
   copy.className = "nav-text";
   copy.append(textElement("strong", title, "ng-group-title"));
-  const subtitle = pinned ? "Opened from this group" : chat.last_activity ? `Active ${relativeTime(chat.last_activity)}` : "Open group dashboard";
+  const subtitle = pinned ? "Opened from this group" : chat.last_activity ? "Active " + relativeTime(chat.last_activity) : "Open group dashboard";
   copy.append(textElement("span", subtitle, "ng-group-description"));
-  if (chat.role) {
-    const roleLabel = chat.role === "admin" ? "Admin" : "Member";
-    copy.append(textElement("span", roleLabel, "ng-group-role-chip" + (chat.role === "admin" ? " is-admin" : "")));
+  copy.append(textElement("span", access.label, "ng-status-chip " + (access.status === "full" ? "ok" : "warn")));
+  if (access.hint) {
+    copy.append(textElement("span", access.hint, "ng-group-description"));
   }
-  link.append(avatar, copy, textElement("span", "›", "chevron"));
-  link.addEventListener("click", () => haptic("light"));
+  link.append(avatar, copy);
+  if (selectable) {
+    link.append(textElement("span", "›", "chevron"));
+    link.addEventListener("click", () => haptic("light"));
+  }
   item.append(link);
   return item;
 }
@@ -121,6 +155,8 @@ export async function renderChats(root, targetSection = "") {
   let requestID = 0;
   let refreshing = false;
   let refreshMessage = "";
+  let accessObserver = null;
+  let fallbackScrollHandler = null;
 
   function markAddGroupClick() {
     pendingAddGroupReturn = true;
@@ -164,9 +200,14 @@ export async function renderChats(root, targetSection = "") {
   }
 
   function renderGroups(data) {
+    const listRequestID = requestID;
+    accessObserver?.disconnect();
+    accessObserver = null;
+    if (fallbackScrollHandler) window.removeEventListener("scroll", fallbackScrollHandler);
+    fallbackScrollHandler = null;
     clear(root);
-    if (data.user?.first_name) setHeader("My Groups", `Hello, ${data.user.first_name}`);
-    const chats = Array.isArray(data.chats) ? data.chats : [];
+    if (data.user?.first_name) setHeader("My Groups", "Hello, " + data.user.first_name);
+    const chats = Array.isArray(data.chats) ? data.chats.slice(0, 50) : [];
     if (chats.length === 0) {
       root.append(firstUseGuide(markAddGroupClick));
     } else {
@@ -176,7 +217,7 @@ export async function renderChats(root, targetSection = "") {
       intro.className = "groups-intro";
       intro.append(
         textElement("h2", "Your groups", "groups-heading"),
-        textElement("p", "Tap any group to open its controls.", "groups-hint"),
+        textElement("p", "Sirf verified admin + bot-admin groups open ho sakte hain.", "groups-hint"),
         addGroupButton("＋ Add another group", markAddGroupClick),
       );
       const search = document.createElement("input");
@@ -189,22 +230,123 @@ export async function renderChats(root, targetSection = "") {
       list.className = "group-list ng-groups-list";
       const empty = textElement("p", "No group matches that name.", "empty search-empty");
       empty.hidden = true;
-      const rows = ordered.map((chat) => {
-        const row = groupRow(chat, String(chat.id) === pinnedID, targetSection);
-        list.append(row);
-        return { row, title: String(chat.title || "").toLocaleLowerCase() };
+      const entries = ordered.map(chat => {
+        const access = cachedGroupAccess(chat.id) || { status: "checking", label: "Checking", selectable: false };
+        const entry = { chat, access, verified: access.status !== "checking", verifying: false, row: null };
+        entry.row = groupRow(chat, String(chat.id) === pinnedID, targetSection, access);
+        list.append(entry.row);
+        return entry;
       });
+      const byID = new Map(entries.map(entry => [String(entry.chat.id), entry]));
+      let searchQuery = "";
+      let autoNavigated = false;
+
+      function applySearch(entry) {
+        entry.row.hidden = !String(entry.chat.title || "").toLocaleLowerCase().includes(searchQuery);
+      }
+
+      function updateEntry(entry) {
+        const next = groupRow(entry.chat, String(entry.chat.id) === pinnedID, targetSection, entry.access);
+        entry.row.replaceWith(next);
+        entry.row = next;
+        applySearch(entry);
+      }
+
+      function maybeAutoSelect() {
+        if (autoNavigated || disposed || listRequestID !== requestID) return;
+        if (!/^#\/groups(?:\/[a-z-]+)?$/.test(window.location.hash)) return;
+        const eligibleID = singleEligibleGroup(entries);
+        if (!eligibleID) return;
+        autoNavigated = true;
+        window.location.hash = targetSection
+          ? "#/chats/" + encodeURIComponent(eligibleID) + "/" + targetSection
+          : "#/chats/" + encodeURIComponent(eligibleID);
+      }
+
+      async function verifyEntry(entry) {
+        if (entry.verified || entry.verifying || disposed || listRequestID !== requestID) return;
+        const cached = cachedGroupAccess(entry.chat.id);
+        if (cached) {
+          entry.access = cached;
+          entry.verified = true;
+          updateEntry(entry);
+          maybeAutoSelect();
+          return;
+        }
+        entry.verifying = true;
+        entry.access = { status: "checking", label: "Checking", selectable: false };
+        updateEntry(entry);
+        let access;
+        try {
+          let details = await api("chats/" + encodeURIComponent(entry.chat.id));
+          if (details.role === "admin") {
+            try {
+              const settings = await api("chats/" + encodeURIComponent(entry.chat.id) + "/settings");
+              const rights = settings.rights;
+              const rightsKnown = rights !== null && rights !== undefined && typeof rights === "object";
+              details = {
+                ...details,
+                bot_rights_known: rightsKnown,
+                rights_known: rightsKnown,
+                can_restrict_members: rightsKnown && rights.can_restrict_members === true,
+                bot_can_restrict_members: rightsKnown && rights.bot_can_restrict_members === true,
+              };
+            } catch (error) {
+              details = { ...details, bot_rights_known: false, rights_known: false };
+            }
+          }
+          access = classifyGroupAccess(details);
+        } catch (error) {
+          access = classifyGroupAccess(null);
+        }
+        if (disposed || listRequestID !== requestID) return;
+        entry.verifying = false;
+        entry.verified = true;
+        entry.access = access;
+        cacheGroupAccess(entry.chat.id, access);
+        updateEntry(entry);
+        maybeAutoSelect();
+      }
+
       search.addEventListener("input", () => {
-        const query = search.value.trim().toLocaleLowerCase();
+        searchQuery = search.value.trim().toLocaleLowerCase();
         let visible = 0;
-        for (const item of rows) {
-          const show = item.title.includes(query);
-          item.row.hidden = !show;
-          if (show) visible++;
+        for (const entry of entries) {
+          applySearch(entry);
+          if (!entry.row.hidden) visible++;
         }
         empty.hidden = visible !== 0;
       });
       root.append(intro, search, list, empty);
+
+      if (chats.length === 1) {
+        void verifyEntry(entries[0]);
+      } else if (typeof IntersectionObserver === "function") {
+        accessObserver = new IntersectionObserver(observed => {
+          for (const item of observed) {
+            if (!item.isIntersecting) continue;
+            const entry = byID.get(item.target.dataset.chatId);
+            accessObserver?.unobserve(item.target);
+            if (entry) void verifyEntry(entry);
+          }
+        }, { rootMargin: "160px 0px" });
+        for (const entry of entries) {
+          if (!entry.verified) accessObserver.observe(entry.row);
+        }
+      } else {
+        fallbackScrollHandler = () => {
+          for (const entry of entries) {
+            if (entry.verified || entry.verifying) continue;
+            const bounds = entry.row.getBoundingClientRect();
+            if (bounds.top < window.innerHeight + 160 && bounds.bottom > -160) {
+              void verifyEntry(entry);
+            }
+          }
+        };
+        window.addEventListener("scroll", fallbackScrollHandler, { passive: true });
+        fallbackScrollHandler();
+      }
+      maybeAutoSelect();
     }
     root.append(groupRefreshGuide(() => void loadGroups(true), refreshMessage, refreshing));
   }
@@ -225,6 +367,10 @@ export async function renderChats(root, targetSection = "") {
   onLeave(() => {
     disposed = true;
     document.removeEventListener("visibilitychange", onVisibilityChange);
+    accessObserver?.disconnect();
+    accessObserver = null;
+    if (fallbackScrollHandler) window.removeEventListener("scroll", fallbackScrollHandler);
+    fallbackScrollHandler = null;
   });
 
   await loadGroups(false);
