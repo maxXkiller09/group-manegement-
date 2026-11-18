@@ -30,7 +30,8 @@ test("Back moves one step and preserves the selected preset", () => {
 test("only a verified admin with a bot admin is selectable", () => {
   assert.equal(classifyGroupAccess({ role: "admin", bot_admin: true }).status, "full");
   assert.equal(classifyGroupAccess({ role: "member", bot_admin: true }).status, "limited");
-  assert.equal(classifyGroupAccess({ role: "admin", bot_admin: false }).status, "bot_missing");
+  assert.equal(classifyGroupAccess({ role: "admin", bot_admin: false, bot_rights_known: true }).status, "bot_missing");
+  assert.equal(classifyGroupAccess({ role: "admin", bot_admin: false, bot_rights_known: false }).status, "unknown");
   assert.equal(classifyGroupAccess(null).status, "unknown");
 });
 
