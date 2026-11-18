@@ -70,6 +70,10 @@ function groupRow(chat, pinned, targetSection) {
   copy.append(textElement("strong", title, "ng-group-title"));
   const subtitle = pinned ? "Opened from this group" : chat.last_activity ? `Active ${relativeTime(chat.last_activity)}` : "Open group dashboard";
   copy.append(textElement("span", subtitle, "ng-group-description"));
+  if (chat.role) {
+    const roleLabel = chat.role === "admin" ? "Admin" : "Member";
+    copy.append(textElement("span", roleLabel, "ng-group-role-chip" + (chat.role === "admin" ? " is-admin" : "")));
+  }
   link.append(avatar, copy, textElement("span", "›", "chevron"));
   link.addEventListener("click", () => haptic("light"));
   item.append(link);
