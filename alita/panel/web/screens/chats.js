@@ -250,7 +250,7 @@ export async function renderChats(root, targetSection = "") {
 
       function maybeAutoSelect() {
         if (autoNavigated || disposed || listRequestID !== requestID) return;
-        if (!/^#\\/groups(?:\\/[a-z-]+)?$/.test(window.location.hash)) return;
+        if (!/^#\/groups(?:\/[a-z-]+)?$/.test(window.location.hash)) return;
         const eligibleID = singleEligibleGroup(entries);
         if (!eligibleID) return;
         autoNavigated = true;
