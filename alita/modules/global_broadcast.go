@@ -220,19 +220,19 @@ func broadcastIsRunning() bool {
 func LoadGlobalBroadcast(dispatcher *ext.Dispatcher) {
 	ownerOnly := []helpers.CheckFunc{helpers.RequireBotOwner()}
 	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
-		Name: "setloggc",
+		Name:           "setloggc",
 		RequiredChecks: []helpers.CheckFunc{helpers.RequireBotOwner(), helpers.RequireGroup()},
 	}, logChannelsModule.setGlobalLogChat)
 	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
-		Name: "broadcast",
+		Name:           "broadcast",
 		RequiredChecks: ownerOnly,
 	}, logChannelsModule.broadcastPreviewCommand)
 	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
-		Name: "broadcast_confirm",
+		Name:           "broadcast_confirm",
 		RequiredChecks: ownerOnly,
 	}, logChannelsModule.confirmBroadcast)
 	helpers.WrapCommand(dispatcher, helpers.CommandDescriptor{
-		Name: "broadcastlist",
+		Name:           "broadcastlist",
 		RequiredChecks: ownerOnly,
 	}, logChannelsModule.broadcastList)
 }
