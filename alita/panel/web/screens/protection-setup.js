@@ -360,9 +360,11 @@ export async function renderProtectionSetup(root, chatID, chat = {}) {
     const isCreator = rights?.is_creator === true;
     const restrict = typeof rights?.can_restrict_members === "boolean" ? rights.can_restrict_members : null;
     const changeInfo = typeof rights?.can_change_info === "boolean" ? rights.can_change_info : null;
-    const botRestrict = !chat.bot_admin
-      ? false
-      : typeof rights?.bot_can_restrict_members === "boolean" ? rights.bot_can_restrict_members : null;
+    const botRestrict = !rights
+      ? null
+      : !chat.bot_admin
+        ? false
+        : typeof rights.bot_can_restrict_members === "boolean" ? rights.bot_can_restrict_members : null;
     card.append(
       statusRow("Admin", isCreator ? "Aap group ke creator ho." : isAdmin ? "Aap group admin ho." : "Aap group admin nahi ho.", isAdmin || isCreator),
       statusRow("Restrict members", restrict === null ? "Telegram se permission status abhi nahi mila." : restrict ? "Aap members ko restrict kar sakte ho." : "Aapke paas Restrict members permission nahi hai.", restrict),
