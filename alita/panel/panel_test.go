@@ -129,7 +129,7 @@ func newPanelFakeClient() *panelFakeClient {
 		botRights:    panelFakeRights{canChangeInfo: true, canRestrictMembers: true},
 		memberErrors: make(map[int64]error),
 		statuses:     make(map[int64]string),
-		memberCount: 42,
+		memberCount:  42,
 	}
 }
 
