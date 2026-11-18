@@ -6,8 +6,8 @@ import { renderSettings } from "./screens/settings.js?v=2026.11.18-rights-ui1";
 import { renderTimeline } from "./screens/timeline.js?v=2026.11.16-bootfix1";
 import { renderWarnings } from "./screens/warnings.js?v=2026.11.16-bootfix1";
 import { renderReferrals } from "./screens/referrals.js?v=2026.11.16-bootfix1";
-import { renderProtectionSetup } from "./screens/protection-setup.js?v=2026.11.18-rights-ui1";
-import { renderCommands } from "./screens/commands.js?v=2026.11.16-bootfix1";
+import { renderProtectionSetup } from "./screens/protection-setup.js?v=2026.11.18-backstack-rights1";
+import { renderCommands } from "./screens/commands.js?v=2026.11.17-backstack1";
 export const sections=[
 {key:"overview",label:"Group Overview",description:"Group health, member activity and recent actions",render:renderOverview},
 {key:"settings",label:"Security Center",description:"Welcome, captcha, antiflood, locks and protection",render:renderSettings},
