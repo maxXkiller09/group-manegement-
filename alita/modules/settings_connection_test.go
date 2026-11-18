@@ -551,7 +551,7 @@ func TestLangGroupConfirmationLanguage(t *testing.T) {
 	}
 }
 
-func TestLangGroupKeyboardKeepsHelpTranslateLink(t *testing.T) {
+func TestLangKeyboardsOmitHelpTranslateLink(t *testing.T) {
 	client, bot, _, admin, _ := connectedPMFixture(t)
 	restoreI18n, err := i18n.OverrideManagerForTest("language_name: Lang\nlanguage_flag: F\nlanguage_help_translate: Help\n")
 	if err != nil {
@@ -562,37 +562,23 @@ func TestLangGroupKeyboardKeepsHelpTranslateLink(t *testing.T) {
 	config.AppConfig.ValidLangCodes = []string{"en", "ru"}
 	t.Cleanup(func() { config.AppConfig.ValidLangCodes = original })
 
-	urlButtons := func() []gotgbot.InlineKeyboardButton {
-		var out []gotgbot.InlineKeyboardButton
+	assertNoExternalURL := func(label string) {
+		t.Helper()
 		for _, btn := range lastButtons(t, client) {
 			if btn.Url != "" {
-				out = append(out, btn)
+				t.Fatalf("%s keyboard unexpectedly contains external URL button: %+v", label, btn)
+			}
+			if len(btn.CallbackData) > 64 {
+				t.Fatalf("%s callback data %q is %d bytes, want <= 64", label, btn.CallbackData, len(btn.CallbackData))
 			}
 		}
-		return out
 	}
 
 	runCommandInPM(t, bot, admin, "/lang", languageDispatcher())
-	want := urlButtons()
-	if len(want) == 0 {
-		t.Fatal("plain /lang keyboard has no link button")
-	}
+	assertNoExternalURL("plain /lang")
 
 	runCommandInPM(t, bot, admin, "/lang group", languageDispatcher())
-	got := urlButtons()
-	if len(got) != len(want) {
-		t.Fatalf("/lang group link buttons = %+v, want %+v", got, want)
-	}
-	for i := range want {
-		if got[i].Url != want[i].Url || got[i].Text != want[i].Text {
-			t.Fatalf("/lang group link button %d = %+v, want %+v", i, got[i], want[i])
-		}
-	}
-	for _, btn := range lastButtons(t, client) {
-		if len(btn.CallbackData) > 64 {
-			t.Fatalf("callback data %q is %d bytes, want <= 64", btn.CallbackData, len(btn.CallbackData))
-		}
-	}
+	assertNoExternalURL("/lang group")
 }
 
 func TestLangGroupCallbackRejectsForgedGroup(t *testing.T) {
