@@ -204,7 +204,7 @@ func TestEveryPMGroupCommandHasHelpEntry(t *testing.T) {
 	LoadAllModules(all)
 	pick := translated(t, "connections_pm_group_pick")
 	commands := dispatcherCommands(t, all)
-	if len(commands) != 229 {
+	if len(commands) != 233 {
 		t.Fatalf("LoadAllModules registered %d command names, want 229", len(commands))
 	}
 	slices.SortFunc(commands, func(a, b handlers.Command) int { return strings.Compare(a.Command, b.Command) })
