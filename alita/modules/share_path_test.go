@@ -4,7 +4,6 @@ package modules
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 	"testing"
 
