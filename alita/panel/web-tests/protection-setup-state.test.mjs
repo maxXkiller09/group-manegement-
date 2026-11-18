@@ -17,7 +17,10 @@ test("first Protection Setup render starts with Balanced selected", () => {
 test("Back moves one step and preserves the selected preset", () => {
   const state = createProtectionSetupState();
   state.preset = "strict";
-  state.step = 3;
+  state.step = 4;
+  assert.equal(backOneProtectionStep(state), true);
+  assert.equal(state.step, 3);
+  assert.equal(state.preset, "strict");
   assert.equal(backOneProtectionStep(state), true);
   assert.equal(state.step, 2);
   assert.equal(state.preset, "strict");
