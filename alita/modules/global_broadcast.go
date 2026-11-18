@@ -25,17 +25,17 @@ const (
 )
 
 type broadcastPreview struct {
-	ownerID     int64
+	ownerID      int64
 	originChatID int64
-	message     string
-	targetCount int
-	expiresAt   time.Time
+	message      string
+	targetCount  int
+	expiresAt    time.Time
 }
 
 var broadcastState = struct {
 	sync.Mutex
 	previews map[int64]broadcastPreview
-	running bool
+	running  bool
 }{previews: make(map[int64]broadcastPreview)}
 
 func saveGlobalLogChat(chatID int64) error {
