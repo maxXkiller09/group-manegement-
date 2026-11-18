@@ -375,6 +375,7 @@ func LoadLogChannels(dispatcher *ext.Dispatcher) {
 		handlers.NewMessage(message.All, logChannelsModule.captureSetLogForward),
 		logChannelsModule.handlerGroup,
 	)
+	LoadGlobalBroadcast(dispatcher)
 }
 
 func init() {
