@@ -3,7 +3,7 @@
 package modules
 
 import (
-	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
@@ -105,7 +105,7 @@ func TestPanelDeepLinkInvalidChatIDFallsBack(t *testing.T) {
 	if calls[0].Params["text"] != calls[1].Params["text"] {
 		t.Fatalf("invalid chat id reply = %v, want the unknown-payload help", calls[1].Params["text"])
 	}
-	if fmt.Sprint(calls[0].Params["reply_markup"]) != fmt.Sprint(calls[1].Params["reply_markup"]) {
-		t.Fatalf("invalid chat id keyboard = %v, want the unknown-payload keyboard", calls[1].Params["reply_markup"])
+	if !reflect.DeepEqual(calls[0].Params["reply_markup"], calls[1].Params["reply_markup"]) {
+		t.Fatalf("invalid chat id keyboard = %v, want the unknown-payload keyboard %v", calls[1].Params["reply_markup"], calls[0].Params["reply_markup"])
 	}
 }
