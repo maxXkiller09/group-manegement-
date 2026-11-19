@@ -744,6 +744,29 @@ func TestExtractUserAndTextInForumTopic(t *testing.T) {
 	}
 }
 
+func TestExtractUserAndTextUsesReplyForOrdinaryReasonText(t *testing.T) {
+	bot := newExtractionBot(&extractionBotClient{})
+	for _, tc := range []struct {
+		name, command string
+		wantReason    string
+	}{
+		{name: "single word reason", command: "/warn spam", wantReason: "spam"},
+		{name: "multi word reason", command: "/ban repeated noisy messages", wantReason: "repeated noisy messages"},
+		{name: "add me text", command: "/warn add me", wantReason: "add me"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := newExtractionContext(bot, tc.command)
+			ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+				From: &gotgbot.User{Id: 24680, FirstName: "Reply Target"},
+			}
+			gotID, gotReason := ExtractUserAndText(bot, ctx)
+			if gotID != 24680 || gotReason != tc.wantReason {
+				t.Fatalf("ExtractUserAndText(%q) = (%d, %q), want (24680, %q)", tc.command, gotID, gotReason, tc.wantReason)
+			}
+		})
+	}
+}
+
 // A user the arguments name is the target even when the command is also a
 // reply; the reply's author is the target only when the arguments name nobody.
 func TestExtractUserAndTextNamedUserBeatsReply(t *testing.T) {

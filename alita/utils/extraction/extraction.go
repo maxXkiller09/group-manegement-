@@ -13,7 +13,6 @@ import (
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
-	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/divkix/Alita_Robot/alita/db/channels"
@@ -207,17 +206,13 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 			}
 		}
 	}
-	if !named && prevMessage != nil && hasArgs {
-		_, parseErr := uuid.Parse(args[1])
+	if !named && prevMessage != nil {
+		// When the command arguments do not identify a target, a reply is the
+		// target regardless of whether the trailing reason happens to be a UUID.
+		// Requiring a UUID here made ordinary reasons such as "spam" or "too
+		// noisy" discard the replied-to user across moderation commands.
 		userId, text = IdFromReply(msg)
-		if parseErr == nil {
-			return userId, trimTextNewline(text)
-		}
-	} else if !named && hasArgs {
-		_, parseErr := uuid.Parse(args[1])
-		if parseErr == nil {
-			return userId, trimTextNewline(text)
-		}
+		return userId, trimTextNewline(text)
 	}
 
 	if userId == 0 {
