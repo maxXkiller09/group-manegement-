@@ -86,9 +86,11 @@ func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 
 	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
 
-	// used to check if bot was added as admin or not
+	// The MyChatMember update already contains the bot's new status. Use
+	// that snapshot instead of making a synchronous Telegram lookup: the
+	// welcome path must not wait for enrichment or fail on a Telegram timeout.
 	msgAdmin := ""
-	if !chat_status.IsBotAdmin(b, ctx, chat) {
+	if !botIsAdminFromJoinUpdate(ctx) {
 		msgAdmin, _ = tr.GetString("bot_updates_make_me_admin")
 	}
 
@@ -133,6 +135,16 @@ func adminCacheAutoUpdate(b *gotgbot.Bot, ctx *ext.Context) error {
 	})
 
 	return ext.ContinueGroups
+}
+
+// botIsAdminFromJoinUpdate reads the bot's status from the membership
+// update itself, avoiding a Telegram API request in the welcome path.
+func botIsAdminFromJoinUpdate(ctx *ext.Context) bool {
+	if ctx == nil || ctx.MyChatMember == nil || ctx.MyChatMember.NewChatMember == nil {
+		return false
+	}
+	status := ctx.MyChatMember.NewChatMember.GetStatus()
+	return status == "administrator" || status == "creator"
 }
 
 // botJoinActorID returns the Telegram user who added the bot, when the

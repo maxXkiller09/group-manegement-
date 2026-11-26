@@ -123,6 +123,30 @@ func TestBotJoinedGroupLeavesChannelWithoutMigrationNotice(t *testing.T) {
 	}
 }
 
+func TestBotJoinedSupergroupWelcomeDoesNotCallTelegramForBotStatus(t *testing.T) {
+	useEnglishLocale(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Super Group"}
+	adder := gotgbot.User{Id: 424242, FirstName: "Adder"}
+	ctx := newModuleMessageContext(bot, chat, adder, "bot joined")
+	ctx.MyChatMember = &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: adder,
+		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+	}
+	client.errors["getChatMember"] = errors.New("Telegram lookup timed out")
+
+	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+		t.Fatalf("sendMessage calls = %d, want welcome despite Telegram lookup error", len(calls))
+	}
+	if calls := client.callsFor("getChatMember"); len(calls) != 0 {
+		t.Fatalf("getChatMember calls = %d, want no synchronous status lookup", len(calls))
+	}
+}
+
 func TestBotJoinedSupergroupSendsWelcome(t *testing.T) {
 	client := newModuleBotClient()
 	bot := newModuleTestBot(client)
