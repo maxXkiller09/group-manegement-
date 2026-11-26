@@ -572,3 +572,38 @@ func TestMarkChatInactiveIsIdempotentAndCanCreateMissingRow(t *testing.T) {
 		t.Fatalf("chat rows = %d, want exactly one after duplicate removal updates", count)
 	}
 }
+
+func TestTouchChatHandlesLegacyRowWithNullAndDefaultFields(t *testing.T) {
+	withChatSQLite(t)
+
+	const chatID = int64(-1007654321)
+	if err := db.DB.Exec("INSERT INTO chats (chat_id) VALUES (?)", chatID).Error; err != nil {
+		t.Fatalf("insert legacy chat row: %v", err)
+	}
+
+	var before models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).First(&before).Error; err != nil {
+		t.Fatalf("load legacy chat row: %v", err)
+	}
+	if before.IsInactive {
+		t.Fatal("legacy row is_inactive = true, want database default false")
+	}
+
+	if err := TouchChat(chatID, "legacy group"); err != nil {
+		t.Fatalf("TouchChat() on legacy row: %v", err)
+	}
+	var after models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).First(&after).Error; err != nil {
+		t.Fatalf("reload legacy chat row: %v", err)
+	}
+	if after.IsInactive {
+		t.Fatal("legacy row was not active after TouchChat")
+	}
+	if after.ChatName != "legacy group" {
+		t.Fatalf("legacy chat_name = %q, want %q", after.ChatName, "legacy group")
+	}
+	if after.LastActivity.IsZero() {
+		t.Fatal("legacy last_activity was not populated by TouchChat")
+	}
+}
+
