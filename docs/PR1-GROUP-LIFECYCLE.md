@@ -8,7 +8,7 @@
 - Refresh the current Telegram admin snapshot asynchronously using the existing bounded, in-flight-deduplicated loader.
 - Keep Mini App discovery consistent with existing access/role checks and exclude inactive groups.
 - Keep admin snapshot reads functional when Redis is unavailable; Redis is only a cache.
-- Group-to-supergroup identity/settings linkage remains blocked until the FK/reference audit is complete.
+- Group-to-supergroup identity/settings linkage is a separate follow-up: preserve both Telegram IDs and add an explicit mapping only after the migration-update path and every chat_id reference are audited. PR1 does not rewrite chat IDs.
 
 ## Safety invariants
 1. The welcome message is independent of DB/Telegram enrichment. Log errors and continue; enrichment failure must not suppress welcome.
@@ -32,26 +32,27 @@ bot-added update -> welcome path (never waits for enrichment)
                     -> async admin snapshot refresh (when bot has admin rights)
                  -> Mini App applies existing access/role verification
 bot-removed update -> mark inactive -> exclude from Mini App list
-old group -> supergroup -> blocked until complete FK/reference audit
+old group -> supergroup -> follow-up mapping feature; no ID rewrite in PR1
 ```
 
 ## Schema audit findings (2026-11-26)
 - The production chat registry is `chats`; its natural key is `chat_id`, and Mini App candidate discovery filters `is_inactive = false`.
 - The existing admin-cache loader already deduplicates in-flight loads and bounds Telegram API requests. Lifecycle enrichment should reuse it rather than add a competing admin cache.
-- The existing foreign-key migration declares `ON UPDATE CASCADE` for its listed chat references, but that is not proof that every table in the current migration chain has the same behavior.
-- The migration runner reads ordered SQL migration files from the configured migrations directory and verifies checksums of already-applied migrations. Existing migration files must never be edited.
-- Therefore, a group-to-supergroup ID migration is **blocked pending a complete current-schema FK/reference audit**. Do not implement it as a bare `UPDATE chats SET chat_id=...`; that could orphan or conflict with settings and related rows.
-- Lifecycle persistence and group-ID migration must be separately testable. Until the FK audit is complete, preserve the old ID and record migration linkage additively; do not rewrite existing IDs.
+- The initial FK migration attaches many legacy settings tables to `chats(chat_id)` with `ON UPDATE CASCADE`, but two later migrations explicitly drop both `channels` chat FKs because channel IDs are not group IDs.
+- Newer tables do not all share the same FK behavior: `moderation_events`, `federation_chats`, and `log_channels` have chat FKs; `chat_daily_stats`, `chat_hourly_stats`, `chat_member_daily_stats`, `chat_member_counts`, `chat_invite_links`, and `chat_invite_attributions` store `chat_id` without a chat FK.
+- Therefore `ON UPDATE CASCADE` is not a complete migration strategy. Rewriting `chats.chat_id` would leave at least the no-FK tables pointing at the old ID. No ID rewrite or migration has been made.
+- The migration runner verifies checksums for already-applied migration files. Existing migration files must never be edited.
+- Group-to-supergroup identity linkage needs a separate additive mapping design and a complete audit of all current migrations, models, raw SQL, and migration-update handling. PR1 keeps existing IDs unchanged; do not add a speculative FK or backfill.
 
 ## Required automated tests
 - [x] bot add → remove → re-add state transition and single-row regression
-- [ ] duplicate add update is idempotent (separate duplicate-delivery case)
+- [x] duplicate add update is idempotent (dispatcher duplicate-delivery case)
 - [x] bot removal, including a previously unseen chat
-- [ ] dispatcher-level kick/removal status update regression
+- [x] dispatcher-level kick/removal status update regression
 - [x] adder tracking in the existing chat-user list
 - [x] async admin-cache refresh uses existing bounded/deduplicated loader
 - [x] welcome path uses the membership update's bot status and does not make a synchronous Telegram admin lookup
-- [ ] legacy rows with NULL/default new fields
+- [x] legacy rows with NULL/default new fields
 - [ ] additive migration for group migration linkage (blocked on FK audit)
 - [x] Redis-unavailable admin snapshot returns the live Telegram result
 
