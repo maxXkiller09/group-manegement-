@@ -12,6 +12,7 @@ import (
 
 	"github.com/divkix/Alita_Robot/alita/db"
 	"github.com/divkix/Alita_Robot/alita/db/logchannels"
+	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/db/models"
 	"github.com/divkix/Alita_Robot/alita/i18n"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
@@ -54,6 +55,7 @@ func TestAdminPermissionUpdatesRefreshAuthorization(t *testing.T) {
 			if err := dispatcher.ProcessUpdate(bot, update, nil); err != nil {
 				t.Fatal(err)
 			}
+			DrainUsersAsyncWrites()
 			ctx := newModuleMessageContext(bot, chat, user, "/ban 123")
 			if chat_status.CanUserRestrict(bot, ctx, &chat, user.Id) {
 				t.Fatal("revoked restriction permission is still authorized")
@@ -206,6 +208,7 @@ func TestAdminCacheAutoUpdateReloadsAdminList(t *testing.T) {
 	if err := adminCacheAutoUpdate(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("adminCacheAutoUpdate() error = %v, want ContinueGroups", err)
 	}
+	DrainUsersAsyncWrites()
 	if calls := client.callsFor("getChatAdministrators"); len(calls) != 1 {
 		t.Fatalf("getChatAdministrators calls = %d, want cache reload", len(calls))
 	}
@@ -597,13 +600,29 @@ func TestBotLifecycleAddRemoveAndReAddPersistsOneActiveRow(t *testing.T) {
 	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
 	client := newModuleBotClient()
 	bot := newModuleTestBot(client)
-	ctx := newModuleMessageContext(bot, chat, gotgbot.User{Id: 42, FirstName: "Member"}, "bot joined")
+	adder := gotgbot.User{Id: 424242, FirstName: "Adder"}
+	ctx := newModuleMessageContext(bot, chat, adder, "bot joined")
+	ctx.Update = &gotgbot.Update{MyChatMember: &gotgbot.ChatMemberUpdated{Chat: chat, From: adder}}
 
 	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("botJoinedGroup() error = %v", err)
 	}
 	DrainUsersAsyncWrites()
 	assertLifecycleChat(t, chat.Id, false)
+	trackedUsers, err := chats.GetChatUsersCached(chat.Id)
+	if err != nil {
+		t.Fatalf("load tracked chat users: %v", err)
+	}
+	foundAdder := false
+	for _, id := range trackedUsers {
+		if id == adder.Id {
+			foundAdder = true
+			break
+		}
+	}
+	if !foundAdder {
+		t.Fatalf("bot adder %d was not added to tracked chat users: %v", adder.Id, trackedUsers)
+	}
 
 	if err := botLeftGroup(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("botLeftGroup() error = %v", err)

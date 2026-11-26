@@ -71,9 +71,16 @@ func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 	// upsert is idempotent, so Telegram redeliveries and re-adds do not create
 	// duplicate chat rows. A failed DB write must not suppress the welcome.
 	chatID, chatTitle := chat.Id, chat.Title
+	adderID := botJoinActorID(ctx)
 	spawnAsyncUpdate(func() {
 		if err := chats.TouchChat(chatID, chatTitle); err != nil {
 			log.WithError(err).Warnf("[BotUpdates] Failed to persist bot addition for chat %d", chatID)
+			return
+		}
+		if adderID > 0 {
+			if err := chats.AddChatMember(chatID, adderID); err != nil {
+				log.WithError(err).Warnf("[BotUpdates] Failed to track bot adder %d for chat %d", adderID, chatID)
+			}
 		}
 	})
 
@@ -115,13 +122,26 @@ func adminCacheAutoUpdate(b *gotgbot.Bot, ctx *ext.Context) error {
 		return ext.ContinueGroups
 	}
 
-	// Always invalidate and reload on admin status updates to avoid stale
-	// permission decisions from outdated cache entries.
-	cache.InvalidateAdminCache(chat.Id)
-	cache.LoadAdminCache(b, chat.Id)
-	log.Info(fmt.Sprintf("Reloaded admin cache for %d (%s)", chat.Id, chat.Title))
+	// Telegram admin-list requests are bounded but can still take several
+	// seconds across retries. Keep them off the update handler so a membership
+	// event never delays the welcome or other group processing.
+	chatID, chatTitle := chat.Id, chat.Title
+	spawnAsyncUpdate(func() {
+		cache.InvalidateAdminCache(chatID)
+		cache.LoadAdminCache(b, chatID)
+		log.Info(fmt.Sprintf("Reloaded admin cache for %d (%s)", chatID, chatTitle))
+	})
 
 	return ext.ContinueGroups
+}
+
+// botJoinActorID returns the Telegram user who added the bot, when the
+// update includes a MyChatMember event. Missing/system actors are ignored.
+func botJoinActorID(ctx *ext.Context) int64 {
+	if ctx == nil || ctx.Update == nil || ctx.Update.MyChatMember == nil {
+		return 0
+	}
+	return ctx.Update.MyChatMember.From.Id
 }
 
 // verifyAnonymousAdmin handles callback verification for anonymous admins.
