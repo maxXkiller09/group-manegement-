@@ -34,13 +34,21 @@ bot-added update -> welcome path (never waits for enrichment)
 bot-removed update -> mark inactive -> exclude from Mini App list
 ```
 
+## Schema audit findings (2026-11-26)
+- The production chat registry is `chats`; its natural key is `chat_id`, and Mini App candidate discovery filters `is_inactive = false`.
+- The existing admin-cache loader already deduplicates in-flight loads and bounds Telegram API requests. Lifecycle enrichment should reuse it rather than add a competing admin cache.
+- The existing foreign-key migration declares `ON UPDATE CASCADE` for its listed chat references, but that is not proof that every table in the current migration chain has the same behavior.
+- The migration runner reads ordered SQL migration files from the configured migrations directory and verifies checksums of already-applied migrations. Existing migration files must never be edited.
+- Therefore, a group-to-supergroup ID migration is **blocked pending a complete current-schema FK/reference audit**. Do not implement it as a bare `UPDATE chats SET chat_id=...`; that could orphan or conflict with settings and related rows.
+- Lifecycle persistence and group-ID migration must be separately testable. Until the FK audit is complete, preserve the old ID and record migration linkage additively; do not rewrite existing IDs.
+
 ## Required automated tests
 - [ ] bot add
 - [ ] duplicate add update is idempotent
 - [ ] bot removal
 - [ ] kick/removal status update
 - [ ] re-add
-- [ ] group-to-supergroup migration and duplicate prevention
+- [ ] group-to-supergroup migration and duplicate prevention (blocked on FK audit)
 - [ ] adder tracking
 - [ ] admin tracking
 - [ ] Telegram API error and timeout; welcome still sent
@@ -59,9 +67,10 @@ bot-removed update -> mark inactive -> exclude from Mini App list
 ## CI result ledger
 | Check | Result |
 |---|---|
-| Go test shards | Pending |
-| Build | Pending |
-| Lint | Pending |
-| Migration checks | Pending |
+| Go test shards | Pending for implementation |
+| Build | Pending for implementation |
+| Lint | Pending for implementation |
+| Migration checks | Pending for implementation |
+| Docs-only CI (commit ea04b380) | Passed; does not validate feature code |
 
 Update this ledger only from the actual workflow run and inspect failing logs before changing code.
