@@ -724,9 +724,11 @@ func TestBotLifecycleDispatcherPersistsKickRemoval(t *testing.T) {
 	dispatcher := ext.NewDispatcher(nil)
 	LoadBotUpdates(dispatcher)
 
-	update := &gotgbot.Update{UpdateId: 3, MyChatMember: event}
-	if err := dispatcher.ProcessUpdate(bot, update, nil); err != nil {
-		t.Fatalf("ProcessUpdate(removal) error = %v", err)
+	for updateID := int64(3); updateID <= 4; updateID++ {
+		update := &gotgbot.Update{UpdateId: updateID, MyChatMember: event}
+		if err := dispatcher.ProcessUpdate(bot, update, nil); err != nil {
+			t.Fatalf("ProcessUpdate(removal %d) error = %v", updateID, err)
+		}
 	}
 	DrainUsersAsyncWrites()
 	assertLifecycleChat(t, chat.Id, true)
