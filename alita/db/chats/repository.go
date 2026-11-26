@@ -121,21 +121,36 @@ func MarkChatInactive(chatId int64, chatName string) error {
 }
 
 // AddChatMember appends userid to the chat's users list if it is not there
-// yet. The chat row must already exist (see TouchChat).
+// yet. A row lock keeps the read/append/write atomic on PostgreSQL, while the
+// ORM serializer keeps the operation portable to the SQLite test backend.
 func AddChatMember(chatId, userid int64) error {
-	if users, err := GetChatUsersCached(chatId); err == nil && slices.Contains(users, userid) {
-		return nil
-	}
+	changed := false
+	err := db.DB.Transaction(func(tx *gorm.DB) error {
+		var chat models.Chat
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Select("users").
+			Where("chat_id = ?", chatId).
+			First(&chat).Error; err != nil {
+			return err
+		}
 
-	result := db.DB.Exec(
-		`UPDATE chats SET users = users || to_jsonb(?::bigint) WHERE chat_id = ? AND NOT (users @> to_jsonb(?::bigint))`,
-		userid, chatId, userid,
-	)
-	if result.Error != nil {
-		log.Errorf("[Database] AddChatMember atomic append failed for chat %d user %d: %v", chatId, userid, result.Error)
-		return result.Error
+		if slices.Contains(chat.Users, userid) {
+			return nil
+		}
+		chat.Users = append(chat.Users, userid)
+		if err := tx.Model(&models.Chat{}).
+			Where("chat_id = ?", chatId).
+			Update("users", chat.Users).Error; err != nil {
+			return err
+		}
+		changed = true
+		return nil
+	})
+	if err != nil {
+		log.Errorf("[Database] AddChatMember append failed for chat %d user %d: %v", chatId, userid, err)
+		return err
 	}
-	if result.RowsAffected > 0 {
+	if changed {
 		cache.DeleteCache(cache.CacheKey("chat_users", chatId))
 	}
 

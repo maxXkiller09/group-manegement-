@@ -212,15 +212,28 @@ func TestUpdateChat(t *testing.T) {
 	}
 }
 
-func TestAddChatMemberReturnsAtomicAppendError(t *testing.T) {
+func TestAddChatMemberAppendsAndDeduplicatesWithSQLite(t *testing.T) {
 	withChatSQLite(t)
 
-	const chatID = int64(-100123)
+	const (
+		chatID = int64(-100123)
+		userID = int64(42)
+	)
 	if err := EnsureChatInDb(chatID, "existing"); err != nil {
 		t.Fatalf("EnsureChatInDb() error = %v", err)
 	}
-	if err := AddChatMember(chatID, 42); err == nil {
-		t.Fatal("AddChatMember() error = nil when the PostgreSQL JSONB append fails")
+	for range 2 {
+		if err := AddChatMember(chatID, userID); err != nil {
+			t.Fatalf("AddChatMember() error = %v", err)
+		}
+	}
+
+	users, err := GetChatUsersCached(chatID)
+	if err != nil {
+		t.Fatalf("GetChatUsersCached() error = %v", err)
+	}
+	if !slices.Equal(users, models.Int64Array{userID}) {
+		t.Fatalf("chat users = %v, want exactly [%d]", users, userID)
 	}
 }
 
