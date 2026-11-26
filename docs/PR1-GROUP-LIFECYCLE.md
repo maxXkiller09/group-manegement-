@@ -50,7 +50,7 @@ old group -> supergroup -> blocked until complete FK/reference audit
 - [ ] dispatcher-level kick/removal status update regression
 - [x] adder tracking in the existing chat-user list
 - [x] async admin-cache refresh uses existing bounded/deduplicated loader
-- [ ] focused welcome-path regression for Telegram API timeout/error
+- [x] welcome path uses the membership update's bot status and does not make a synchronous Telegram admin lookup
 - [ ] legacy rows with NULL/default new fields
 - [ ] additive migration for group migration linkage (blocked on FK audit)
 - [x] Redis-unavailable admin snapshot returns the live Telegram result
@@ -67,8 +67,8 @@ old group -> supergroup -> blocked until complete FK/reference audit
 
 | Commit | Result |
 |---|---|
-| `a7ca5a57388a7ea5d2e7c4331e616ba8e95158f7` | CI pending; workflow run 45842426233 |
-| `2fe2cc8d2c717776844dd1071469d3ce48041656` | CI run 45842210402 was in progress at last check; not counted as passed |
+| `66ef3bff42ef64028ad0c341e89ed252b12d6827` | CI pending; workflow run 45842890571 (feature-code validation) |
+| `3af5d7e581a01fc109bd57c12aad4153f2c5eca1` | CI run 45842764259 did not complete; some jobs were cancelled; not counted as passed |
 | `02c64173f4589e615e0484ea11d4f1bc3a1bc6fb` | Feature CI passed for the first lifecycle slice only |
 | Docs-only commits | Not counted as feature validation |
 
