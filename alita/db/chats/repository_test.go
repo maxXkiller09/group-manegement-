@@ -529,3 +529,33 @@ func TestListChatsWithUser(t *testing.T) {
 		t.Fatalf("ListChatsWithUser() = %v, want %v", ids, want)
 	}
 }
+
+func TestMarkChatInactiveIsIdempotentAndCanCreateMissingRow(t *testing.T) {
+	withChatSQLite(t)
+
+	const chatID = int64(-100987)
+	if err := MarkChatInactive(chatID, "removed group"); err != nil {
+		t.Fatalf("first MarkChatInactive() error = %v", err)
+	}
+	if err := MarkChatInactive(chatID, "removed group"); err != nil {
+		t.Fatalf("second MarkChatInactive() error = %v", err)
+	}
+
+	var chat models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).First(&chat).Error; err != nil {
+		t.Fatalf("load inactive chat: %v", err)
+	}
+	if !chat.IsInactive {
+		t.Fatal("chat is active after MarkChatInactive")
+	}
+	if chat.ChatName != "removed group" {
+		t.Fatalf("chat name = %q, want %q", chat.ChatName, "removed group")
+	}
+	var count int64
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatID).Count(&count).Error; err != nil {
+		t.Fatalf("count chat rows: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("chat rows = %d, want exactly one after duplicate removal updates", count)
+	}
+}

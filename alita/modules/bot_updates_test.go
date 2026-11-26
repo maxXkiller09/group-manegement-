@@ -10,7 +10,9 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 
+	"github.com/divkix/Alita_Robot/alita/db"
 	"github.com/divkix/Alita_Robot/alita/db/logchannels"
+	"github.com/divkix/Alita_Robot/alita/db/models"
 	"github.com/divkix/Alita_Robot/alita/i18n"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
 	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
@@ -586,5 +588,46 @@ func TestAnonymousAdminConfirmationFromAnotherChatDoesNotRunCommand(t *testing.T
 	}
 	if calls := flow.client.callsFor("answerCallbackQuery"); len(calls) != 1 {
 		t.Fatalf("answerCallbackQuery calls = %d, want the invalid-request answer", len(calls))
+	}
+}
+
+func TestBotLifecycleAddRemoveAndReAddPersistsOneActiveRow(t *testing.T) {
+	useEnglishLocale(t)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Lifecycle Group"}
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	ctx := newModuleMessageContext(bot, chat, gotgbot.User{Id: 42, FirstName: "Member"}, "bot joined")
+
+	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botJoinedGroup() error = %v", err)
+	}
+	DrainUsersAsyncWrites()
+	assertLifecycleChat(t, chat.Id, false)
+
+	if err := botLeftGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botLeftGroup() error = %v", err)
+	}
+	DrainUsersAsyncWrites()
+	assertLifecycleChat(t, chat.Id, true)
+
+	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botJoinedGroup() on re-add error = %v", err)
+	}
+	DrainUsersAsyncWrites()
+	assertLifecycleChat(t, chat.Id, false)
+}
+
+func assertLifecycleChat(t *testing.T, chatID int64, inactive bool) {
+	t.Helper()
+	var rows []models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).Find(&rows).Error; err != nil {
+		t.Fatalf("query lifecycle chat: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("lifecycle rows = %d, want exactly one", len(rows))
+	}
+	if rows[0].IsInactive != inactive {
+		t.Fatalf("chat is_inactive = %t, want %t", rows[0].IsInactive, inactive)
 	}
 }

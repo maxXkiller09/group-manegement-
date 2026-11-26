@@ -95,6 +95,31 @@ func TouchChat(chatId int64, chatname string) error {
 	return nil
 }
 
+// MarkChatInactive records that the bot has left or been removed from a chat.
+// It is an idempotent upsert so removal is persisted even when no message was
+// observed before the lifecycle update.
+func MarkChatInactive(chatId int64, chatName string) error {
+	now := time.Now()
+	updates := map[string]any{
+		"is_inactive": true,
+		"updated_at":  now,
+	}
+	if chatName != "" {
+		updates["chat_name"] = chatName
+	}
+	chat := &models.Chat{ChatId: chatId, ChatName: chatName, IsInactive: true}
+	if err := db.DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "chat_id"}},
+		DoUpdates: clause.Assignments(updates),
+	}).Create(chat).Error; err != nil {
+		log.Errorf("[Database] MarkChatInactive failed for chat %d: %v", chatId, err)
+		return fmt.Errorf("failed to mark chat %d inactive: %w", chatId, err)
+	}
+	cache.DeleteCache(cache.CacheKey("chat", chatId))
+	cache.DeleteCache(cache.CacheKey("chat_users", chatId))
+	return nil
+}
+
 // AddChatMember appends userid to the chat's users list if it is not there
 // yet. The chat row must already exist (see TouchChat).
 func AddChatMember(chatId, userid int64) error {
