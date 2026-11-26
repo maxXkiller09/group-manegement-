@@ -674,3 +674,61 @@ func assertLifecycleChat(t *testing.T, chatID int64, inactive bool) {
 		t.Fatalf("chat is_inactive = %t, want %t", rows[0].IsInactive, inactive)
 	}
 }
+
+func TestBotLifecycleDuplicateAddUpdateIsIdempotentThroughDispatcher(t *testing.T) {
+	useEnglishLocale(t)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Duplicate Add"}
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	adder := gotgbot.User{Id: 434343, FirstName: "Adder"}
+	event := &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: adder,
+		OldChatMember: gotgbot.ChatMemberLeft{User: bot.User},
+		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+	}
+	dispatcher := ext.NewDispatcher(nil)
+	LoadBotUpdates(dispatcher)
+
+	for updateID := int64(1); updateID <= 2; updateID++ {
+		update := &gotgbot.Update{UpdateId: updateID, MyChatMember: event}
+		if err := dispatcher.ProcessUpdate(bot, update, nil); err != nil {
+			t.Fatalf("ProcessUpdate(%d) error = %v", updateID, err)
+		}
+	}
+	DrainUsersAsyncWrites()
+
+	assertLifecycleChat(t, chat.Id, false)
+	trackedUsers, err := chats.GetChatUsersCached(chat.Id)
+	if err != nil {
+		t.Fatalf("load tracked chat users: %v", err)
+	}
+	if len(trackedUsers) != 1 || trackedUsers[0] != adder.Id {
+		t.Fatalf("tracked users after duplicate delivery = %v, want exactly [%d]", trackedUsers, adder.Id)
+	}
+}
+
+func TestBotLifecycleDispatcherPersistsKickRemoval(t *testing.T) {
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Removed Group"}
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
+	if err := chats.TouchChat(chat.Id, chat.Title); err != nil {
+		t.Fatalf("seed chat: %v", err)
+	}
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	event := &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: gotgbot.User{Id: 515151},
+		OldChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+		NewChatMember: gotgbot.ChatMemberLeft{User: bot.User},
+	}
+	dispatcher := ext.NewDispatcher(nil)
+	LoadBotUpdates(dispatcher)
+
+	update := &gotgbot.Update{UpdateId: 3, MyChatMember: event}
+	if err := dispatcher.ProcessUpdate(bot, update, nil); err != nil {
+		t.Fatalf("ProcessUpdate(removal) error = %v", err)
+	}
+	DrainUsersAsyncWrites()
+	assertLifecycleChat(t, chat.Id, true)
+}
+
