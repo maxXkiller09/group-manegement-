@@ -138,7 +138,7 @@ func adminCacheAutoUpdate(b *gotgbot.Bot, ctx *ext.Context) error {
 // botJoinActorID returns the Telegram user who added the bot, when the
 // update includes a MyChatMember event. Missing/system actors are ignored.
 func botJoinActorID(ctx *ext.Context) int64 {
-	if ctx == nil || ctx.Update == nil || ctx.MyChatMember == nil {
+	if ctx == nil || ctx.MyChatMember == nil {
 		return 0
 	}
 	return ctx.MyChatMember.From.Id
