@@ -733,4 +733,3 @@ func TestBotLifecycleDispatcherPersistsKickRemoval(t *testing.T) {
 	DrainUsersAsyncWrites()
 	assertLifecycleChat(t, chat.Id, true)
 }
-
