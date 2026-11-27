@@ -23,6 +23,16 @@ import (
 	"github.com/divkix/Alita_Robot/alita/utils/formatting"
 )
 
+func moduleSendMessagesToChat(client *moduleBotClient, chatID int64) []moduleBotCall {
+	var messages []moduleBotCall
+	for _, call := range client.callsFor("sendMessage") {
+		if fmt.Sprint(call.Params["chat_id"]) == fmt.Sprint(chatID) {
+			messages = append(messages, call)
+		}
+	}
+	return messages
+}
+
 func TestAdminPermissionUpdatesRefreshAuthorization(t *testing.T) {
 	for _, botUpdate := range []bool{false, true} {
 		t.Run(fmt.Sprintf("bot=%t", botUpdate), func(t *testing.T) {
@@ -96,7 +106,11 @@ func TestBotJoinedGroupLeavesBasicGroupAfterMigrationNotice(t *testing.T) {
 	if err := botJoinedGroup(bot, ctx); err != ext.EndGroups {
 		t.Fatalf("botJoinedGroup() error = %v, want EndGroups for basic group", err)
 	}
-	notice := client.onlyCall(t, "sendMessage")
+	notices := moduleSendMessagesToChat(client, chat.Id)
+	if len(notices) != 1 {
+		t.Fatalf("group sendMessage calls = %d, want only the migration notice", len(notices))
+	}
+	notice := notices[0]
 	tr := i18n.MustNewTranslator("en")
 	needSupergroup, _ := tr.GetString("bot_updates_need_supergroup")
 	convertInstr, _ := tr.GetString("bot_updates_convert_instruction")
@@ -142,8 +156,8 @@ func TestBotJoinedSupergroupWelcomeDoesNotCallTelegramForBotStatus(t *testing.T)
 	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
 	}
-	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
-		t.Fatalf("sendMessage calls = %d, want welcome despite Telegram lookup error", len(calls))
+	if calls := moduleSendMessagesToChat(client, chat.Id); len(calls) != 1 {
+		t.Fatalf("group sendMessage calls = %d, want welcome despite Telegram lookup error", len(calls))
 	}
 	if calls := client.callsFor("getChatMember"); len(calls) != 0 {
 		t.Fatalf("getChatMember calls = %d, want no synchronous status lookup", len(calls))
@@ -160,8 +174,8 @@ func TestBotJoinedSupergroupSendsWelcome(t *testing.T) {
 	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups for supergroup", err)
 	}
-	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
-		t.Fatalf("sendMessage calls = %d, want welcome message", len(calls))
+	if calls := moduleSendMessagesToChat(client, chat.Id); len(calls) != 1 {
+		t.Fatalf("group sendMessage calls = %d, want welcome message", len(calls))
 	}
 	if calls := client.callsFor("leaveChat"); len(calls) != 0 {
 		t.Fatalf("leaveChat calls = %d, want none for supergroup", len(calls))
@@ -744,7 +758,6 @@ func resetLifecycleLogStateForTest() {
 	lifecycleLogState.nextSend = time.Time{}
 	lifecycleLogState.disabled = false
 	lifecycleLogState.warnedOnce = false
-	lifecycleLogState.pending = 0
 }
 
 func waitForLifecycleLogs(t *testing.T) {
@@ -767,6 +780,7 @@ func setLifecycleDumpForTest(t *testing.T, chatID int64) {
 	if config.AppConfig == nil {
 		t.Fatal("config.AppConfig is nil")
 	}
+	waitForLifecycleLogs(t)
 	previous := config.AppConfig.MessageDump
 	config.AppConfig.MessageDump = chatID
 	resetLifecycleLogStateForTest()
