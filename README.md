@@ -39,6 +39,17 @@ For setup, configuration, deployment, and command references, see
 [the project documentation](docs/). For contributor and architecture guidance, see
 [AGENTS.md](AGENTS.md).
 
+## Operational lifecycle logs
+
+The configured `MESSAGE_DUMP` chat receives short HTML audit notices when a
+user starts the bot in PM, the bot is added to or removed from a group, or
+Telegram reports a group-to-supergroup migration. These notices contain
+identifiers and event metadata only; they never copy message text or other
+message content. Delivery is asynchronous, rate-limited, deduplicated, and
+uses a bounded Telegram request timeout. If Telegram reports that the dump
+chat cannot be found, lifecycle delivery is disabled for that process after
+one warning; normal bot update handling continues.
+
 ## Development
 
 ```bash
