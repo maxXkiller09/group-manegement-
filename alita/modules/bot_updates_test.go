@@ -16,6 +16,7 @@ import (
 	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/db/logchannels"
 	"github.com/divkix/Alita_Robot/alita/db/models"
+	dbuser "github.com/divkix/Alita_Robot/alita/db/user"
 	"github.com/divkix/Alita_Robot/alita/i18n"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
 	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
@@ -891,5 +892,41 @@ func TestGroupMigrationLifecycleLog(t *testing.T) {
 		!strings.Contains(messages[0], "<code>-333</code>") ||
 		!strings.Contains(messages[0], "<code>-100333</code>") {
 		t.Fatalf("migration log = %v, want old and new chat IDs", messages)
+	}
+}
+
+func TestPrivateStartLifecycleLogDistinguishesFirstAndReturning(t *testing.T) {
+	const dumpChatID int64 = -1007000000004
+	setLifecycleDumpForTest(t, dumpChatID)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: 700000004, Type: "private", FirstName: "PM"}
+	startedBy := gotgbot.User{
+		Id: time.Now().UnixNano() & 0x7fffffff, FirstName: "PM Starter", Username: "pmstarter",
+	}
+	ctx := newModuleMessageContext(bot, chat, startedBy, "/start")
+	ctx.UpdateId = 71005
+	ctx.EffectiveMessage.Date = 1700000005
+	if err := logPrivateStart(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("first logPrivateStart() = %v, want ContinueGroups", err)
+	}
+	waitForLifecycleLogs(t)
+	messages := lifecycleDumpMessages(client, dumpChatID)
+	if len(messages) != 1 || !strings.Contains(messages[0], "FIRST TIME") ||
+		!strings.Contains(messages[0], "pmstarter") || !strings.Contains(messages[0], fmt.Sprint(startedBy.Id)) {
+		t.Fatalf("first PM start log = %v, want first-time user identity", messages)
+	}
+
+	if err := dbuser.EnsureUserInDb(startedBy.Id, startedBy.Username, startedBy.FirstName); err != nil {
+		t.Fatalf("persist returning PM user: %v", err)
+	}
+	ctx.UpdateId = 71006
+	if err := logPrivateStart(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("returning logPrivateStart() = %v, want ContinueGroups", err)
+	}
+	waitForLifecycleLogs(t)
+	messages = lifecycleDumpMessages(client, dumpChatID)
+	if len(messages) != 2 || !strings.Contains(messages[1], "RETURNING") {
+		t.Fatalf("returning PM start log = %v, want RETURNING event", messages)
 	}
 }
