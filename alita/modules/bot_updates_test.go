@@ -10,6 +10,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 
+	"github.com/divkix/Alita_Robot/alita/config"
 	"github.com/divkix/Alita_Robot/alita/db"
 	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/db/logchannels"
@@ -732,4 +733,138 @@ func TestBotLifecycleDispatcherPersistsKickRemoval(t *testing.T) {
 	}
 	DrainUsersAsyncWrites()
 	assertLifecycleChat(t, chat.Id, true)
+}
+
+
+func resetLifecycleLogStateForTest() {
+	lifecycleLogState.Lock()
+	defer lifecycleLogState.Unlock()
+	lifecycleLogState.seen = make(map[string]time.Time)
+	lifecycleLogState.nextSend = time.Time{}
+	lifecycleLogState.disabled = false
+	lifecycleLogState.warnedOnce = false
+}
+
+func setLifecycleDumpForTest(t *testing.T, chatID int64) {
+	t.Helper()
+	if config.AppConfig == nil {
+		t.Fatal("config.AppConfig is nil")
+	}
+	previous := config.AppConfig.MessageDump
+	config.AppConfig.MessageDump = chatID
+	resetLifecycleLogStateForTest()
+	t.Cleanup(func() {
+		DrainUsersAsyncWrites()
+		config.AppConfig.MessageDump = previous
+		resetLifecycleLogStateForTest()
+	})
+}
+
+func lifecycleDumpMessages(client *moduleBotClient, dumpChatID int64) []string {
+	var messages []string
+	for _, call := range client.callsFor("sendMessage") {
+		if fmt.Sprint(call.Params["chat_id"]) == fmt.Sprint(dumpChatID) {
+			messages = append(messages, fmt.Sprint(call.Params["text"]))
+		}
+	}
+	return messages
+}
+
+func TestBotLifecycleLogsAddRemoveReaddAndDeduplicates(t *testing.T) {
+	const dumpChatID int64 = -1007000000001
+	setLifecycleDumpForTest(t, dumpChatID)
+	client := newModuleBotClient()
+	client.responses["getChatMemberCount"] = json.RawMessage("19")
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Lifecycle <Group>"}
+	adder := gotgbot.User{Id: 7001, FirstName: "Group", LastName: "Owner", Username: "groupowner"}
+
+	join := newModuleMessageContext(bot, chat, adder, "bot joined")
+	join.UpdateId = 71001
+	join.MyChatMember = &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: adder, Date: 1700000001,
+		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+	}
+	if err := botJoinedGroup(bot, join); err != ext.ContinueGroups {
+		t.Fatalf("first botJoinedGroup() = %v, want ContinueGroups", err)
+	}
+	DrainUsersAsyncWrites()
+
+	remover := gotgbot.User{Id: 7002, FirstName: "Moderator"}
+	left := newModuleMessageContext(bot, chat, remover, "bot removed")
+	left.UpdateId = 71002
+	left.MyChatMember = &gotgbot.ChatMemberUpdated{Chat: chat, From: remover, Date: 1700000002}
+	if err := botLeftGroup(bot, left); err != ext.ContinueGroups {
+		t.Fatalf("botLeftGroup() = %v, want ContinueGroups", err)
+	}
+	DrainUsersAsyncWrites()
+
+	rejoin := newModuleMessageContext(bot, chat, adder, "bot re-added")
+	rejoin.UpdateId = 71003
+	rejoin.MyChatMember = join.MyChatMember
+	if err := botJoinedGroup(bot, rejoin); err != ext.ContinueGroups {
+		t.Fatalf("re-add botJoinedGroup() = %v, want ContinueGroups", err)
+	}
+	DrainUsersAsyncWrites()
+
+	// A Telegram redelivery of the same update must not produce another log.
+	if err := botJoinedGroup(bot, rejoin); err != ext.ContinueGroups {
+		t.Fatalf("duplicate botJoinedGroup() = %v, want ContinueGroups", err)
+	}
+	DrainUsersAsyncWrites()
+
+	messages := lifecycleDumpMessages(client, dumpChatID)
+	if len(messages) != 3 {
+		t.Fatalf("MESSAGE_DUMP messages = %d (%v), want add/remove/re-add exactly once each", len(messages), messages)
+	}
+	if !strings.Contains(messages[0], "BOT ADDED TO GROUP") ||
+		!strings.Contains(messages[0], "Members: 19") ||
+		!strings.Contains(messages[0], "Bot admin: true") ||
+		strings.Contains(messages[0], "Lifecycle <Group>") {
+		t.Fatalf("added event is incomplete or unescaped: %q", messages[0])
+	}
+	if !strings.Contains(messages[1], "BOT REMOVED/KICKED GROUP") || !strings.Contains(messages[1], "Moderator") {
+		t.Fatalf("removed event missing actor: %q", messages[1])
+	}
+	if !strings.Contains(messages[2], "BOT ADDED TO GROUP") {
+		t.Fatalf("re-add event missing: %q", messages[2])
+	}
+}
+
+func TestLifecycleLogChatNotFoundWarnsOnceAndStopsRetries(t *testing.T) {
+	const dumpChatID int64 = -1007000000002
+	setLifecycleDumpForTest(t, dumpChatID)
+	client := newModuleBotClient()
+	client.errors["sendMessage"] = &gotgbot.TelegramError{Code: 400, Description: "Bad Request: chat not found"}
+	bot := newModuleTestBot(client)
+
+	enqueueLifecycleLog(bot, "log-chat-failure-first", "<b>TEST EVENT</b>")
+	DrainUsersAsyncWrites()
+	enqueueLifecycleLog(bot, "log-chat-failure-second", "<b>TEST EVENT</b>")
+	DrainUsersAsyncWrites()
+
+	if calls := len(lifecycleDumpMessages(client, dumpChatID)); calls != 1 {
+		t.Fatalf("MESSAGE_DUMP send attempts = %d, want one attempt before disabling missing destination", calls)
+	}
+}
+
+func TestGroupMigrationLifecycleLog(t *testing.T) {
+	const dumpChatID int64 = -1007000000003
+	setLifecycleDumpForTest(t, dumpChatID)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: -100333, Type: "supergroup", Title: "Migrated Group"}
+	ctx := newModuleMessageContext(bot, chat, gotgbot.User{Id: 7}, "service migration")
+	ctx.UpdateId = 71004
+	ctx.EffectiveMessage.MigrateFromChatId = -333
+	if err := logGroupMigration(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("logGroupMigration() = %v, want ContinueGroups", err)
+	}
+	DrainUsersAsyncWrites()
+	messages := lifecycleDumpMessages(client, dumpChatID)
+	if len(messages) != 1 || !strings.Contains(messages[0], "GROUP MIGRATION") ||
+		!strings.Contains(messages[0], "<code>-333</code>") ||
+		!strings.Contains(messages[0], "<code>-100333</code>") {
+		t.Fatalf("migration log = %v, want old and new chat IDs", messages)
+	}
 }
