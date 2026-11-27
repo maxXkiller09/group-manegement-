@@ -736,7 +736,6 @@ func TestBotLifecycleDispatcherPersistsKickRemoval(t *testing.T) {
 	assertLifecycleChat(t, chat.Id, true)
 }
 
-
 func resetLifecycleLogStateForTest() {
 	lifecycleLogState.Lock()
 	defer lifecycleLogState.Unlock()
