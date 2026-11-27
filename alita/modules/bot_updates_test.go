@@ -781,6 +781,7 @@ func setLifecycleDumpForTest(t *testing.T, chatID int64) {
 		t.Fatal("config.AppConfig is nil")
 	}
 	waitForLifecycleLogs(t)
+	waitForLifecycleLogs(t)
 	previous := config.AppConfig.MessageDump
 	config.AppConfig.MessageDump = chatID
 	resetLifecycleLogStateForTest()
