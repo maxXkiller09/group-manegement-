@@ -67,9 +67,9 @@ func TestWarnDispatcherRejectsReplyToAnonymousChannelPost(t *testing.T) {
 	ctx := newModuleMessageContext(f.bot, f.chat, f.admin, "/warn channel post")
 	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
 		MessageId:  202,
-		Date:      1,
-		Chat:      f.chat,
-		From:      &gotgbot.User{Id: 777123, FirstName: "Channel Placeholder"},
+		Date:       1,
+		Chat:       f.chat,
+		From:       &gotgbot.User{Id: 777123, FirstName: "Channel Placeholder"},
 		SenderChat: &channel,
 	}
 
