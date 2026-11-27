@@ -504,18 +504,12 @@ func TestRegisterMetrics(t *testing.T) {
 	rr := httptest.NewRecorder()
 	s.mux.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", rr.Code)
-	}
-	ct := rr.Header().Get("Content-Type")
-	if !strings.Contains(ct, "text/plain") {
-		t.Errorf("expected text/plain content type, got %s", ct)
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("without METRICS_AUTH_TOKEN: expected 404, got %d", rr.Code)
 	}
 }
 
 func TestRegisterDBMetrics(t *testing.T) {
-	setupHTTPServerDB(t)
-
 	s := New(8080, time.Now())
 	s.RegisterDBMetrics()
 
@@ -523,14 +517,26 @@ func TestRegisterDBMetrics(t *testing.T) {
 	rr := httptest.NewRecorder()
 	s.mux.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", rr.Code)
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("without METRICS_AUTH_TOKEN: expected 404, got %d", rr.Code)
 	}
-	if ct := rr.Header().Get("Content-Type"); !strings.Contains(ct, "application/json") {
-		t.Errorf("expected application/json content type, got %s", ct)
+}
+
+func TestHealthUnaffectedWhenMetricsTokenIsUnset(t *testing.T) {
+	s := New(8080, time.Now())
+	s.RegisterHealth()
+	s.RegisterMetrics()
+	s.RegisterDBMetrics()
+
+	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	rr := httptest.NewRecorder()
+	s.mux.ServeHTTP(rr, req)
+
+	if rr.Code == http.StatusNotFound || rr.Code == http.StatusUnauthorized {
+		t.Fatalf("/health unexpectedly blocked by metrics auth: status %d", rr.Code)
 	}
-	if !strings.Contains(rr.Body.String(), "open_connections") {
-		t.Errorf("expected database metrics JSON, got %s", rr.Body.String())
+	if !strings.Contains(rr.Body.String(), "status") {
+		t.Fatalf("/health response = %q, want health JSON", rr.Body.String())
 	}
 }
 
