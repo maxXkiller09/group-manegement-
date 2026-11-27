@@ -326,15 +326,17 @@ func logBotAddedToGroup(b *gotgbot.Bot, ctx *ext.Context, chat *gotgbot.Chat) {
 	var adder *gotgbot.User
 	var eventTime int64
 	if ctx.MyChatMember != nil {
-		adder = &ctx.MyChatMember.From
+		adderCopy := ctx.MyChatMember.From
+		adder = &adderCopy
 		eventTime = ctx.MyChatMember.Date
 	}
 	if adder == nil && ctx.EffectiveUser != nil {
-		adder = ctx.EffectiveUser
+		adderCopy := *ctx.EffectiveUser
+		adder = &adderCopy
 	}
 	isAdmin := botIsAdminFromJoinUpdate(ctx)
 	chatCopy := *chat
-	spawnAsyncUpdate(func() {
+	enqueueLifecycleLogWithBuilder(b, fmt.Sprintf("bot-added:%d", updateID), func() string {
 		memberCount := "unknown"
 		count, err := b.GetChatMemberCount(chatCopy.Id, &gotgbot.GetChatMemberCountOpts{
 			RequestOpts: &gotgbot.RequestOpts{Timeout: lifecycleLogRequestTimeout},
@@ -344,11 +346,10 @@ func logBotAddedToGroup(b *gotgbot.Bot, ctx *ext.Context, chat *gotgbot.Chat) {
 		} else {
 			memberCount = fmt.Sprint(count)
 		}
-		messageText := fmt.Sprintf(
+		return fmt.Sprintf(
 			"<b>BOT ADDED TO GROUP</b>\nGroup: %s\nChat ID: <code>%d</code>\nAdded by: %s\nMembers: %s\nBot admin: %t\nTime: %s",
 			lifecycleGroupTitle(&chatCopy), chatCopy.Id, lifecycleUserLabel(adder), memberCount, isAdmin, lifecycleEventTime(eventTime),
 		)
-		enqueueLifecycleLog(b, fmt.Sprintf("bot-added:%d", updateID), messageText)
 	})
 }
 
