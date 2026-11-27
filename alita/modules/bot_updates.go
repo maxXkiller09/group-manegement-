@@ -35,7 +35,8 @@ func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 	if chat.Type == "private" {
 		return ext.EndGroups
 	}
-	if chat.Type == "group" || chat.Type == "supergroup" {
+	if (chat.Type == "group" || chat.Type == "supergroup") && ctx.MyChatMember != nil {
+		// Only Telegram membership updates represent an actual bot addition.
 		logBotAddedToGroup(b, ctx, chat)
 	}
 
@@ -405,7 +406,15 @@ func logPrivateStartMessage(b *gotgbot.Bot, ctx *ext.Context) error {
 // including the user's message or deep-link payload. User lookup and formatting
 // happen in the lifecycle worker, never in the update handler.
 func logPrivateStart(b *gotgbot.Bot, ctx *ext.Context) error {
-	if ctx == nil || ctx.EffectiveChat == nil || ctx.EffectiveChat.Type != "private" || ctx.EffectiveUser == nil {
+	if ctx == nil || ctx.EffectiveChat == nil || ctx.EffectiveChat.Type != "private" || ctx.EffectiveUser == nil || ctx.EffectiveMessage == nil {
+		return ext.ContinueGroups
+	}
+	fields := strings.Fields(ctx.EffectiveMessage.Text)
+	if len(fields) == 0 || !strings.HasPrefix(fields[0], "/") {
+		return ext.ContinueGroups
+	}
+	command := strings.SplitN(strings.TrimPrefix(fields[0], "/"), "@", 2)[0]
+	if command != "start" {
 		return ext.ContinueGroups
 	}
 	startedBy := *ctx.EffectiveUser
