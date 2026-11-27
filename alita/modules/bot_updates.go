@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/callbackquery"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/message"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/db/lang"
+	"github.com/divkix/Alita_Robot/alita/db/user"
 	"github.com/divkix/Alita_Robot/alita/i18n"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
 	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
@@ -83,6 +86,7 @@ func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 			}
 		}
 	})
+	logBotAddedToGroup(b, ctx, chat)
 
 	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
 
@@ -298,11 +302,131 @@ func botLeftGroup(_ *gotgbot.Bot, ctx *ext.Context) error {
 		return ext.ContinueGroups
 	}
 	chatID, chatTitle := chat.Id, chat.Title
+	logBotRemovedFromGroup(_botFromContext(ctx), ctx, chat)
 	spawnAsyncUpdate(func() {
 		if err := chats.MarkChatInactive(chatID, chatTitle); err != nil {
 			log.WithError(err).Warnf("[BotUpdates] Failed to persist bot removal for chat %d", chatID)
 		}
 	})
+	return ext.ContinueGroups
+}
+
+// logBotAddedToGroup gathers the member count asynchronously and sends a
+// content-free lifecycle record to MESSAGE_DUMP.
+func logBotAddedToGroup(b *gotgbot.Bot, ctx *ext.Context, chat *gotgbot.Chat) {
+	if ctx == nil || chat == nil {
+		return
+	}
+	updateID := ctx.UpdateId
+	if updateID == 0 {
+		updateID = time.Now().UnixNano()
+	}
+	var adder *gotgbot.User
+	var eventTime int64
+	if ctx.MyChatMember != nil {
+		adder = &ctx.MyChatMember.From
+		eventTime = ctx.MyChatMember.Date
+	}
+	if adder == nil && ctx.EffectiveUser != nil {
+		adder = ctx.EffectiveUser
+	}
+	isAdmin := botIsAdminFromJoinUpdate(ctx)
+	chatCopy := *chat
+	spawnAsyncUpdate(func() {
+		memberCount := "unknown"
+		count, err := b.GetChatMemberCount(chatCopy.Id, &gotgbot.GetChatMemberCountOpts{
+			RequestOpts: &gotgbot.RequestOpts{Timeout: lifecycleLogRequestTimeout},
+		})
+		if err != nil {
+			log.WithError(err).Warnf("[LifecycleLog] Could not read member count for group %d", chatCopy.Id)
+		} else {
+			memberCount = fmt.Sprint(count)
+		}
+		messageText := fmt.Sprintf(
+			"<b>BOT ADDED TO GROUP</b>\nGroup: %s\nChat ID: <code>%d</code>\nAdded by: %s\nMembers: %s\nBot admin: %t\nTime: %s",
+			lifecycleGroupTitle(&chatCopy), chatCopy.Id, lifecycleUserLabel(adder), memberCount, isAdmin, lifecycleEventTime(eventTime),
+		)
+		enqueueLifecycleLog(b, fmt.Sprintf("bot-added:%d", updateID), messageText)
+	})
+}
+
+// logBotRemovedFromGroup records the actor when Telegram includes it. A bot
+// initiated leave is distinguished from a removal by another administrator.
+func logBotRemovedFromGroup(b *gotgbot.Bot, ctx *ext.Context, chat *gotgbot.Chat) {
+	if ctx == nil || chat == nil {
+		return
+	}
+	updateID := ctx.UpdateId
+	if updateID == 0 {
+		updateID = time.Now().UnixNano()
+	}
+	var actor *gotgbot.User
+	var eventTime int64
+	if ctx.MyChatMember != nil {
+			actor = &ctx.MyChatMember.From
+			eventTime = ctx.MyChatMember.Date
+	}
+	action := "left"
+	if actor != nil && (b == nil || actor.Id != b.Id) {
+		action = "removed/kicked by " + lifecycleUserLabel(actor)
+	}
+	messageText := fmt.Sprintf(
+		"<b>BOT %s GROUP</b>\nGroup: %s\nChat ID: <code>%d</code>\nTime: %s",
+		html.EscapeString(strings.ToUpper(action)), lifecycleGroupTitle(chat), chat.Id, lifecycleEventTime(eventTime),
+	)
+	enqueueLifecycleLog(b, fmt.Sprintf("bot-removed:%d", updateID), messageText)
+}
+
+// logPrivateStart records first-time versus returning PM starts without
+// including the user's message or deep-link payload.
+func logPrivateStart(b *gotgbot.Bot, ctx *ext.Context) error {
+	if ctx == nil || ctx.EffectiveChat == nil || ctx.EffectiveChat.Type != "private" || ctx.EffectiveUser == nil {
+		return ext.ContinueGroups
+	}
+	kind := "RETURNING"
+	if user.CheckUserInfo(ctx.EffectiveUser.Id) == nil {
+		kind = "FIRST TIME"
+	}
+	unixTime := int64(0)
+	if ctx.EffectiveMessage != nil {
+		unixTime = ctx.EffectiveMessage.Date
+	}
+	messageText := fmt.Sprintf(
+		"<b>BOT PM START — %s</b>\nUser: %s\nTime: %s",
+		kind, lifecycleUserLabel(ctx.EffectiveUser), lifecycleEventTime(unixTime),
+	)
+	updateID := ctx.UpdateId
+	if updateID == 0 {
+		updateID = time.Now().UnixNano()
+	}
+	enqueueLifecycleLog(b, fmt.Sprintf("pm-start:%d", updateID), messageText)
+	return ext.ContinueGroups
+}
+
+// logGroupMigration records Telegram's migration service message. It is a
+// message update (not a MyChatMember update), so it is registered separately
+// from the bot add/remove handlers.
+func logGroupMigration(b *gotgbot.Bot, ctx *ext.Context) error {
+	if ctx == nil || ctx.EffectiveMessage == nil {
+		return ext.ContinueGroups
+	}
+	msg := ctx.EffectiveMessage
+	var text string
+	switch {
+	case msg.MigrateToChatId != 0:
+		text = fmt.Sprintf("<b>GROUP MIGRATION</b>\nFrom: <code>%d</code>\nTo: <code>%d</code>\nGroup: %s\nTime: %s",
+			msg.Chat.Id, msg.MigrateToChatId, lifecycleGroupTitle(&msg.Chat), lifecycleEventTime(msg.Date))
+	case msg.MigrateFromChatId != 0:
+		text = fmt.Sprintf("<b>GROUP MIGRATION</b>\nFrom: <code>%d</code>\nTo: <code>%d</code>\nGroup: %s\nTime: %s",
+			msg.MigrateFromChatId, msg.Chat.Id, lifecycleGroupTitle(&msg.Chat), lifecycleEventTime(msg.Date))
+	default:
+		return ext.ContinueGroups
+	}
+	updateID := ctx.UpdateId
+	if updateID == 0 {
+		updateID = time.Now().UnixNano()
+	}
+	enqueueLifecycleLog(b, fmt.Sprintf("group-migration:%d", updateID), text)
 	return ext.ContinueGroups
 }
 
@@ -340,6 +464,8 @@ func LoadBotUpdates(dispatcher *ext.Dispatcher) {
 		),
 	)
 
+	dispatcher.AddHandler(handlers.NewCommand("start", logPrivateStart))
+	dispatcher.AddHandler(handlers.NewMessage(message.All, logGroupMigration))
 	dispatcher.AddHandler(handlers.NewCallback(callbackquery.Prefix("anon_admin"), verifyAnonymousAdmin))
 }
 
