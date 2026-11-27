@@ -363,8 +363,8 @@ func logBotRemovedFromGroup(b *gotgbot.Bot, ctx *ext.Context, chat *gotgbot.Chat
 	var actor *gotgbot.User
 	var eventTime int64
 	if ctx.MyChatMember != nil {
-			actor = &ctx.MyChatMember.From
-			eventTime = ctx.MyChatMember.Date
+		actor = &ctx.MyChatMember.From
+		eventTime = ctx.MyChatMember.Date
 	}
 	action := "LEFT"
 	actorLine := "Removed by: unknown"
