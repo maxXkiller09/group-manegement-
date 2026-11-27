@@ -36,8 +36,10 @@ func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 		return ext.EndGroups
 	}
 	if (chat.Type == "group" || chat.Type == "supergroup") && ctx.MyChatMember != nil {
-		// Only Telegram membership updates represent an actual bot addition.
-		logBotAddedToGroup(b, ctx, chat)
+		wasMember, isMember := chat_status.ExtractJoinLeftStatusChange(ctx.MyChatMember)
+		if !wasMember && isMember {
+			logBotAddedToGroup(b, ctx, chat)
+		}
 	}
 
 	// check if group is supergroup or not
@@ -305,7 +307,12 @@ func botLeftGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 		return ext.ContinueGroups
 	}
 	chatID, chatTitle := chat.Id, chat.Title
-	logBotRemovedFromGroup(b, ctx, chat)
+	if ctx.MyChatMember != nil {
+		wasMember, isMember := chat_status.ExtractJoinLeftStatusChange(ctx.MyChatMember)
+		if wasMember && !isMember {
+			logBotRemovedFromGroup(b, ctx, chat)
+		}
+	}
 	spawnAsyncUpdate(func() {
 		if err := chats.MarkChatInactive(chatID, chatTitle); err != nil {
 			log.WithError(err).Warnf("[BotUpdates] Failed to persist bot removal for chat %d", chatID)
