@@ -3,6 +3,7 @@ package modules
 import (
 	"encoding/json"
 	"errors"
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -693,6 +694,7 @@ func assertLifecycleChat(t *testing.T, chatID int64, inactive bool) {
 }
 
 func TestBotLifecycleDuplicateAddUpdateIsIdempotentThroughDispatcher(t *testing.T) {
+	disableLifecycleDumpForTest(t)
 	useEnglishLocale(t)
 	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Duplicate Add"}
 	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
@@ -726,6 +728,7 @@ func TestBotLifecycleDuplicateAddUpdateIsIdempotentThroughDispatcher(t *testing.
 }
 
 func TestBotLifecycleDispatcherPersistsKickRemoval(t *testing.T) {
+	disableLifecycleDumpForTest(t)
 	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Removed Group"}
 	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
 	if err := chats.TouchChat(chat.Id, chat.Title); err != nil {
@@ -749,6 +752,16 @@ func TestBotLifecycleDispatcherPersistsKickRemoval(t *testing.T) {
 	}
 	DrainUsersAsyncWrites()
 	assertLifecycleChat(t, chat.Id, true)
+}
+
+func disableLifecycleDumpForTest(t *testing.T) {
+	t.Helper()
+	if config.AppConfig == nil {
+		t.Fatal("config.AppConfig is nil")
+	}
+	previous := config.AppConfig.MessageDump
+	config.AppConfig.MessageDump = 0
+	t.Cleanup(func() { config.AppConfig.MessageDump = previous })
 }
 
 func resetLifecycleLogStateForTest() {
@@ -780,7 +793,6 @@ func setLifecycleDumpForTest(t *testing.T, chatID int64) {
 	if config.AppConfig == nil {
 		t.Fatal("config.AppConfig is nil")
 	}
-	waitForLifecycleLogs(t)
 	waitForLifecycleLogs(t)
 	previous := config.AppConfig.MessageDump
 	config.AppConfig.MessageDump = chatID
@@ -816,6 +828,7 @@ func TestBotLifecycleLogsAddRemoveReaddAndDeduplicates(t *testing.T) {
 	join.UpdateId = 71001
 	join.MyChatMember = &gotgbot.ChatMemberUpdated{
 		Chat: chat, From: adder, Date: 1700000001,
+		OldChatMember: gotgbot.ChatMemberLeft{User: bot.User},
 		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
 	}
 	if err := botJoinedGroup(bot, join); err != ext.ContinueGroups {
@@ -827,7 +840,11 @@ func TestBotLifecycleLogsAddRemoveReaddAndDeduplicates(t *testing.T) {
 	remover := gotgbot.User{Id: 7002, FirstName: "Moderator"}
 	left := newModuleMessageContext(bot, chat, remover, "bot removed")
 	left.UpdateId = 71002
-	left.MyChatMember = &gotgbot.ChatMemberUpdated{Chat: chat, From: remover, Date: 1700000002}
+	left.MyChatMember = &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: remover, Date: 1700000002,
+		OldChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+		NewChatMember: gotgbot.ChatMemberLeft{User: bot.User},
+	}
 	if err := botLeftGroup(bot, left); err != ext.ContinueGroups {
 		t.Fatalf("botLeftGroup() = %v, want ContinueGroups", err)
 	}
@@ -885,6 +902,83 @@ func TestLifecycleLogChatNotFoundWarnsOnceAndStopsRetries(t *testing.T) {
 	if calls := len(lifecycleDumpMessages(client, dumpChatID)); calls != 1 {
 		t.Fatalf("MESSAGE_DUMP send attempts = %d, want one attempt before disabling missing destination", calls)
 	}
+}
+
+
+type blockingLifecycleCountClient struct {
+	*moduleBotClient
+	started chan struct{}
+	release <-chan struct{}
+}
+
+func (c *blockingLifecycleCountClient) RequestWithContext(ctx context.Context, token, method string, params map[string]any, opts *gotgbot.RequestOpts) (json.RawMessage, error) {
+	if method == "getChatMemberCount" {
+		select {
+		case <-c.started:
+		default:
+			close(c.started)
+		}
+		select {
+		case <-c.release:
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	return c.moduleBotClient.RequestWithContext(ctx, token, method, params, opts)
+}
+
+func TestBotJoinDoesNotWaitForLifecycleLogEnrichment(t *testing.T) {
+	const dumpChatID int64 = -1007000000005
+	setLifecycleDumpForTest(t, dumpChatID)
+
+	release := make(chan struct{})
+	released := false
+	releaseWorker := func() {
+		if !released {
+			close(release)
+			released = true
+		}
+	}
+	defer releaseWorker()
+
+	base := newModuleBotClient()
+	client := &blockingLifecycleCountClient{
+		moduleBotClient: base,
+		started:         make(chan struct{}),
+		release:         release,
+	}
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Nonblocking Join"}
+	adder := gotgbot.User{Id: 7005, FirstName: "Adder"}
+	ctx := newModuleMessageContext(bot, chat, adder, "bot joined")
+	ctx.MyChatMember = &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: adder, Date: 1700000005,
+		OldChatMember: gotgbot.ChatMemberLeft{User: bot.User},
+		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+	}
+
+	done := make(chan error, 1)
+	go func() { done <- botJoinedGroup(bot, ctx) }()
+	select {
+	case err := <-done:
+		if err != ext.ContinueGroups {
+			t.Fatalf("botJoinedGroup() = %v, want ContinueGroups", err)
+		}
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("botJoinedGroup waited for lifecycle logging")
+	}
+
+	select {
+	case <-client.started:
+	case <-time.After(time.Second):
+		t.Fatal("lifecycle worker did not start member-count enrichment")
+	}
+	if calls := moduleSendMessagesToChat(base, chat.Id); len(calls) != 1 {
+		t.Fatalf("group welcome calls = %d while log enrichment is blocked, want 1", len(calls))
+	}
+
+	releaseWorker()
+	waitForLifecycleLogs(t)
 }
 
 func TestGroupMigrationLifecycleLog(t *testing.T) {
