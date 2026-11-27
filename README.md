@@ -39,6 +39,17 @@ For setup, configuration, deployment, and command references, see
 [the project documentation](docs/). For contributor and architecture guidance, see
 [AGENTS.md](AGENTS.md).
 
+## Metrics endpoint security
+
+The `/metrics` and `/db_metrics` endpoints are disabled with **404 Not Found**
+when `METRICS_AUTH_TOKEN` is empty. Set a strong, private
+`METRICS_AUTH_TOKEN` to enable them; requests must then include
+`Authorization: Bearer <token>`. Missing or incorrect tokens receive
+`401 Unauthorized`. The public `/health` endpoint is not protected by this
+metrics token and remains available for service health checks.
+
+Do not expose the metrics token in logs, source control, or client-side code.
+
 ## Development
 
 ```bash
