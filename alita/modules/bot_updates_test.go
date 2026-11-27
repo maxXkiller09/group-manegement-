@@ -743,6 +743,22 @@ func resetLifecycleLogStateForTest() {
 	lifecycleLogState.nextSend = time.Time{}
 	lifecycleLogState.disabled = false
 	lifecycleLogState.warnedOnce = false
+	lifecycleLogState.pending = 0
+}
+
+func waitForLifecycleLogs(t *testing.T) {
+	t.Helper()
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		lifecycleLogState.Lock()
+		pending := lifecycleLogState.pending
+		lifecycleLogState.Unlock()
+		if pending == 0 {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("lifecycle log queue did not drain before timeout")
 }
 
 func setLifecycleDumpForTest(t *testing.T, chatID int64) {
@@ -755,6 +771,8 @@ func setLifecycleDumpForTest(t *testing.T, chatID int64) {
 	resetLifecycleLogStateForTest()
 	t.Cleanup(func() {
 		DrainUsersAsyncWrites()
+	waitForLifecycleLogs(t)
+		waitForLifecycleLogs(t)
 		config.AppConfig.MessageDump = previous
 		resetLifecycleLogStateForTest()
 	})
@@ -789,6 +807,7 @@ func TestBotLifecycleLogsAddRemoveReaddAndDeduplicates(t *testing.T) {
 		t.Fatalf("first botJoinedGroup() = %v, want ContinueGroups", err)
 	}
 	DrainUsersAsyncWrites()
+	waitForLifecycleLogs(t)
 
 	remover := gotgbot.User{Id: 7002, FirstName: "Moderator"}
 	left := newModuleMessageContext(bot, chat, remover, "bot removed")
@@ -798,6 +817,7 @@ func TestBotLifecycleLogsAddRemoveReaddAndDeduplicates(t *testing.T) {
 		t.Fatalf("botLeftGroup() = %v, want ContinueGroups", err)
 	}
 	DrainUsersAsyncWrites()
+	waitForLifecycleLogs(t)
 
 	rejoin := newModuleMessageContext(bot, chat, adder, "bot re-added")
 	rejoin.UpdateId = 71003
@@ -806,12 +826,14 @@ func TestBotLifecycleLogsAddRemoveReaddAndDeduplicates(t *testing.T) {
 		t.Fatalf("re-add botJoinedGroup() = %v, want ContinueGroups", err)
 	}
 	DrainUsersAsyncWrites()
+	waitForLifecycleLogs(t)
 
 	// A Telegram redelivery of the same update must not produce another log.
 	if err := botJoinedGroup(bot, rejoin); err != ext.ContinueGroups {
 		t.Fatalf("duplicate botJoinedGroup() = %v, want ContinueGroups", err)
 	}
 	DrainUsersAsyncWrites()
+	waitForLifecycleLogs(t)
 
 	messages := lifecycleDumpMessages(client, dumpChatID)
 	if len(messages) != 3 {
@@ -839,9 +861,11 @@ func TestLifecycleLogChatNotFoundWarnsOnceAndStopsRetries(t *testing.T) {
 	bot := newModuleTestBot(client)
 
 	enqueueLifecycleLog(bot, "log-chat-failure-first", "<b>TEST EVENT</b>")
-	DrainUsersAsyncWrites()
+	waitForLifecycleLogs(t)
+	waitForLifecycleLogs(t)
 	enqueueLifecycleLog(bot, "log-chat-failure-second", "<b>TEST EVENT</b>")
-	DrainUsersAsyncWrites()
+	waitForLifecycleLogs(t)
+	waitForLifecycleLogs(t)
 
 	if calls := len(lifecycleDumpMessages(client, dumpChatID)); calls != 1 {
 		t.Fatalf("MESSAGE_DUMP send attempts = %d, want one attempt before disabling missing destination", calls)
@@ -861,6 +885,7 @@ func TestGroupMigrationLifecycleLog(t *testing.T) {
 		t.Fatalf("logGroupMigration() = %v, want ContinueGroups", err)
 	}
 	DrainUsersAsyncWrites()
+	waitForLifecycleLogs(t)
 	messages := lifecycleDumpMessages(client, dumpChatID)
 	if len(messages) != 1 || !strings.Contains(messages[0], "GROUP MIGRATION") ||
 		!strings.Contains(messages[0], "<code>-333</code>") ||
