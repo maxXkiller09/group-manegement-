@@ -212,15 +212,28 @@ func TestUpdateChat(t *testing.T) {
 	}
 }
 
-func TestAddChatMemberReturnsAtomicAppendError(t *testing.T) {
+func TestAddChatMemberAppendsAndDeduplicatesWithSQLite(t *testing.T) {
 	withChatSQLite(t)
 
-	const chatID = int64(-100123)
+	const (
+		chatID = int64(-100123)
+		userID = int64(42)
+	)
 	if err := EnsureChatInDb(chatID, "existing"); err != nil {
 		t.Fatalf("EnsureChatInDb() error = %v", err)
 	}
-	if err := AddChatMember(chatID, 42); err == nil {
-		t.Fatal("AddChatMember() error = nil when the PostgreSQL JSONB append fails")
+	for range 2 {
+		if err := AddChatMember(chatID, userID); err != nil {
+			t.Fatalf("AddChatMember() error = %v", err)
+		}
+	}
+
+	users, err := GetChatUsersCached(chatID)
+	if err != nil {
+		t.Fatalf("GetChatUsersCached() error = %v", err)
+	}
+	if !slices.Equal(users, models.Int64Array{userID}) {
+		t.Fatalf("chat users = %v, want exactly [%d]", users, userID)
 	}
 }
 
@@ -527,5 +540,69 @@ func TestListChatsWithUser(t *testing.T) {
 	}
 	if want := []int64{newer, tied, older}; !slices.Equal(ids, want) {
 		t.Fatalf("ListChatsWithUser() = %v, want %v", ids, want)
+	}
+}
+
+func TestMarkChatInactiveIsIdempotentAndCanCreateMissingRow(t *testing.T) {
+	withChatSQLite(t)
+
+	const chatID = int64(-100987)
+	if err := MarkChatInactive(chatID, "removed group"); err != nil {
+		t.Fatalf("first MarkChatInactive() error = %v", err)
+	}
+	if err := MarkChatInactive(chatID, "removed group"); err != nil {
+		t.Fatalf("second MarkChatInactive() error = %v", err)
+	}
+
+	var chat models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).First(&chat).Error; err != nil {
+		t.Fatalf("load inactive chat: %v", err)
+	}
+	if !chat.IsInactive {
+		t.Fatal("chat is active after MarkChatInactive")
+	}
+	if chat.ChatName != "removed group" {
+		t.Fatalf("chat name = %q, want %q", chat.ChatName, "removed group")
+	}
+	var count int64
+	if err := db.DB.Model(&models.Chat{}).Where("chat_id = ?", chatID).Count(&count).Error; err != nil {
+		t.Fatalf("count chat rows: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("chat rows = %d, want exactly one after duplicate removal updates", count)
+	}
+}
+
+func TestTouchChatHandlesLegacyRowWithNullAndDefaultFields(t *testing.T) {
+	withChatSQLite(t)
+
+	const chatID = int64(-1007654321)
+	if err := db.DB.Exec("INSERT INTO chats (chat_id) VALUES (?)", chatID).Error; err != nil {
+		t.Fatalf("insert legacy chat row: %v", err)
+	}
+
+	var before models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).First(&before).Error; err != nil {
+		t.Fatalf("load legacy chat row: %v", err)
+	}
+	if before.IsInactive {
+		t.Fatal("legacy row is_inactive = true, want database default false")
+	}
+
+	if err := TouchChat(chatID, "legacy group"); err != nil {
+		t.Fatalf("TouchChat() on legacy row: %v", err)
+	}
+	var after models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).First(&after).Error; err != nil {
+		t.Fatalf("reload legacy chat row: %v", err)
+	}
+	if after.IsInactive {
+		t.Fatal("legacy row was not active after TouchChat")
+	}
+	if after.ChatName != "legacy group" {
+		t.Fatalf("legacy chat_name = %q, want %q", after.ChatName, "legacy group")
+	}
+	if after.LastActivity.IsZero() {
+		t.Fatal("legacy last_activity was not populated by TouchChat")
 	}
 }

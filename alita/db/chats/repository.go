@@ -95,22 +95,62 @@ func TouchChat(chatId int64, chatname string) error {
 	return nil
 }
 
-// AddChatMember appends userid to the chat's users list if it is not there
-// yet. The chat row must already exist (see TouchChat).
-func AddChatMember(chatId, userid int64) error {
-	if users, err := GetChatUsersCached(chatId); err == nil && slices.Contains(users, userid) {
-		return nil
+// MarkChatInactive records that the bot has left or been removed from a chat.
+// It is an idempotent upsert so removal is persisted even when no message was
+// observed before the lifecycle update.
+func MarkChatInactive(chatId int64, chatName string) error {
+	now := time.Now()
+	updates := map[string]any{
+		"is_inactive": true,
+		"updated_at":  now,
 	}
+	if chatName != "" {
+		updates["chat_name"] = chatName
+	}
+	chat := &models.Chat{ChatId: chatId, ChatName: chatName, IsInactive: true}
+	if err := db.DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "chat_id"}},
+		DoUpdates: clause.Assignments(updates),
+	}).Create(chat).Error; err != nil {
+		log.Errorf("[Database] MarkChatInactive failed for chat %d: %v", chatId, err)
+		return fmt.Errorf("failed to mark chat %d inactive: %w", chatId, err)
+	}
+	cache.DeleteCache(cache.CacheKey("chat", chatId))
+	cache.DeleteCache(cache.CacheKey("chat_users", chatId))
+	return nil
+}
 
-	result := db.DB.Exec(
-		`UPDATE chats SET users = users || to_jsonb(?::bigint) WHERE chat_id = ? AND NOT (users @> to_jsonb(?::bigint))`,
-		userid, chatId, userid,
-	)
-	if result.Error != nil {
-		log.Errorf("[Database] AddChatMember atomic append failed for chat %d user %d: %v", chatId, userid, result.Error)
-		return result.Error
+// AddChatMember appends userid to the chat's users list if it is not there
+// yet. A row lock keeps the read/append/write atomic on PostgreSQL, while the
+// ORM serializer keeps the operation portable to the SQLite test backend.
+func AddChatMember(chatId, userid int64) error {
+	changed := false
+	err := db.DB.Transaction(func(tx *gorm.DB) error {
+		var chat models.Chat
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Select("users").
+			Where("chat_id = ?", chatId).
+			First(&chat).Error; err != nil {
+			return err
+		}
+
+		if slices.Contains(chat.Users, userid) {
+			return nil
+		}
+		chat.Users = append(chat.Users, userid)
+		if err := tx.Model(&models.Chat{}).
+			Where("chat_id = ?", chatId).
+			Update("users", chat.Users).Error; err != nil {
+			return err
+		}
+		changed = true
+		return nil
+	})
+	if err != nil {
+		log.Errorf("[Database] AddChatMember append failed for chat %d user %d: %v", chatId, userid, err)
+		return err
 	}
-	if result.RowsAffected > 0 {
+	if changed {
 		cache.DeleteCache(cache.CacheKey("chat_users", chatId))
 	}
 

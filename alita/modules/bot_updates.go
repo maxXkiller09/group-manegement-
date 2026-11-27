@@ -11,6 +11,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/callbackquery"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/db/lang"
 	"github.com/divkix/Alita_Robot/alita/i18n"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
@@ -66,11 +67,30 @@ func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 		return ext.EndGroups
 	}
 
+	// Persist lifecycle state independently of the welcome/admin checks. The
+	// upsert is idempotent, so Telegram redeliveries and re-adds do not create
+	// duplicate chat rows. A failed DB write must not suppress the welcome.
+	chatID, chatTitle := chat.Id, chat.Title
+	adderID := botJoinActorID(ctx)
+	spawnAsyncUpdate(func() {
+		if err := chats.TouchChat(chatID, chatTitle); err != nil {
+			log.WithError(err).Warnf("[BotUpdates] Failed to persist bot addition for chat %d", chatID)
+			return
+		}
+		if adderID > 0 {
+			if err := chats.AddChatMember(chatID, adderID); err != nil {
+				log.WithError(err).Warnf("[BotUpdates] Failed to track bot adder %d for chat %d", adderID, chatID)
+			}
+		}
+	})
+
 	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
 
-	// used to check if bot was added as admin or not
+	// The MyChatMember update already contains the bot's new status. Use
+	// that snapshot instead of making a synchronous Telegram lookup: the
+	// welcome path must not wait for enrichment or fail on a Telegram timeout.
 	msgAdmin := ""
-	if !chat_status.IsBotAdmin(b, ctx, chat) {
+	if !botIsAdminFromJoinUpdate(ctx) {
 		msgAdmin, _ = tr.GetString("bot_updates_make_me_admin")
 	}
 
@@ -104,13 +124,36 @@ func adminCacheAutoUpdate(b *gotgbot.Bot, ctx *ext.Context) error {
 		return ext.ContinueGroups
 	}
 
-	// Always invalidate and reload on admin status updates to avoid stale
-	// permission decisions from outdated cache entries.
-	cache.InvalidateAdminCache(chat.Id)
-	cache.LoadAdminCache(b, chat.Id)
-	log.Info(fmt.Sprintf("Reloaded admin cache for %d (%s)", chat.Id, chat.Title))
+	// Telegram admin-list requests are bounded but can still take several
+	// seconds across retries. Keep them off the update handler so a membership
+	// event never delays the welcome or other group processing.
+	chatID, chatTitle := chat.Id, chat.Title
+	spawnAsyncUpdate(func() {
+		cache.InvalidateAdminCache(chatID)
+		cache.LoadAdminCache(b, chatID)
+		log.Info(fmt.Sprintf("Reloaded admin cache for %d (%s)", chatID, chatTitle))
+	})
 
 	return ext.ContinueGroups
+}
+
+// botIsAdminFromJoinUpdate reads the bot's status from the membership
+// update itself, avoiding a Telegram API request in the welcome path.
+func botIsAdminFromJoinUpdate(ctx *ext.Context) bool {
+	if ctx == nil || ctx.MyChatMember == nil || ctx.MyChatMember.NewChatMember == nil {
+		return false
+	}
+	status := ctx.MyChatMember.NewChatMember.GetStatus()
+	return status == "administrator" || status == "creator"
+}
+
+// botJoinActorID returns the Telegram user who added the bot, when the
+// update includes a MyChatMember event. Missing/system actors are ignored.
+func botJoinActorID(ctx *ext.Context) int64 {
+	if ctx == nil || ctx.MyChatMember == nil {
+		return 0
+	}
+	return ctx.MyChatMember.From.Id
 }
 
 // verifyAnonymousAdmin handles callback verification for anonymous admins.
@@ -246,12 +289,39 @@ func getAnonAdminCache(chatId, msgId int64) (*gotgbot.Message, error) {
 	return result.(*gotgbot.Message), nil
 }
 
+// botLeftGroup persists removal without making a Telegram request. The
+// database upsert is safe for duplicate lifecycle updates and for chats that
+// have not yet been observed by the message tracker.
+func botLeftGroup(_ *gotgbot.Bot, ctx *ext.Context) error {
+	chat := ctx.EffectiveChat
+	if chat == nil || (chat.Type != "group" && chat.Type != "supergroup") {
+		return ext.ContinueGroups
+	}
+	chatID, chatTitle := chat.Id, chat.Title
+	spawnAsyncUpdate(func() {
+		if err := chats.MarkChatInactive(chatID, chatTitle); err != nil {
+			log.WithError(err).Warnf("[BotUpdates] Failed to persist bot removal for chat %d", chatID)
+		}
+	})
+	return ext.ContinueGroups
+}
+
 // LoadBotUpdates registers bot event handlers for group management.
 // Sets up handlers for bot joins, admin updates, and anonymous admin verification.
 func LoadBotUpdates(dispatcher *ext.Dispatcher) {
 	dispatcher.AddHandlerToGroup(handlers.NewMyChatMember(
 		chat_status.ExtractAdminUpdateStatusChange, adminCacheAutoUpdate,
 	), -2)
+	dispatcher.AddHandlerToGroup(
+		handlers.NewMyChatMember(
+			func(u *gotgbot.ChatMemberUpdated) bool {
+				wasMember, isMember := chat_status.ExtractJoinLeftStatusChange(u)
+				return wasMember && !isMember
+			},
+			botLeftGroup,
+		),
+		-1,
+	)
 	dispatcher.AddHandlerToGroup(
 		handlers.NewMyChatMember(
 			func(u *gotgbot.ChatMemberUpdated) bool {

@@ -41,6 +41,26 @@ func TestAdminCacheHelpersHandleNilMarshal(t *testing.T) {
 	InvalidateAdminCache(-100123)
 }
 
+// Loading an admin snapshot must still return the Telegram result when Redis
+// is unavailable; caching is optional and must not gate group functionality.
+func TestLoadAdminCacheReturnsSnapshotWithoutMarshal(t *testing.T) {
+	originalMarshal := GetMarshal()
+	SetMarshal(nil)
+	t.Cleanup(func() { SetMarshal(originalMarshal) })
+
+	client := &adminCacheBotClient{responses: map[string]json.RawMessage{
+		"getChatMember:999":     json.RawMessage(`{"status":"administrator","user":{"id":999,"is_bot":true,"first_name":"NexGuard"}}`),
+		"getChatAdministrators": json.RawMessage(`[{"status":"administrator","user":{"id":42,"is_bot":false,"first_name":"Admin"}}]`),
+	}}
+	got := LoadAdminCache(newAdminCacheBot(client), -100123)
+	if !got.Cached || len(got.UserInfo) != 1 || got.UserInfo[0].User.Id != 42 {
+		t.Fatalf("LoadAdminCache() without Redis = %+v, want the live Telegram admin snapshot", got)
+	}
+	if found, _ := GetAdminCacheList(-100123); found {
+		t.Fatal("admin snapshot was cached while the marshaler was unavailable")
+	}
+}
+
 type adminCacheBotClient struct {
 	responses           map[string]json.RawMessage
 	errors              map[string]error

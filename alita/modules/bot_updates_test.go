@@ -10,7 +10,10 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 
+	"github.com/divkix/Alita_Robot/alita/db"
+	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/db/logchannels"
+	"github.com/divkix/Alita_Robot/alita/db/models"
 	"github.com/divkix/Alita_Robot/alita/i18n"
 	"github.com/divkix/Alita_Robot/alita/utils/cache"
 	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
@@ -52,6 +55,7 @@ func TestAdminPermissionUpdatesRefreshAuthorization(t *testing.T) {
 			if err := dispatcher.ProcessUpdate(bot, update, nil); err != nil {
 				t.Fatal(err)
 			}
+			DrainUsersAsyncWrites()
 			ctx := newModuleMessageContext(bot, chat, user, "/ban 123")
 			if chat_status.CanUserRestrict(bot, ctx, &chat, user.Id) {
 				t.Fatal("revoked restriction permission is still authorized")
@@ -116,6 +120,30 @@ func TestBotJoinedGroupLeavesChannelWithoutMigrationNotice(t *testing.T) {
 	}
 	if calls := client.callsFor("leaveChat"); len(calls) != 1 {
 		t.Fatalf("leaveChat calls = %d, want bot to leave channel", len(calls))
+	}
+}
+
+func TestBotJoinedSupergroupWelcomeDoesNotCallTelegramForBotStatus(t *testing.T) {
+	useEnglishLocale(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Super Group"}
+	adder := gotgbot.User{Id: 424242, FirstName: "Adder"}
+	ctx := newModuleMessageContext(bot, chat, adder, "bot joined")
+	ctx.MyChatMember = &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: adder,
+		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+	}
+	client.errors["getChatMember"] = errors.New("Telegram lookup timed out")
+
+	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
+	}
+	if calls := client.callsFor("sendMessage"); len(calls) != 1 {
+		t.Fatalf("sendMessage calls = %d, want welcome despite Telegram lookup error", len(calls))
+	}
+	if calls := client.callsFor("getChatMember"); len(calls) != 0 {
+		t.Fatalf("getChatMember calls = %d, want no synchronous status lookup", len(calls))
 	}
 }
 
@@ -204,6 +232,7 @@ func TestAdminCacheAutoUpdateReloadsAdminList(t *testing.T) {
 	if err := adminCacheAutoUpdate(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("adminCacheAutoUpdate() error = %v, want ContinueGroups", err)
 	}
+	DrainUsersAsyncWrites()
 	if calls := client.callsFor("getChatAdministrators"); len(calls) != 1 {
 		t.Fatalf("getChatAdministrators calls = %d, want cache reload", len(calls))
 	}
@@ -587,4 +616,120 @@ func TestAnonymousAdminConfirmationFromAnotherChatDoesNotRunCommand(t *testing.T
 	if calls := flow.client.callsFor("answerCallbackQuery"); len(calls) != 1 {
 		t.Fatalf("answerCallbackQuery calls = %d, want the invalid-request answer", len(calls))
 	}
+}
+
+func TestBotLifecycleAddRemoveAndReAddPersistsOneActiveRow(t *testing.T) {
+	useEnglishLocale(t)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Lifecycle Group"}
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	adder := gotgbot.User{Id: 424242, FirstName: "Adder"}
+	ctx := newModuleMessageContext(bot, chat, adder, "bot joined")
+	ctx.Update = &gotgbot.Update{MyChatMember: &gotgbot.ChatMemberUpdated{Chat: chat, From: adder}}
+
+	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botJoinedGroup() error = %v", err)
+	}
+	DrainUsersAsyncWrites()
+	assertLifecycleChat(t, chat.Id, false)
+	trackedUsers, err := chats.GetChatUsersCached(chat.Id)
+	if err != nil {
+		t.Fatalf("load tracked chat users: %v", err)
+	}
+	foundAdder := false
+	for _, id := range trackedUsers {
+		if id == adder.Id {
+			foundAdder = true
+			break
+		}
+	}
+	if !foundAdder {
+		t.Fatalf("bot adder %d was not added to tracked chat users: %v", adder.Id, trackedUsers)
+	}
+
+	if err := botLeftGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botLeftGroup() error = %v", err)
+	}
+	DrainUsersAsyncWrites()
+	assertLifecycleChat(t, chat.Id, true)
+
+	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botJoinedGroup() on re-add error = %v", err)
+	}
+	DrainUsersAsyncWrites()
+	assertLifecycleChat(t, chat.Id, false)
+}
+
+func assertLifecycleChat(t *testing.T, chatID int64, inactive bool) {
+	t.Helper()
+	var rows []models.Chat
+	if err := db.DB.Where("chat_id = ?", chatID).Find(&rows).Error; err != nil {
+		t.Fatalf("query lifecycle chat: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("lifecycle rows = %d, want exactly one", len(rows))
+	}
+	if rows[0].IsInactive != inactive {
+		t.Fatalf("chat is_inactive = %t, want %t", rows[0].IsInactive, inactive)
+	}
+}
+
+func TestBotLifecycleDuplicateAddUpdateIsIdempotentThroughDispatcher(t *testing.T) {
+	useEnglishLocale(t)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Duplicate Add"}
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	adder := gotgbot.User{Id: 434343, FirstName: "Adder"}
+	event := &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: adder,
+		OldChatMember: gotgbot.ChatMemberLeft{User: bot.User},
+		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+	}
+	dispatcher := ext.NewDispatcher(nil)
+	LoadBotUpdates(dispatcher)
+
+	for updateID := int64(1); updateID <= 2; updateID++ {
+		update := &gotgbot.Update{UpdateId: updateID, MyChatMember: event}
+		if err := dispatcher.ProcessUpdate(bot, update, nil); err != nil {
+			t.Fatalf("ProcessUpdate(%d) error = %v", updateID, err)
+		}
+	}
+	DrainUsersAsyncWrites()
+
+	assertLifecycleChat(t, chat.Id, false)
+	trackedUsers, err := chats.GetChatUsersCached(chat.Id)
+	if err != nil {
+		t.Fatalf("load tracked chat users: %v", err)
+	}
+	if len(trackedUsers) != 1 || trackedUsers[0] != adder.Id {
+		t.Fatalf("tracked users after duplicate delivery = %v, want exactly [%d]", trackedUsers, adder.Id)
+	}
+}
+
+func TestBotLifecycleDispatcherPersistsKickRemoval(t *testing.T) {
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Removed Group"}
+	t.Cleanup(func() { db.DB.Where("chat_id = ?", chat.Id).Delete(&models.Chat{}) })
+	if err := chats.TouchChat(chat.Id, chat.Title); err != nil {
+		t.Fatalf("seed chat: %v", err)
+	}
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	event := &gotgbot.ChatMemberUpdated{
+		Chat: chat, From: gotgbot.User{Id: 515151},
+		OldChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+		NewChatMember: gotgbot.ChatMemberLeft{User: bot.User},
+	}
+	dispatcher := ext.NewDispatcher(nil)
+	LoadBotUpdates(dispatcher)
+
+	for updateID := int64(3); updateID <= 4; updateID++ {
+		update := &gotgbot.Update{UpdateId: updateID, MyChatMember: event}
+		if err := dispatcher.ProcessUpdate(bot, update, nil); err != nil {
+			t.Fatalf("ProcessUpdate(removal %d) error = %v", updateID, err)
+		}
+	}
+	DrainUsersAsyncWrites()
+	assertLifecycleChat(t, chat.Id, true)
 }
