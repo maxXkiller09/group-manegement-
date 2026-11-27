@@ -772,7 +772,6 @@ func setLifecycleDumpForTest(t *testing.T, chatID int64) {
 	resetLifecycleLogStateForTest()
 	t.Cleanup(func() {
 		DrainUsersAsyncWrites()
-	waitForLifecycleLogs(t)
 		waitForLifecycleLogs(t)
 		config.AppConfig.MessageDump = previous
 		resetLifecycleLogStateForTest()
