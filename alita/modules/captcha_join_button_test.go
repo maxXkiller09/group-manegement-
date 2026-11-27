@@ -103,7 +103,7 @@ func TestBotJoinedSupergroupWithCaptchaOnOffersNoButton(t *testing.T) {
 	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
 	}
-	if buttons := joinMessageButtons(t, client); len(buttons) != 0 {
+	if buttons := joinMessageButtons(t, client, chat.Id); len(buttons) != 0 {
 		t.Fatalf("join message buttons = %q, want none when captcha is already on", buttons)
 	}
 }
