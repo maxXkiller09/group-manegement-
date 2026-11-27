@@ -384,29 +384,49 @@ func logBotRemovedFromGroup(b *gotgbot.Bot, ctx *ext.Context, chat *gotgbot.Chat
 	enqueueLifecycleLog(b, fmt.Sprintf("bot-removed:%d", updateID), messageText)
 }
 
+// logPrivateStartMessage observes PM /start updates without registering a
+// second command name or changing the existing /start command's handler.
+func logPrivateStartMessage(b *gotgbot.Bot, ctx *ext.Context) error {
+	if ctx == nil || ctx.EffectiveChat == nil || ctx.EffectiveChat.Type != "private" || ctx.EffectiveMessage == nil {
+		return ext.ContinueGroups
+	}
+	parts := strings.Fields(ctx.EffectiveMessage.Text)
+	if len(parts) == 0 || !strings.HasPrefix(parts[0], "/") {
+		return ext.ContinueGroups
+	}
+	command := strings.SplitN(strings.TrimPrefix(parts[0], "/"), "@", 2)[0]
+	if command != "start" {
+		return ext.ContinueGroups
+	}
+	return logPrivateStart(b, ctx)
+}
+
 // logPrivateStart records first-time versus returning PM starts without
-// including the user's message or deep-link payload.
+// including the user's message or deep-link payload. User lookup and formatting
+// happen in the lifecycle worker, never in the update handler.
 func logPrivateStart(b *gotgbot.Bot, ctx *ext.Context) error {
 	if ctx == nil || ctx.EffectiveChat == nil || ctx.EffectiveChat.Type != "private" || ctx.EffectiveUser == nil {
 		return ext.ContinueGroups
 	}
-	kind := "RETURNING"
-	if user.CheckUserInfo(ctx.EffectiveUser.Id) == nil {
-		kind = "FIRST TIME"
-	}
+	startedBy := *ctx.EffectiveUser
 	unixTime := int64(0)
 	if ctx.EffectiveMessage != nil {
 		unixTime = ctx.EffectiveMessage.Date
 	}
-	messageText := fmt.Sprintf(
-		"<b>BOT PM START — %s</b>\nUser: %s\nTime: %s",
-		kind, lifecycleUserLabel(ctx.EffectiveUser), lifecycleEventTime(unixTime),
-	)
 	updateID := ctx.UpdateId
 	if updateID == 0 {
 		updateID = time.Now().UnixNano()
 	}
-	enqueueLifecycleLog(b, fmt.Sprintf("pm-start:%d", updateID), messageText)
+	enqueueLifecycleLogWithBuilder(b, fmt.Sprintf("pm-start:%d", updateID), func() string {
+		kind := "RETURNING"
+		if user.CheckUserInfo(startedBy.Id) == nil {
+			kind = "FIRST TIME"
+		}
+		return fmt.Sprintf(
+			"<b>BOT PM START — %s</b>\nUser: %s\nTime: %s",
+			kind, lifecycleUserLabel(&startedBy), lifecycleEventTime(unixTime),
+		)
+	})
 	return ext.ContinueGroups
 }
 
@@ -471,7 +491,7 @@ func LoadBotUpdates(dispatcher *ext.Dispatcher) {
 		),
 	)
 
-	dispatcher.AddHandler(handlers.NewCommand("start", logPrivateStart))
+	dispatcher.AddHandler(handlers.NewMessage(message.All, logPrivateStartMessage))
 	dispatcher.AddHandler(handlers.NewMessage(message.All, logGroupMigration))
 	dispatcher.AddHandler(handlers.NewCallback(callbackquery.Prefix("anon_admin"), verifyAnonymousAdmin))
 }
