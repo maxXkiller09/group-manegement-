@@ -40,7 +40,7 @@ func assertCaptchaChatTitle(t *testing.T, chat gotgbot.Chat) {
 // message the bot sent.
 func joinMessageButtons(t *testing.T, client *moduleBotClient, chatID int64) []string {
 	t.Helper()
-	calls := moduleSendMessagesToChat(client, chatID)
+	calls := moduleSendMessagesToChatID(client, chatID)
 	if len(calls) != 1 {
 		t.Fatalf("group sendMessage calls = %d, want one join message", len(calls))
 	}
