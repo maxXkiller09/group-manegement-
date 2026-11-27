@@ -296,13 +296,13 @@ func getAnonAdminCache(chatId, msgId int64) (*gotgbot.Message, error) {
 // botLeftGroup persists removal without making a Telegram request. The
 // database upsert is safe for duplicate lifecycle updates and for chats that
 // have not yet been observed by the message tracker.
-func botLeftGroup(_ *gotgbot.Bot, ctx *ext.Context) error {
+func botLeftGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 	chat := ctx.EffectiveChat
 	if chat == nil || (chat.Type != "group" && chat.Type != "supergroup") {
 		return ext.ContinueGroups
 	}
 	chatID, chatTitle := chat.Id, chat.Title
-	logBotRemovedFromGroup(_botFromContext(ctx), ctx, chat)
+	logBotRemovedFromGroup(b, ctx, chat)
 	spawnAsyncUpdate(func() {
 		if err := chats.MarkChatInactive(chatID, chatTitle); err != nil {
 			log.WithError(err).Warnf("[BotUpdates] Failed to persist bot removal for chat %d", chatID)
@@ -366,13 +366,17 @@ func logBotRemovedFromGroup(b *gotgbot.Bot, ctx *ext.Context, chat *gotgbot.Chat
 			actor = &ctx.MyChatMember.From
 			eventTime = ctx.MyChatMember.Date
 	}
-	action := "left"
-	if actor != nil && (b == nil || actor.Id != b.Id) {
-		action = "removed/kicked by " + lifecycleUserLabel(actor)
+	action := "LEFT"
+	actorLine := "Removed by: unknown"
+	if actor != nil && b != nil && actor.Id == b.Id {
+		actorLine = "Left by bot"
+	} else if actor != nil {
+		action = "REMOVED/KICKED"
+		actorLine = "Removed by: " + lifecycleUserLabel(actor)
 	}
 	messageText := fmt.Sprintf(
-		"<b>BOT %s GROUP</b>\nGroup: %s\nChat ID: <code>%d</code>\nTime: %s",
-		html.EscapeString(strings.ToUpper(action)), lifecycleGroupTitle(chat), chat.Id, lifecycleEventTime(eventTime),
+		"<b>BOT %s GROUP</b>\nGroup: %s\nChat ID: <code>%d</code>\n%s\nTime: %s",
+		action, lifecycleGroupTitle(chat), chat.Id, actorLine, lifecycleEventTime(eventTime),
 	)
 	enqueueLifecycleLog(b, fmt.Sprintf("bot-removed:%d", updateID), messageText)
 }
