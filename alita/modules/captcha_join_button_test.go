@@ -38,9 +38,13 @@ func assertCaptchaChatTitle(t *testing.T, chat gotgbot.Chat) {
 
 // joinMessageButtons returns the callback data of every button on the join
 // message the bot sent.
-func joinMessageButtons(t *testing.T, client *moduleBotClient) []string {
+func joinMessageButtons(t *testing.T, client *moduleBotClient, chatID int64) []string {
 	t.Helper()
-	call := client.onlyCall(t, "sendMessage")
+	calls := moduleSendMessagesToChat(client, chatID)
+	if len(calls) != 1 {
+		t.Fatalf("group sendMessage calls = %d, want one join message", len(calls))
+	}
+	call := calls[0]
 	markup, ok := call.Params["reply_markup"].(gotgbot.InlineKeyboardMarkup)
 	if !ok {
 		return nil
@@ -75,7 +79,7 @@ func TestBotJoinedSupergroupOffersCaptchaButtonWithoutWritingSettings(t *testing
 	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
 	}
-	buttons := joinMessageButtons(t, client)
+	buttons := joinMessageButtons(t, client, chat.Id)
 	if len(buttons) != 1 {
 		t.Fatalf("join message buttons = %q, want the captcha button", buttons)
 	}
