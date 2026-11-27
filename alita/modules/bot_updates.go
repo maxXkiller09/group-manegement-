@@ -35,6 +35,7 @@ func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 	if chat.Type == "private" {
 		return ext.EndGroups
 	}
+	logBotAddedToGroup(b, ctx, chat)
 
 	// check if group is supergroup or not
 	// if not a supergroup, send a message and leave it
@@ -86,7 +87,6 @@ func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
 			}
 		}
 	})
-	logBotAddedToGroup(b, ctx, chat)
 
 	tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
 
