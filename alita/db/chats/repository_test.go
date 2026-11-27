@@ -606,4 +606,3 @@ func TestTouchChatHandlesLegacyRowWithNullAndDefaultFields(t *testing.T) {
 		t.Fatal("legacy last_activity was not populated by TouchChat")
 	}
 }
-
