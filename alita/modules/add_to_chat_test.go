@@ -98,7 +98,7 @@ bot_updates_make_me_admin: " Localized: make me admin."
 	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
 	}
-	calls := moduleSendMessagesToChat(client, chat.Id)
+	calls := moduleSendMessagesToChatID(client, chat.Id)
 	if len(calls) != 1 {
 		t.Fatalf("group sendMessage calls = %d, want 1", len(calls))
 	}
