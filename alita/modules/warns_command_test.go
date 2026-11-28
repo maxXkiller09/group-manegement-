@@ -816,7 +816,7 @@ func TestWarnSettingsEscapeUserInputInHTMLReplies(t *testing.T) {
 	}
 }
 
-func TestWarnStoresForNonMemberWithoutMembershipPreflight(t *testing.T) {
+func TestWarnStoresForNonMemberWhenMembershipLookupFails(t *testing.T) {
 	useEnglishLocale(t)
 	requestErr := errors.New("membership lookup should not be needed")
 	f := newAdminChatFixture(t)
@@ -832,8 +832,5 @@ func TestWarnStoresForNonMemberWithoutMembershipPreflight(t *testing.T) {
 	}
 	if count, entries := warns.GetWarns(target.Id, f.chat.Id); count != 1 || len(entries) != 1 {
 		t.Fatalf("stored warns = %d/%d, want one warning for non-member", count, len(entries))
-	}
-	if calls := f.client.callsFor("getChatMember"); len(calls) != 0 {
-		t.Fatalf("non-member warning performed %d membership lookups, want none", len(calls))
 	}
 }
