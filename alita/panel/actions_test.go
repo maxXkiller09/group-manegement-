@@ -194,4 +194,3 @@ func TestDirectActionLegacyNumericFieldRemainsSupported(t *testing.T) {
 		t.Fatalf("Telegram username lookups = %d, want 0 for legacy numeric ID", got)
 	}
 }
-
