@@ -1433,15 +1433,23 @@ func TestBanFamilyNonMemberTargetResolutionMatrix(t *testing.T) {
 						}
 				}
 					status := "member"
-					if membership == "non-member" { status = "left" }
+					if membership == "non-member" {
+						status = "left"
+					}
 					f.client.membersByUser[fmt.Sprint(targetID)] = []byte(fmt.Sprintf(
 						`{"status":%q,"user":{"id":%d,"is_bot":false,"first_name":"Matrix Target"}}`, status, targetID))
 					arg := fmt.Sprint(targetID)
-					if targetMethod == "username" { arg = "@matrixuser"+fmt.Sprint(targetID) }
-					if targetMethod == "reply" { arg = "" }
+					if targetMethod == "username" {
+						arg = "@matrixuser" + fmt.Sprint(targetID)
+					}
+					if targetMethod == "reply" {
+						arg = ""
+					}
 					ctx := newModuleMessageContext(f.bot, f.chat, f.admin, command.text(arg, targetMethod == "reply"))
 					replyUser := target
-					if targetMethod != "reply" { replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"} }
+					if targetMethod != "reply" {
+						replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"}
+					}
 					ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{MessageId: 303, Date: 1, Chat: f.chat, From: &replyUser, Text: "reply source"}
 					if err := command.run(f.bot, ctx); err != ext.EndGroups {
 						t.Fatalf("command error = %v, want EndGroups", err)
@@ -1449,7 +1457,9 @@ func TestBanFamilyNonMemberTargetResolutionMatrix(t *testing.T) {
 					calls := f.client.callsFor(command.action)
 					if command.name == "kick" || command.name == "skick" || command.name == "dkick" {
 						if membership == "non-member" {
-							if len(calls) != 0 { t.Fatalf("non-member kick action calls = %+v, want none", calls) }
+							if len(calls) != 0 {
+							t.Fatalf("non-member kick action calls = %+v, want none", calls)
+						}
 						if reply := lastReply(t, f.client); !strings.Contains(reply, "Ye user abhi group me nahi hai, /ban use karo.") {
 							 t.Fatalf("non-member kick reply = %q", reply)
 						}
