@@ -122,4 +122,3 @@ func TestMigrateChatIDFailsClosedOnTargetRows(t *testing.T) {
 		t.Fatalf("target filter must remain untouched: %v", err)
 	}
 }
-
