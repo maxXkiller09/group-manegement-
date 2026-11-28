@@ -1424,7 +1424,7 @@ func TestBanFamilyNonMemberTargetResolutionMatrix(t *testing.T) {
 						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "matrixuser" + fmt.Sprint(targetID), Name: target.FirstName}).Error; err != nil {
 							t.Fatal(err)
 						}
-				}
+					}
 					status := "member"
 					if membership == "non-member" {
 						status = "left"
