@@ -20,8 +20,8 @@ var (
 )
 
 type chatIDMigration struct {
-	OldChatID int64     `gorm:"column:old_chat_id;primaryKey"`
-	NewChatID int64     `gorm:"column:new_chat_id;uniqueIndex;not null"`
+	OldChatID  int64     `gorm:"column:old_chat_id;primaryKey"`
+	NewChatID  int64     `gorm:"column:new_chat_id;uniqueIndex;not null"`
 	MigratedAt time.Time `gorm:"column:migrated_at;not null"`
 }
 
