@@ -818,6 +818,7 @@ func TestWarnSettingsEscapeUserInputInHTMLReplies(t *testing.T) {
 
 func TestWarnStoresForNonMemberWithoutMembershipPreflight(t *testing.T) {
 	useEnglishLocale(t)
+	requestErr := errors.New("membership lookup should not be needed")
 	f := newAdminChatFixture(t)
 	f.client.errors["getChatMember"] = requestErr
 	target := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Former Member"}
