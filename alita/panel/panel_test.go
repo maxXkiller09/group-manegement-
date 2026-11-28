@@ -115,12 +115,12 @@ type panelFakeRights struct {
 }
 
 type panelFakeClient struct {
-	mu             sync.Mutex
-	calls          []string
-	chatType       string
-	usernameChats  map[string]gotgbot.Chat
+	mu              sync.Mutex
+	calls           []string
+	chatType        string
+	usernameChats   map[string]gotgbot.Chat
 	usernameLookups int
-	chatErr        error
+	chatErr         error
 	members        map[int64]json.RawMessage
 	admins         map[int64]json.RawMessage
 	botAdmin       bool
