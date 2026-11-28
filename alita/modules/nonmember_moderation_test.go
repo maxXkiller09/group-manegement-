@@ -59,7 +59,7 @@ func TestMuteVariantsExplainTelegramNonMemberRefusal(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f := newAdminChatFixture(t)
-			f.client.errorsByUser["restrictChatMember|13"] = errors.New("Bad Request: user is not a member of the chat")
+			f.client.errorsByUser = map[string]error{"restrictChatMember|13": errors.New("Bad Request: user is not a member of the chat")}
 			ctx := tt.ctx(f.bot, f.chat, f.admin)
 			if err := tt.run(f.bot, ctx); err != ext.EndGroups {
 				t.Fatalf("%s returned %v, want EndGroups after the refusal reply", tt.text, err)
@@ -94,7 +94,7 @@ func TestRestrictPromptExplainsAbsentTarget(t *testing.T) {
 
 func TestRestrictButtonExplainsTargetThatLeftBeforeAction(t *testing.T) {
 	f := newAdminChatFixture(t)
-	f.client.errorsByUser["restrictChatMember|13"] = errors.New("Bad Request: user is not a member of the chat")
+	f.client.errorsByUser = map[string]error{"restrictChatMember|13": errors.New("Bad Request: user is not a member of the chat")}
 	msgCtx := newModuleMessageContext(f.bot, f.chat, f.admin, "/restrict 13")
 	data := moderationButtonData("restrict", msgCtx.EffectiveMessage, &f.chat, map[string]string{"a": "mute", "u": "13"})
 	ctx := newModuleCallbackContext(f.bot, f.chat, f.admin, data)
@@ -116,7 +116,7 @@ func TestRestrictButtonExplainsTargetThatLeftBeforeAction(t *testing.T) {
 
 func TestUnrestrictButtonExplainsTargetThatLeftBeforeAction(t *testing.T) {
 	f := newAdminChatFixture(t)
-	f.client.errorsByUser["restrictChatMember|13"] = errors.New("Bad Request: user is not a member of the chat")
+	f.client.errorsByUser = map[string]error{"restrictChatMember|13": errors.New("Bad Request: user is not a member of the chat")}
 	msgCtx := newModuleMessageContext(f.bot, f.chat, f.admin, "/unrestrict 13")
 	data := moderationButtonData("unrestrict", msgCtx.EffectiveMessage, &f.chat, map[string]string{"a": "unmute", "u": "13"})
 	ctx := newModuleCallbackContext(f.bot, f.chat, f.admin, data)
