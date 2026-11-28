@@ -1472,8 +1472,10 @@ func TestBanConfirmationUsesStoredTargetIdentity(t *testing.T) {
 			t.Fatalf("ban confirmation %q does not contain %q", text, want)
 		}
 	}
-	if calls := f.client.callsFor("getChat"); len(calls) != 0 {
-		t.Fatalf("stored identity display made %d getChat calls, want none", len(calls))
+	// One getChat call is expected from the group-admin protection check;
+	// target display must not issue a second lookup for the user's ID.
+	if calls := f.client.callsFor("getChat"); len(calls) != 1 || fmt.Sprint(calls[0].Params["chat_id"]) != fmt.Sprint(f.chat.Id) {
+		t.Fatalf("getChat calls = %+v, want only the group lookup for permission validation", calls)
 	}
 }
 
