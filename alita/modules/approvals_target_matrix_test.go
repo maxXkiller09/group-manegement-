@@ -19,11 +19,15 @@ func TestApprovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 		text func(string, bool) string
 	}{
 		{"approve", approvalsModule.approveUser, func(target string, reply bool) string {
-			if reply { return "/approve" }
+			if reply {
+				return "/approve"
+			}
 			return "/approve " + target + " reason"
 		}},
 		{"unapprove", approvalsModule.unapproveUser, func(target string, reply bool) string {
-			if reply { return "/unapprove" }
+			if reply {
+				return "/unapprove"
+			}
 			return "/unapprove " + target
 		}},
 	}
