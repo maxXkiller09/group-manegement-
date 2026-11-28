@@ -101,8 +101,18 @@ func TestWarnCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 			}
 			return "/warn " + target + " spam"
 		}},
-		{"swarn", func(target string, reply bool) string { if reply { return "/swarn" }; return "/swarn " + target }},
-		{"dwarn", func(target string, reply bool) string { if reply { return "/dwarn" }; return "/dwarn " + target + " spam" }},
+		{"swarn", func(target string, reply bool) string {
+			if reply {
+				return "/swarn"
+			}
+			return "/swarn " + target
+		}},
+		{"dwarn", func(target string, reply bool) string {
+			if reply {
+				return "/dwarn"
+			}
+			return "/dwarn " + target + " spam"
+		}},
 	}
 	for _, command := range commands {
 		for _, membership := range []string{"member", "non-member"} {
