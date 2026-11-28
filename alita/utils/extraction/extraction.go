@@ -292,7 +292,7 @@ func ResolvedUserInfoFromContext(ctx *ext.Context, userID int64) (username, firs
 }
 
 var (
-	ErrInvalidModerationTarget = errors.New("invalid moderation target")
+	ErrInvalidModerationTarget  = errors.New("invalid moderation target")
 	ErrModerationTargetNotFound = errors.New("moderation target not found")
 )
 
