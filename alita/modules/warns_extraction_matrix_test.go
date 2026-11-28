@@ -127,16 +127,24 @@ func TestWarnCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 						}
 					}
 					status := "member"
-					if membership == "non-member" { status = "left" }
+					if membership == "non-member" {
+						status = "left"
+					}
 					f.client.membersByUser[fmt.Sprint(targetID)] = json.RawMessage(fmt.Sprintf(
 						`{"status":%q,"user":{"id":%d,"is_bot":false,"first_name":"Warn Matrix Target"}}`, status, targetID))
 					arg := fmt.Sprint(targetID)
-					if targetMethod == "username" { arg = "@warnmatrix"+fmt.Sprint(targetID) }
-					if targetMethod == "reply" { arg = "" }
+					if targetMethod == "username" {
+						arg = "@warnmatrix" + fmt.Sprint(targetID)
+					}
+					if targetMethod == "reply" {
+						arg = ""
+					}
 					text := command.text(arg, targetMethod == "reply")
 					ctx := newModuleMessageContext(f.bot, f.chat, f.admin, text)
 					replyUser := target
-					if targetMethod != "reply" { replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"} }
+					if targetMethod != "reply" {
+						replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"}
+					}
 					ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{MessageId: 303, Date: 1, Chat: f.chat, From: &replyUser, Text: "reply source"}
 					dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
 					LoadWarns(dispatcher)
@@ -170,11 +178,15 @@ func TestWarnRemovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 		text func(string, bool) string
 	}{
 		{"rmwarn", warnsModule.removeWarn, func(target string, reply bool) string {
-			if reply { return "/rmwarn" }
+			if reply {
+				return "/rmwarn"
+			}
 			return "/rmwarn " + target
 		}},
 		{"resetwarns", warnsModule.resetWarns, func(target string, reply bool) string {
-			if reply { return "/resetwarns" }
+			if reply {
+				return "/resetwarns"
+			}
 			return "/resetwarns " + target
 		}},
 	}
@@ -197,8 +209,12 @@ func TestWarnRemovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 					f.client.membersByUser[fmt.Sprint(targetID)] = json.RawMessage(fmt.Sprintf(
 						`{"status":%q,"user":{"id":%d,"is_bot":false,"first_name":"Warn Removal Target"}}`, status, targetID))
 					arg := fmt.Sprint(targetID)
-					if targetMethod == "username" { arg = "@warnremove"+fmt.Sprint(targetID) }
-					if targetMethod == "reply" { arg = "" }
+					if targetMethod == "username" {
+						arg = "@warnremove" + fmt.Sprint(targetID)
+					}
+					if targetMethod == "reply" {
+						arg = ""
+					}
 					ctx := newModuleMessageContext(f.bot, f.chat, f.admin, command.text(arg, targetMethod == "reply"))
 					replyUser := gotgbot.User{Id: targetID, FirstName: "Warn Removal Target"}
 					if targetMethod != "reply" { replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"} }
