@@ -291,31 +291,97 @@ func ResolvedUserInfoFromContext(ctx *ext.Context, userID int64) (username, firs
 	return info.Username, info.FirstName, info.Username != "" || info.FirstName != ""
 }
 
-func resolveUsername(b *gotgbot.Bot, username string) (int64, string, string) {
+var (
+	ErrInvalidModerationTarget = errors.New("invalid moderation target")
+	ErrModerationTargetNotFound = errors.New("moderation target not found")
+)
+
+// ResolveModerationTarget resolves only Telegram users for Mini App moderation.
+// It checks NexGuard's user database first, then Telegram getChat as a fallback;
+// the fallback is accepted only for a private user chat, never a group, channel
+// or bot. Numeric IDs are parsed locally and verified against membership by
+// the caller's live Telegram rights checks.
+func ResolveModerationTarget(b *gotgbot.Bot, value string) (int64, error) {
+	value = strings.TrimSpace(value)
+	if b == nil || value == "" {
+		return 0, ErrInvalidModerationTarget
+	}
+	if strings.HasPrefix(value, "@") {
+		username := normalizeModerationUsername(value)
+		if username == "" {
+			return 0, ErrInvalidModerationTarget
+		}
+		if userID := lookupModerationUserID(username); validModerationUserID(b, userID) {
+			if userID == b.Id {
+				return 0, ErrInvalidModerationTarget
+			}
+			return userID, nil
+		}
+		chat, err := lookupPrivateTelegramUser(b, username)
+		if err != nil {
+			return 0, err
+		}
+		if chat.Id == b.Id || !validModerationUserID(b, chat.Id) {
+			return 0, ErrInvalidModerationTarget
+		}
+		return chat.Id, nil
+	}
+
+	userID, err := strconv.ParseInt(value, 10, 64)
+	if err != nil || !validModerationUserID(b, userID) || userID == b.Id {
+		return 0, ErrInvalidModerationTarget
+	}
+	return userID, nil
+}
+
+func normalizeModerationUsername(username string) string {
 	username = strings.ToLower(strings.TrimPrefix(strings.TrimSpace(username), "@"))
-	if len(username) < 5 || b == nil {
+	if len(username) < 5 {
+		return ""
+	}
+	return username
+}
+
+func lookupModerationUserID(username string) int64 {
+	return user.GetUserIdByUserName(username)
+}
+
+func lookupPrivateTelegramUser(b *gotgbot.Bot, username string) (*gotgbot.Chat, error) {
+	chat, err := chat_status.GetChat(b, "@"+username)
+	if err != nil {
+		log.Debugf("[Extraction] Failed to get user @%s from Telegram API: %v", username, err)
+		return nil, ErrModerationTargetNotFound
+	}
+	if chat == nil || chat.Type != "private" || !validModerationUserID(b, chat.Id) || chat.Id == b.Id {
+		chatType := ""
+		chatID := int64(0)
+		if chat != nil {
+			chatType, chatID = chat.Type, chat.Id
+		}
+		log.Debugf("[Extraction] Rejected @%s Telegram fallback: chat type=%q id=%d", username, chatType, chatID)
+		return nil, ErrInvalidModerationTarget
+	}
+	return chat, nil
+}
+
+func resolveUsername(b *gotgbot.Bot, username string) (int64, string, string) {
+	username = normalizeModerationUsername(username)
+	if username == "" || b == nil {
 		return 0, "", ""
 	}
 
+	if userID := lookupModerationUserID(username); validModerationUserID(b, userID) && userID != b.Id {
+		return userID, "", ""
+	}
 	if channelID := channels.GetChannelIdByUserName(username); chat_status.IsChannelId(channelID) {
 		// Generic /info extraction also supports channel usernames already
 		// known to the bot. Moderation callers reject channel IDs downstream.
 		return channelID, "", ""
 	}
-	if userID := user.GetUserIdByUserName(username); validModerationUserID(b, userID) && userID != b.Id {
-		return userID, "", ""
-	}
-
-	chat, err := chat_status.GetChat(b, "@"+username)
+	chat, err := lookupPrivateTelegramUser(b, username)
 	if err != nil {
-		log.Debugf("[Extraction] Failed to get user @%s from Telegram API: %v", username, err)
 		return 0, "", ""
 	}
-	if chat.Type != "private" || chat.Id == b.Id || !validModerationUserID(b, chat.Id) {
-		log.Debugf("[Extraction] Rejected @%s Telegram fallback: chat type=%q id=%d", username, chat.Type, chat.Id)
-		return 0, "", ""
-	}
-
 	log.Debugf("[Extraction] Found private user @%s (ID: %d) via Telegram API", username, chat.Id)
 	return chat.Id, chat.Username, chat.FirstName
 }
