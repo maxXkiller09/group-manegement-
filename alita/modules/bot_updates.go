@@ -484,7 +484,7 @@ func logGroupMigration(b *gotgbot.Bot, ctx *ext.Context) error {
 	return ext.ContinueGroups
 }
 
-//// LoadBotUpdates registers bot event handlers for group management.
+// LoadBotUpdates registers bot event handlers for group management.
 // Sets up handlers for bot joins, admin updates, and anonymous admin verification.
 func LoadBotUpdates(dispatcher *ext.Dispatcher) {
 	dispatcher.AddHandlerToGroup(handlers.NewMyChatMember(
