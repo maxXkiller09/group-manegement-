@@ -41,6 +41,16 @@ func MigrateChatID(oldID, newID int64, newTitle string) error {
 	}
 
 	err := db.DB.Transaction(func(tx *gorm.DB) error {
+		// Serialize duplicate Telegram migration updates on the retained source row.
+		var oldChat models.Chat
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("chat_id = ?", oldID).First(&oldChat).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrChatMigrationSourceNotFound
+			}
+			return err
+		}
+
 		var prior chatIDMigration
 		err := tx.Where("old_chat_id = ?", oldID).First(&prior).Error
 		if err == nil {
@@ -69,15 +79,6 @@ func MigrateChatID(oldID, newID int64, newTitle string) error {
 		if err := tx.Where("chat_id = ?", newID).First(&targetChat).Error; err == nil {
 			return fmt.Errorf("%w: chats", ErrChatMigrationTargetExists)
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-
-		var oldChat models.Chat
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("chat_id = ?", oldID).First(&oldChat).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return ErrChatMigrationSourceNotFound
-			}
 			return err
 		}
 
