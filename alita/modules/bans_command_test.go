@@ -1428,7 +1428,7 @@ func TestBanFamilyNonMemberTargetResolutionMatrix(t *testing.T) {
 					targetID := uniquePositiveUserID()
 					target := gotgbot.User{Id: targetID, FirstName: "Matrix Target"}
 					if targetMethod == "username" {
-						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "matrixuser"+fmt.Sprint(targetID), Name: target.FirstName}).Error; err != nil {
+						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "matrixuser" + fmt.Sprint(targetID), Name: target.FirstName}).Error; err != nil {
 							t.Fatal(err)
 						}
 				}
