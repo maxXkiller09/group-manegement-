@@ -2,6 +2,8 @@ package modules
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
@@ -112,8 +114,10 @@ func TestTemporaryMuteRejectsInvalidDurationAndProtectedTarget(t *testing.T) {
 		t.Fatalf("tMute(protected) error = %v, want EndGroups", err)
 	}
 
-	if calls := client.callsFor("restrictChatMember"); len(calls) != 0 {
-		t.Fatalf("restrictChatMember calls = %d, want none for rejected temporary mutes", len(calls))
+	if calls := client.callsFor("restrictChatMember"); len(calls) != 1 {
+		t.Fatalf("restrictChatMember calls = %d, want one Telegram refusal for the absent user", len(calls))
+	} else {
+		assertParams(t, calls[0], targetParams(chat.Id, 13))
 	}
 }
 
