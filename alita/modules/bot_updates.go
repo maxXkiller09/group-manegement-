@@ -29,6 +29,9 @@ import (
 // botJoinedGroup handles bot addition to new groups.
 // Sends welcome message and ensures the group is a supergroup before staying.
 func botJoinedGroup(b *gotgbot.Bot, ctx *ext.Context) error {
+	if ctx == nil || ctx.EffectiveChat == nil {
+		return ext.ContinueGroups
+	}
 	chat := ctx.EffectiveChat
 
 	// don't log if it's a private chat
