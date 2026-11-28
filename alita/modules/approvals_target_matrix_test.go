@@ -48,8 +48,12 @@ func TestApprovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 						}
 					}
 					arg := fmt.Sprint(targetID)
-					if targetMethod == "username" { arg = "@approvaluser"+fmt.Sprint(targetID) }
-					if targetMethod == "reply" { arg = "" }
+					if targetMethod == "username" {
+						arg = "@approvaluser" + fmt.Sprint(targetID)
+					}
+					if targetMethod == "reply" {
+						arg = ""
+					}
 					ctx := newModuleMessageContext(f.bot, f.chat, f.admin, command.text(arg, targetMethod == "reply"))
 					replyUser := gotgbot.User{Id: targetID, FirstName: "Approval Target"}
 					if targetMethod != "reply" {
