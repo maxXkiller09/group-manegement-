@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
@@ -121,7 +122,11 @@ func UpdateUser(userId int64, username, name string) error {
 
 func GetUserIdByUserName(username string) int64 {
 	var userId int64
-	err := db.DB.Model(&models.User{}).Select("user_id").Where("username = ?", username).Scan(&userId).Error
+	username = strings.ToLower(strings.TrimPrefix(strings.TrimSpace(username), "@"))
+	if username == "" {
+		return 0
+	}
+	err := db.DB.Model(&models.User{}).Select("user_id").Where("LOWER(username) = ?", username).Scan(&userId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0
 	} else if err != nil {

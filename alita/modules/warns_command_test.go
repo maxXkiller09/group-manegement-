@@ -565,12 +565,10 @@ func TestWarnThisUserPropagatesGotgbotRequestErrors(t *testing.T) {
 	target := gotgbot.User{Id: 42, FirstName: "Member"}
 
 	for _, tt := range []struct {
-		name         string
-		method       string
-		mode         string
-		callWarnThis bool
+		name   string
+		method string
+		mode   string
 	}{
-		{name: "member lookup failure", method: "getChatMember", callWarnThis: true},
 		{name: "warning reply failure", method: "sendMessage"},
 		{name: "ban limit failure", method: "banChatMember", mode: "ban"},
 		{name: "kick limit failure", method: "unbanChatMember", mode: "kick"},
@@ -591,12 +589,7 @@ func TestWarnThisUserPropagatesGotgbotRequestErrors(t *testing.T) {
 			}
 			ctx := newWarnReplyContext(bot, chat, admin, target, "/warn too noisy")
 
-			var err error
-			if tt.callWarnThis {
-				err = warnsModule.warnThisUser(bot, ctx, target.Id, "too noisy", "warn", warnIssuer(ctx))
-			} else {
-				err = warnsModule.warnUser(bot, ctx)
-			}
+			err := warnsModule.warnUser(bot, ctx)
 			if !errors.Is(err, requestErr) {
 				t.Fatalf("warnUser() error = %v, want request error", err)
 			}
@@ -820,5 +813,24 @@ func TestWarnSettingsEscapeUserInputInHTMLReplies(t *testing.T) {
 				t.Fatalf("reply = %q, want the input HTML-escaped", text)
 			}
 		})
+	}
+}
+
+func TestWarnStoresForNonMemberWhenMembershipLookupFails(t *testing.T) {
+	useEnglishLocale(t)
+	requestErr := errors.New("membership lookup should not be needed")
+	f := newAdminChatFixture(t)
+	f.client.errors["getChatMember"] = requestErr
+	target := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Former Member"}
+	ctx := newModuleMessageContext(f.bot, f.chat, f.admin, "/warn too noisy")
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 303, Date: 1, Chat: f.chat, From: &target, Text: "previous message",
+	}
+
+	if err := warnsModule.warnThisUser(f.bot, ctx, target.Id, "too noisy", "warn", warnIssuer(ctx)); err != ext.EndGroups {
+		t.Fatalf("warnThisUser() error = %v, want EndGroups", err)
+	}
+	if count, entries := warns.GetWarns(target.Id, f.chat.Id); count != 1 || len(entries) != 1 {
+		t.Fatalf("stored warns = %d/%d, want one warning for non-member", count, len(entries))
 	}
 }

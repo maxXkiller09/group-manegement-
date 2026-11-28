@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 	"unicode/utf8"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
@@ -135,6 +134,7 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 	splitText := strings.SplitN(msg.Text, " ", 2)
 
 	if len(splitText) < 2 {
+		setReplyUserInfo(ctx, msg)
 		return IdFromReply(msg)
 	}
 
@@ -170,47 +170,44 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 		// ParseEntityTypes normalises entity offsets to UTF-8 bytes, so the
 		// suffix is a byte slice, not a UTF-16 range.
 		text = msg.Text[ent.Offset+ent.Length:]
-	} else if hasArgs && args[1][0] == '@' {
-		user := args[1]
-		userId = GetUserId(b, user)
-		if userId == 0 {
-			tr := i18n.MustNewTranslator(lang.GetLanguage(ctx))
-			text, _ := tr.GetString("extraction_user_not_found")
-			_, err := msg.Reply(b, text, nil)
-			if err != nil {
-				log.Errorf("[Extraction] Failed to reply with user not found: %v", err)
-			}
+	} else if hasArgs && strings.HasPrefix(args[1], "@") {
+		var resolvedUsername, resolvedName string
+		userId, resolvedUsername, resolvedName = resolveUsername(b, args[1])
+		if !validModerationUserID(b, userId) {
+			replyUnknownModerationUser(b, ctx)
 			return -1, ""
 		}
+		setResolvedUserInfo(ctx, userId, resolvedUsername, resolvedName)
 		res := strings.SplitN(msg.Text, " ", 3)
 		if len(res) >= 3 {
 			text = res[2]
 		}
 		named = true
 	} else if hasArgs {
-		named = true
-		if chatId, err := strconv.ParseInt(args[1], 10, 64); err != nil || !chat_status.IsChannelId(chatId) {
-			for _, arg := range args[1] {
-				if unicode.IsDigit(arg) {
-					continue
-				}
-				named = false
-				break
+		if parsedID, err := strconv.ParseInt(args[1], 10, 64); err == nil || isNumericIDToken(args[1]) {
+			named = true
+			if err != nil || (!validModerationUserID(b, parsedID) && !isReplyChannelTarget(msg, parsedID) && !chat_status.IsChannelId(parsedID)) {
+				replyUnknownModerationUser(b, ctx)
+				return -1, ""
 			}
-		}
-		if named {
-			userId, _ = strconv.ParseInt(args[1], 10, 64)
+			userId = parsedID
 			res := strings.SplitN(msg.Text, " ", 3)
 			if len(res) >= 3 {
 				text = res[2]
 			}
 		}
 	}
+	if named && !validModerationUserID(b, userId) && !isReplyChannelTarget(msg, userId) && !chat_status.IsChannelId(userId) {
+		replyUnknownModerationUser(b, ctx)
+		return -1, ""
+	}
+
 	if !named && prevMessage != nil {
 		// When the command arguments do not identify a target, a reply is the
 		// target regardless of whether the trailing reason happens to be a UUID.
 		// Requiring a UUID here made ordinary reasons such as "spam" or "too
 		// noisy" discard the replied-to user across moderation commands.
+		setReplyUserInfo(ctx, msg)
 		userId, text = IdFromReply(msg)
 		return userId, trimTextNewline(text)
 	}
@@ -222,34 +219,110 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 	return userId, trimTextNewline(text)
 }
 
-func GetUserId(b *gotgbot.Bot, username string) int64 {
-	username = strings.TrimPrefix(username, "@")
+// validModerationUserID accepts positive Telegram user IDs. Protected targets
+// (including the bot) are rejected by the moderation protection checks.
+func validModerationUserID(b *gotgbot.Bot, userID int64) bool {
+	return chat_status.IsValidUserId(userID)
+}
 
-	if len(username) < 5 {
-		return 0
+func isReplyChannelTarget(msg *gotgbot.Message, targetID int64) bool {
+	reply := UserReply(msg)
+	return reply != nil && reply.SenderChat != nil &&
+		chat_status.IsChannelId(targetID) && reply.SenderChat.Id == targetID
+}
+
+func isNumericIDToken(value string) bool {
+	if value == "" {
+		return false
+	}
+	for _, r := range value {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func replyUnknownModerationUser(b *gotgbot.Bot, ctx *ext.Context) {
+	if b == nil || ctx == nil || ctx.EffectiveMessage == nil {
+		return
+	}
+	if _, err := ctx.EffectiveMessage.Reply(b, "Ye username mere paas nahi hai. Uske message par reply karo ya numeric ID do.", nil); err != nil {
+		log.Errorf("[Extraction] Failed to reply with unknown moderation target: %v", err)
+	}
+}
+
+const resolvedUserInfoContextKey = "moderation_resolved_user_info"
+
+type ResolvedUserInfo struct {
+	UserID    int64
+	Username  string
+	FirstName string
+}
+
+func setReplyUserInfo(ctx *ext.Context, msg *gotgbot.Message) {
+	reply := UserReply(msg)
+	if reply == nil || reply.From == nil {
+		return
+	}
+	setResolvedUserInfo(ctx, reply.From.Id, reply.From.Username, reply.From.FirstName)
+}
+
+func setResolvedUserInfo(ctx *ext.Context, userID int64, username, firstName string) {
+	if ctx == nil || userID <= 0 || (username == "" && firstName == "") {
+		return
+	}
+	if ctx.Data == nil {
+		ctx.Data = make(map[string]any)
+	}
+	ctx.Data[resolvedUserInfoContextKey] = ResolvedUserInfo{UserID: userID, Username: username, FirstName: firstName}
+}
+
+// ResolvedUserInfoFromContext returns identity data already present in the
+// update (reply sender) or returned by the private-user username fallback.
+func ResolvedUserInfoFromContext(ctx *ext.Context, userID int64) (username, firstName string, found bool) {
+	if ctx == nil || ctx.Data == nil {
+		return "", "", false
+	}
+	info, ok := ctx.Data[resolvedUserInfoContextKey].(ResolvedUserInfo)
+	if !ok || info.UserID != userID {
+		return "", "", false
+	}
+	return info.Username, info.FirstName, info.Username != "" || info.FirstName != ""
+}
+
+func resolveUsername(b *gotgbot.Bot, username string) (int64, string, string) {
+	username = strings.ToLower(strings.TrimPrefix(strings.TrimSpace(username), "@"))
+	if len(username) < 5 || b == nil {
+		return 0, "", ""
 	}
 
-	user := user.GetUserIdByUserName(username)
-	if user != 0 {
-		return user
+	if channelID := channels.GetChannelIdByUserName(username); chat_status.IsChannelId(channelID) {
+		// Generic /info extraction also supports channel usernames already
+		// known to the bot. Moderation callers reject channel IDs downstream.
+		return channelID, "", ""
 	}
-
-	channel := channels.GetChannelIdByUserName(username)
-	if channel != 0 {
-		return channel
+	if userID := user.GetUserIdByUserName(username); validModerationUserID(b, userID) && userID != b.Id {
+		return userID, "", ""
 	}
 
 	chat, err := chat_status.GetChat(b, "@"+username)
 	if err != nil {
 		log.Debugf("[Extraction] Failed to get user @%s from Telegram API: %v", username, err)
-		return 0
+		return 0, "", ""
+	}
+	if chat.Type != "private" || chat.Id == b.Id || !validModerationUserID(b, chat.Id) {
+		log.Debugf("[Extraction] Rejected @%s Telegram fallback: chat type=%q id=%d", username, chat.Type, chat.Id)
+		return 0, "", ""
 	}
 
-	userId := chat.Id
+	log.Debugf("[Extraction] Found private user @%s (ID: %d) via Telegram API", username, chat.Id)
+	return chat.Id, chat.Username, chat.FirstName
+}
 
-	log.Debugf("[Extraction] Found user @%s (ID: %d) via Telegram API", username, userId)
-
-	return userId
+func GetUserId(b *gotgbot.Bot, username string) int64 {
+	userID, _, _ := resolveUsername(b, username)
+	return userID
 }
 
 func GetUserInfo(userId int64) (username, name string, found bool) {

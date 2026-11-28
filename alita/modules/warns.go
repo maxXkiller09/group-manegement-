@@ -353,7 +353,7 @@ func (moduleStruct) warnThisUserWithPunisher(b *gotgbot.Bot, ctx *ext.Context, u
 	removeWarnText, _ := tr.GetString("warns_remove_button")
 	rulesButtonText, _ := tr.GetString("common_rules_button_emoji")
 
-	if chat_status.IsUserAdmin(b, chat.Id, userId) {
+	if chat_status.IsUserBanProtected(b, ctx, nil, userId) {
 		text, _ := tr.GetString("warns_admin_warning_error")
 		if _, err = msg.Reply(b, text, nil); err != nil {
 			return err
@@ -364,16 +364,29 @@ func (moduleStruct) warnThisUserWithPunisher(b *gotgbot.Bot, ctx *ext.Context, u
 	if !chat_status.IsValidUserId(userId) || chat_status.IsSystemUser(userId) {
 		return ext.EndGroups
 	}
-	chatMember, err := b.GetChatMemberWithContext(tracing.UpdateContext(ctx), chat.Id, userId, nil)
-	if error_handling.IsMissingChatMemberError(err) {
-		replyHTML(b, msg, trS(tr, "common_user_not_in_chat"))
-		return ext.EndGroups
+	username, name, found := user.GetUserInfoById(userId)
+	if resolvedUsername, resolvedName, resolved := extraction.ResolvedUserInfoFromContext(ctx, userId); resolved {
+		if username == "" {
+			username = resolvedUsername
+		}
+		if name == "" {
+			name = resolvedName
+		}
+		found = true
 	}
-	if err != nil {
-		return err
+	if name == "" {
+		name = username
 	}
-
-	u := chatMember.MergeChatMember().User
+	if name == "" {
+		name = strconv.FormatInt(userId, 10)
+	}
+	if username != "" && username != name {
+		name += " (@" + username + ")"
+	}
+	u := gotgbot.User{Id: userId, FirstName: name, Username: username}
+	if !found {
+		log.Debugf("[Warns] target %d has no stored user profile; using numeric identity", userId)
+	}
 	mu := warnPunishLock(chat.Id, userId)
 	mu.Lock()
 	defer mu.Unlock()
@@ -414,14 +427,22 @@ func (moduleStruct) warnThisUserWithPunisher(b *gotgbot.Bot, ctx *ext.Context, u
 		}
 		reply, punished, logMarkup, err = punishAtWarnLimit(tracing.UpdateContext(ctx), b, apply, chat.Id, tr, warnrc, u, numWarns, bannedBy, reason)
 		if err != nil {
-			// The warn stays written though the limit's action failed.
-			logWarn("WARN")
-			return err
+			if (warnrc.WarnMode == "kick" || warnrc.WarnMode == "mute" || warnrc.WarnMode == "tmute") &&
+				(error_handling.IsMissingChatMemberError(err) || isTelegramMissingTargetError(err)) {
+				// Telegram refused the non-member action; the warn remains stored.
+				err = nil
+			} else {
+				logWarn("WARN")
+				return err
+			}
 		}
 
 		if !punished {
-			// An unknown warn mode punishes nobody: the warn alone was made.
+			// An unknown mode or Telegram refusal leaves the warn recorded.
 			logWarn("WARN")
+			if warnrc.WarnMode == "kick" || warnrc.WarnMode == "mute" || warnrc.WarnMode == "tmute" {
+				reply = "Ye user abhi group me nahi hai, /ban use karo.\n"
+			}
 		} else {
 			// Only the bot's own warns (blacklists) are automated; an admin's
 			// warn at the limit is a human action.
@@ -483,7 +504,6 @@ func (m moduleStruct) dispatchWarn(b *gotgbot.Bot, ctx *ext.Context, warnType st
 	}
 
 	mc.Command = warnType
-	chat := ctx.EffectiveChat
 	msg := ctx.EffectiveMessage
 	tr := mc.Tr
 
@@ -513,17 +533,7 @@ func (m moduleStruct) dispatchWarn(b *gotgbot.Bot, ctx *ext.Context, warnType st
 		return ext.EndGroups
 	}
 
-	if !chat_status.IsUserInChat(b, chat, userId) {
-		return ext.EndGroups
-	}
-	var warnusr int64
-	if msg.ReplyToMessage != nil && msg.ReplyToMessage.From != nil && msg.ReplyToMessage.From.Id == userId {
-		warnusr = msg.ReplyToMessage.From.Id
-	} else {
-		warnusr = userId
-	}
-
-	return m.warnThisUser(b, ctx, warnusr, reason, warnType, warnIssuer(ctx))
+	return m.warnThisUser(b, ctx, userId, reason, warnType, warnIssuer(ctx))
 }
 
 func (m moduleStruct) warnUser(b *gotgbot.Bot, ctx *ext.Context) error {
@@ -742,6 +752,23 @@ func (moduleStruct) setWarnLimit(b *gotgbot.Bot, ctx *ext.Context) error {
 	return ext.EndGroups
 }
 
+func warnTargetMention(ctx *ext.Context, userID int64) string {
+	username, name, found := user.GetUserInfoById(userID)
+	if !found {
+		username, name, _ = extraction.ResolvedUserInfoFromContext(ctx, userID)
+	}
+	if name == "" {
+		name = username
+	}
+	if name == "" {
+		name = strconv.FormatInt(userID, 10)
+	}
+	if username != "" && username != name {
+		name += " (@" + username + ")"
+	}
+	return formatting.MentionHtml(userID, name)
+}
+
 func (moduleStruct) resetWarns(b *gotgbot.Bot, ctx *ext.Context) error {
 	msg := ctx.EffectiveMessage
 	chat := ctx.EffectiveChat
@@ -938,6 +965,7 @@ func (moduleStruct) removeWarn(b *gotgbot.Bot, ctx *ext.Context) error {
 		replyText, _ = tr.GetString("warns_no_warns_to_remove")
 	}
 
+	replyText += "\nTarget: " + warnTargetMention(ctx, userId)
 	_, err := msg.Reply(b, withGroupLine(tr, msg, chat, replyText), formatting.Shtml())
 	if err != nil {
 		log.Error(err)

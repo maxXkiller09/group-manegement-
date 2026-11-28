@@ -28,8 +28,9 @@ type extractionBotCall struct {
 }
 
 type extractionBotClient struct {
-	calls  []extractionBotCall
-	errors map[string]error
+	calls           []extractionBotCall
+	errors          map[string]error
+	getChatResponse json.RawMessage
 }
 
 func (c *extractionBotClient) RequestWithContext(_ context.Context, _ string, method string, params map[string]any, _ *gotgbot.RequestOpts) (json.RawMessage, error) {
@@ -44,6 +45,9 @@ func (c *extractionBotClient) RequestWithContext(_ context.Context, _ string, me
 	}
 	switch method {
 	case "getChat":
+		if c.getChatResponse != nil {
+			return c.getChatResponse, nil
+		}
 		return json.RawMessage(
 			`{"id":555123,"type":"private","first_name":"Fetched","username":"fallbackuser"}`,
 		), nil
@@ -1223,5 +1227,117 @@ func TestDurationUnitKeysResolveInEveryLocale(t *testing.T) {
 			}
 		}
 		restore()
+	}
+}
+
+func TestGetUserIDFallbackOnlyAcceptsPrivateHumanUsers(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		chat string
+		want int64
+	}{
+		{name: "private user", chat: `{"id":555123,"type":"private","first_name":"Fetched"}`, want: 555123},
+		{name: "group rejected", chat: `{"id":-12345,"type":"group","title":"Group"}`},
+		{name: "supergroup rejected", chat: `{"id":-10012345,"type":"supergroup","title":"Supergroup"}`},
+		{name: "channel rejected", chat: `{"id":-10012346,"type":"channel","title":"Channel"}`},
+		{name: "bot id rejected", chat: `{"id":123,"type":"private","first_name":"Bot"}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			client := &extractionBotClient{getChatResponse: json.RawMessage(tc.chat)}
+			bot := newExtractionBot(client)
+			if got := GetUserId(bot, "@fallbacktarget"); got != tc.want {
+				t.Fatalf("GetUserId() = %d, want %d", got, tc.want)
+			}
+			if calls := client.callsFor("getChat"); len(calls) != 1 {
+				t.Fatalf("getChat calls = %d, want exactly 1", len(calls))
+			}
+		})
+	}
+}
+
+func TestGetUserIDPrefersDatabaseWithoutTelegramCall(t *testing.T) {
+	const targetID = int64(555124)
+	if err := db.DB.Create(&db.User{UserId: targetID, UserName: "DbFirstTarget", Name: "DB Target"}).Error; err != nil {
+		t.Fatalf("create DB target: %v", err)
+	}
+	client := &extractionBotClient{getChatResponse: json.RawMessage(`{"id":-10012345,"type":"channel"}`)}
+	bot := newExtractionBot(client)
+	if got := GetUserId(bot, "@dbfirsttarget"); got != targetID {
+		t.Fatalf("GetUserId() = %d, want DB ID %d", got, targetID)
+	}
+	if calls := client.callsFor("getChat"); len(calls) != 0 {
+		t.Fatalf("getChat calls = %d, want 0 for DB hit", len(calls))
+	}
+}
+
+func TestExtractUserAndTextRejectsInvalidNumericTargets(t *testing.T) {
+	for _, raw := range []string{"0", "-12345"} {
+		t.Run(raw, func(t *testing.T) {
+			client := &extractionBotClient{}
+			bot := newExtractionBot(client)
+			ctx := newExtractionContext(bot, "/ban "+raw+" reason")
+			id, _ := ExtractUserAndText(bot, ctx)
+			if id != -1 {
+				t.Fatalf("ExtractUserAndText() ID = %d, want rejected sentinel -1", id)
+			}
+			calls := client.callsFor("sendMessage")
+			if len(calls) != 1 || calls[0].params["text"] != "Ye username mere paas nahi hai. Uske message par reply karo ya numeric ID do." {
+				t.Fatalf("invalid-target reply = %+v", calls)
+			}
+		})
+	}
+}
+
+func TestExtractUserAndTextRejectsUsernameResolvingToChannel(t *testing.T) {
+	client := &extractionBotClient{getChatResponse: json.RawMessage(`{"id":-10012345,"type":"channel","title":"Channel"}`)}
+	bot := newExtractionBot(client)
+	ctx := newExtractionContext(bot, "/ban @fallbacktarget reason")
+	id, _ := ExtractUserAndText(bot, ctx)
+	if id != -1 {
+		t.Fatalf("ExtractUserAndText() ID = %d, want rejected sentinel -1", id)
+	}
+	calls := client.callsFor("sendMessage")
+	if len(calls) != 1 || calls[0].params["text"] != "Ye username mere paas nahi hai. Uske message par reply karo ya numeric ID do." {
+		t.Fatalf("unknown-username reply = %+v", calls)
+	}
+}
+
+func TestExtractUserAndTextCarriesFallbackPrivateIdentity(t *testing.T) {
+	client := &extractionBotClient{getChatResponse: json.RawMessage(`{"id":555125,"type":"private","first_name":"Fallback Name","username":"fallbacktarget"}`)}
+	bot := newExtractionBot(client)
+	ctx := newExtractionContext(bot, "/ban @fallbacktarget")
+	id, _ := ExtractUserAndText(bot, ctx)
+	if id != 555125 {
+		t.Fatalf("target ID = %d, want 555125", id)
+	}
+	username, name, found := ResolvedUserInfoFromContext(ctx, id)
+	if !found || username != "fallbacktarget" || name != "Fallback Name" {
+		t.Fatalf("resolved identity = %q/%q/%v, want fallbacktarget/Fallback Name/true", username, name, found)
+	}
+}
+
+func TestExtractUserAndTextCarriesReplySenderIdentity(t *testing.T) {
+	client := &extractionBotClient{}
+	bot := newExtractionBot(client)
+	ctx := newExtractionContext(bot, "/ban spam")
+	replyUser := &gotgbot.User{Id: 555126, FirstName: "Reply Name", Username: "replytarget"}
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{From: replyUser, Text: "original"}
+	id, _ := ExtractUserAndText(bot, ctx)
+	if id != replyUser.Id {
+		t.Fatalf("target ID = %d, want %d", id, replyUser.Id)
+	}
+	username, name, found := ResolvedUserInfoFromContext(ctx, id)
+	if !found || username != "replytarget" || name != "Reply Name" {
+		t.Fatalf("resolved identity = %q/%q/%v, want replytarget/Reply Name/true", username, name, found)
+	}
+}
+
+func TestExtractUserAndTextReturnsBotIDForProtectionValidation(t *testing.T) {
+	client := &extractionBotClient{}
+	bot := newExtractionBot(client)
+	ctx := newExtractionContext(bot, fmt.Sprintf("/ban %d reason", bot.Id))
+	id, _ := ExtractUserAndText(bot, ctx)
+	if id != bot.Id {
+		t.Fatalf("ExtractUserAndText() ID = %d, want bot ID %d for moderation protection checks", id, bot.Id)
 	}
 }

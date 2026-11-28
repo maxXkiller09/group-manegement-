@@ -218,7 +218,7 @@ func TestRmWarnButtonFromPMChecksPresserInNamedGroup(t *testing.T) {
 
 // From PM, a user who is no member of the named group is not warned there,
 // though they are a member of the connected group and of the PM.
-func TestWarnCommandsInPMWithGroupIgnoreNonMember(t *testing.T) {
+func TestWarnCommandsInPMWithGroupStoresNonMemberWarn(t *testing.T) {
 	for _, tc := range []struct{ cmd, args string }{{"warn", " spam"}, {"swarn", ""}} {
 		t.Run(tc.cmd, func(t *testing.T) {
 			f, connected := pmWarnsFixture(t, 0)
@@ -227,8 +227,8 @@ func TestWarnCommandsInPMWithGroupIgnoreNonMember(t *testing.T) {
 
 			processPM(t, warnsPMDispatcher(), f, f.admin.Id, "/"+tc.cmd+" @fixturegroup @victim"+tc.args)
 
-			if warnsOf(victimID, f.chat.Id) != 0 || warnsOf(victimID, connected) != 0 {
-				t.Fatalf("/%s from PM warned a user who is no member of the named group: %d in it, %d in the connected one",
+			if warnsOf(victimID, f.chat.Id) != 1 || warnsOf(victimID, connected) != 0 {
+				t.Fatalf("/%s from PM stored %d warns in the named group and %d in the connected group; want 1 and 0",
 					tc.cmd, warnsOf(victimID, f.chat.Id), warnsOf(victimID, connected))
 			}
 		})
