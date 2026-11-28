@@ -1229,7 +1229,7 @@ func TestDurationUnitKeysResolveInEveryLocale(t *testing.T) {
 		restore()
 	}
 }
- 
+
 func TestGetUserIDFallbackOnlyAcceptsPrivateHumanUsers(t *testing.T) {
 	for _, tc := range []struct {
 		name string
@@ -1271,7 +1271,7 @@ func TestGetUserIDPrefersDatabaseWithoutTelegramCall(t *testing.T) {
 }
 
 func TestExtractUserAndTextRejectsInvalidNumericTargets(t *testing.T) {
-	for _, raw := range []string{"0", "-1001234567890", "123"} {
+	for _, raw := range []string{"0", "-1001234567890"} {
 		t.Run(raw, func(t *testing.T) {
 			client := &extractionBotClient{}
 			bot := newExtractionBot(client)
@@ -1329,5 +1329,15 @@ func TestExtractUserAndTextCarriesReplySenderIdentity(t *testing.T) {
 	username, name, found := ResolvedUserInfoFromContext(ctx, id)
 	if !found || username != "replytarget" || name != "Reply Name" {
 		t.Fatalf("resolved identity = %q/%q/%v, want replytarget/Reply Name/true", username, name, found)
+	}
+}
+
+func TestExtractUserAndTextReturnsBotIDForProtectionValidation(t *testing.T) {
+	client := &extractionBotClient{}
+	bot := newExtractionBot(client)
+	ctx := newExtractionContext(bot, fmt.Sprintf("/ban %d reason", bot.Id))
+	id, _ := ExtractUserAndText(bot, ctx)
+	if id != bot.Id {
+		t.Fatalf("ExtractUserAndText() ID = %d, want bot ID %d for moderation protection checks", id, bot.Id)
 	}
 }
