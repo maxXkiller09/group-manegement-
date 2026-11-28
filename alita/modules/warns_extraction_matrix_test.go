@@ -197,7 +197,7 @@ func TestWarnRemovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 					f := newAdminChatFixture(t)
 					targetID := uniquePositiveUserID()
 					if targetMethod == "username" {
-						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "warnremove"+fmt.Sprint(targetID), Name: "Warn Removal Target"}).Error; err != nil {
+						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "warnremove" + fmt.Sprint(targetID), Name: "Warn Removal Target"}).Error; err != nil {
 							t.Fatal(err)
 						}
 					}
