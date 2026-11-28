@@ -43,8 +43,8 @@ func TestTmuteInPMWithGroupReadsTimeAfterUser(t *testing.T) {
 	}
 }
 
-// From PM, /smute answers like /mute, unmute button included: there is no
-// command message in the group to delete.
+// From PM, /smute answers like /mute using the stored target identity; the
+// unmute button is included and there is no group command message to delete.
 func TestSmuteInPMWithGroupAnswersLikeMute(t *testing.T) {
 	f, _ := pmModerationFixture(t)
 
@@ -53,7 +53,7 @@ func TestSmuteInPMWithGroupAnswersLikeMute(t *testing.T) {
 	if calls := f.client.callsFor("deleteMessage"); len(calls) != 0 {
 		t.Fatalf("/smute from PM deleted a message: %+v", calls)
 	}
-	if !repliedIn(f, f.admin.Id, "Victim") {
+	if !repliedIn(f, f.admin.Id, "Member") {
 		t.Fatalf("/smute from PM did not answer in the PM; sent:\n%s", sentText(f.client))
 	}
 	buttonFor(t, f, 0, "unrestrict", "unmute")

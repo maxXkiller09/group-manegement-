@@ -3,6 +3,7 @@ package modules
 import (
 	"fmt"
 	"html"
+	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/divkix/Alita_Robot/alita/db/models"
 	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
+	"github.com/divkix/Alita_Robot/alita/utils/error_handling"
 	"github.com/divkix/Alita_Robot/alita/utils/extraction"
 	"github.com/divkix/Alita_Robot/alita/utils/formatting"
 	"github.com/divkix/Alita_Robot/alita/utils/helpers"
@@ -20,24 +22,26 @@ import (
 var mutesModule = moduleStruct{moduleName: "Mutes"}
 
 func muteTargetValidation(c *moderationCtx, t *target) error {
-	return validateTarget(c, t.userID, true, "common_user_not_in_chat", "mutes_mute_admin_error", "mutes_restrict_self_error")
+	return validateTarget(c, t.userID, false, "", "mutes_mute_admin_error", "mutes_restrict_self_error")
+}
+
+func mutePunish(c *moderationCtx, t *target, duration time.Duration) error {
+	err := c.punish(t, punishment.Mute, duration)
+	if error_handling.IsMissingChatMemberError(err) || isTelegramMissingTargetError(err) {
+		return replyUserNotInChatUseBan(c)
+	}
+	return err
 }
 
 func muteReplyWithButton(c *moderationCtx, t *target) error {
-	muteUser, err := c.Bot.GetChat(t.userID, nil)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
 	baseStr, _ := c.Tr.GetString("mutes_mute_message")
-	text := fmt.Sprintf(baseStr, formatting.MentionHtml(muteUser.Id, muteUser.FirstName))
+	text := fmt.Sprintf(baseStr, targetMention(c, t.userID))
 	if t.reason != "" {
 		temp, _ := c.Tr.GetString("mutes_reason_suffix")
 		text += fmt.Sprintf(temp, html.EscapeString(t.reason))
 	}
 
-	_, err = c.Msg.Reply(c.Bot,
+	_, err := c.Msg.Reply(c.Bot,
 		withGroupLine(c.Tr, c.Msg, c.Chat, text),
 		&gotgbot.SendMessageOpts{
 			ParseMode: formatting.HTML,
@@ -91,23 +95,17 @@ func moderationTmute(m *moduleStruct) *moderationCommand {
 			if !ok {
 				return ext.EndGroups
 			}
-			return c.punish(t, punishment.Mute, d)
+			return mutePunish(c, t, d)
 		},
 		reply: func(c *moderationCtx, t *target) error {
-			muteUser, err := c.Bot.GetChat(t.userID, nil)
-			if err != nil {
-				log.Error(err)
-				return err
-			}
-
 			temp, _ := c.Tr.GetString("mutes_tmute_message")
-			baseStr := fmt.Sprintf(temp, formatting.MentionHtml(muteUser.Id, muteUser.FirstName), t.timeVal)
+			baseStr := fmt.Sprintf(temp, targetMention(c, t.userID), t.timeVal)
 			if t.reason != "" {
 				temp, _ := c.Tr.GetString("mutes_reason_suffix")
 				baseStr += fmt.Sprintf(temp, html.EscapeString(t.reason))
 			}
 
-			_, err = c.Msg.Reply(c.Bot, withGroupLine(c.Tr, c.Msg, c.Chat, baseStr), formatting.Shtml())
+			_, err := c.Msg.Reply(c.Bot, withGroupLine(c.Tr, c.Msg, c.Chat, baseStr), formatting.Shtml())
 			if err != nil {
 				log.Error(err)
 				return err
@@ -126,7 +124,7 @@ func moderationMute(m *moduleStruct) *moderationCommand {
 		extract:  extractFromArgs,
 		validate: muteTargetValidation,
 		execute: func(c *moderationCtx, t *target) error {
-			return c.punish(t, punishment.Mute, 0)
+			return mutePunish(c, t, 0)
 		},
 		reply:       muteReplyWithButton,
 		logAction:   "mute",
@@ -141,7 +139,7 @@ func moderationSmute(m *moduleStruct) *moderationCommand {
 		extract:  extractUserOnly,
 		validate: muteTargetValidation,
 		execute: func(c *moderationCtx, t *target) error {
-			return c.punish(t, punishment.Mute, 0)
+			return mutePunish(c, t, 0)
 		},
 		reply: func(c *moderationCtx, t *target) error {
 			if c.sentInPM() {
@@ -175,12 +173,14 @@ func moderationDmute(m *moduleStruct) *moderationCommand {
 			return muteTargetValidation(c, t)
 		},
 		execute: func(c *moderationCtx, t *target) error {
+			return mutePunish(c, t, 0)
+		},
+		cleanup: func(c *moderationCtx, _ *target) error {
 			_, err := c.Reply.Delete(c.Bot, nil)
 			if err != nil {
 				log.Error(err)
-				return err
 			}
-			return c.punish(t, punishment.Mute, 0)
+			return err
 		},
 		reply:       muteReplyWithButton,
 		logAction:   "dmute",
@@ -195,13 +195,7 @@ func moderationUnmute(m *moduleStruct) *moderationCommand {
 		extract: extractUserOnly,
 		validate: func(c *moderationCtx, t *target) error {
 			if !chat_status.IsUserInChat(c.Bot, c.Chat, t.userID) {
-				text, _ := c.Tr.GetString("common_user_not_in_chat")
-				_, err := c.Msg.Reply(c.Bot, text, formatting.Shtml())
-				if err != nil {
-					log.Error(err)
-					return err
-				}
-				return errUserNotInChat
+				return replyUserNotInChatUseBan(c)
 			}
 			if t.userID == c.Bot.Id {
 				text, _ := c.Tr.GetString("mutes_restrict_self_error")
@@ -218,18 +212,16 @@ func moderationUnmute(m *moduleStruct) *moderationCommand {
 			return nil
 		},
 		execute: func(c *moderationCtx, t *target) error {
-			return c.lift(t, punishment.Mute)
+			err := c.lift(t, punishment.Mute)
+			if error_handling.IsMissingChatMemberError(err) || isTelegramMissingTargetError(err) {
+				return replyUserNotInChatUseBan(c)
+			}
+			return err
 		},
 		reply: func(c *moderationCtx, t *target) error {
-			muteUser, err := c.Bot.GetChat(t.userID, nil)
-			if err != nil {
-				log.Error(err)
-				return err
-			}
-
 			temp, _ := c.Tr.GetString("mutes_unmute_message")
-			_, err = c.Msg.Reply(c.Bot,
-				withGroupLine(c.Tr, c.Msg, c.Chat, fmt.Sprintf(temp, formatting.MentionHtml(muteUser.Id, muteUser.FirstName))),
+			_, err := c.Msg.Reply(c.Bot,
+				withGroupLine(c.Tr, c.Msg, c.Chat, fmt.Sprintf(temp, targetMention(c, t.userID))),
 				formatting.Shtml(),
 			)
 			if err != nil {

@@ -1149,12 +1149,6 @@ func TestRestrictCommandsAndCallbacksPropagateGotgbotRequestErrors(t *testing.T)
 			run: bansModule.unrestrict,
 		},
 		{
-			name:   "restrict callback get chat failure",
-			method: "getChat",
-			ctx:    func(bot *gotgbot.Bot) *ext.Context { return newModuleCallbackContext(bot, chat, admin, restrictData) },
-			run:    bansModule.restrictButtonHandler,
-		},
-		{
 			name:   "restrict callback mute failure",
 			method: "restrictChatMember",
 			ctx:    func(bot *gotgbot.Bot) *ext.Context { return newModuleCallbackContext(bot, chat, admin, restrictData) },

@@ -320,8 +320,11 @@ func isTelegramMissingTargetError(err error) bool {
 	return strings.Contains(message, "user not found") ||
 		strings.Contains(message, "participant_id_invalid") ||
 		strings.Contains(message, "user_id_invalid") ||
+		strings.Contains(message, "user_not_participant") ||
 		strings.Contains(message, "member not found") ||
-		strings.Contains(message, "user is not in chat")
+		strings.Contains(message, "user is not in chat") ||
+		strings.Contains(message, "user is not a member") ||
+		strings.Contains(message, "not a member of the chat")
 }
 
 // Sentinel errors used by moderation command templates.
@@ -339,6 +342,27 @@ func replyValidationError(c *moderationCtx, text string) error {
 		return err
 	}
 	return nil
+}
+
+func replyUserNotInChatUseBan(c *moderationCtx) error {
+	if err := replyValidationError(c, "Ye user abhi group me nahi hai, /ban use karo."); err != nil {
+		return err
+	}
+	return ext.EndGroups
+}
+
+func answerNonMemberModerationCallback(b *gotgbot.Bot, query *gotgbot.CallbackQuery) error {
+	if query == nil {
+		return ext.EndGroups
+	}
+	_, err := query.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text:      "Ye user abhi group me nahi hai, /ban use karo.",
+		ShowAlert: true,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+	return ext.EndGroups
 }
 
 // validateTarget runs the shared target checks: optional in-chat membership,
