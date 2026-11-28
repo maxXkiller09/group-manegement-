@@ -947,7 +947,8 @@ func TestBotJoinDoesNotWaitForLifecycleLogEnrichment(t *testing.T) {
 		started:         make(chan struct{}),
 		release:         release,
 	}
-	bot := newModuleTestBot(client)
+	bot := newModuleTestBot(base)
+	bot.BotClient = client
 	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Nonblocking Join"}
 	adder := gotgbot.User{Id: 7005, FirstName: "Adder"}
 	ctx := newModuleMessageContext(bot, chat, adder, "bot joined")
