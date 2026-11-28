@@ -3,6 +3,7 @@ package modules
 import (
 	"fmt"
 	"html"
+	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
@@ -24,6 +25,14 @@ func muteTargetValidation(c *moderationCtx, t *target) error {
 	return validateTarget(c, t.userID, false, "", "mutes_mute_admin_error", "mutes_restrict_self_error")
 }
 
+func mutePunish(c *moderationCtx, t *target, duration time.Duration) error {
+	err := c.punish(t, punishment.Mute, duration)
+	if error_handling.IsMissingChatMemberError(err) || isTelegramMissingTargetError(err) {
+		return replyUserNotInChatUseBan(c)
+	}
+	return err
+}
+
 func muteReplyWithButton(c *moderationCtx, t *target) error {
 	baseStr, _ := c.Tr.GetString("mutes_mute_message")
 	text := fmt.Sprintf(baseStr, targetMention(c, t.userID))
@@ -32,7 +41,7 @@ func muteReplyWithButton(c *moderationCtx, t *target) error {
 		text += fmt.Sprintf(temp, html.EscapeString(t.reason))
 	}
 
-	_, err = c.Msg.Reply(c.Bot,
+	_, err := c.Msg.Reply(c.Bot,
 		withGroupLine(c.Tr, c.Msg, c.Chat, text),
 		&gotgbot.SendMessageOpts{
 			ParseMode: formatting.HTML,
@@ -96,7 +105,7 @@ func moderationTmute(m *moduleStruct) *moderationCommand {
 				baseStr += fmt.Sprintf(temp, html.EscapeString(t.reason))
 			}
 
-			_, err = c.Msg.Reply(c.Bot, withGroupLine(c.Tr, c.Msg, c.Chat, baseStr), formatting.Shtml())
+			_, err := c.Msg.Reply(c.Bot, withGroupLine(c.Tr, c.Msg, c.Chat, baseStr), formatting.Shtml())
 			if err != nil {
 				log.Error(err)
 				return err
@@ -130,7 +139,7 @@ func moderationSmute(m *moduleStruct) *moderationCommand {
 		extract:  extractUserOnly,
 		validate: muteTargetValidation,
 		execute: func(c *moderationCtx, t *target) error {
-			return c.punish(t, punishment.Mute, 0)
+			return mutePunish(c, t, 0)
 		},
 		reply: func(c *moderationCtx, t *target) error {
 			if c.sentInPM() {
@@ -164,12 +173,14 @@ func moderationDmute(m *moduleStruct) *moderationCommand {
 			return muteTargetValidation(c, t)
 		},
 		execute: func(c *moderationCtx, t *target) error {
+			return mutePunish(c, t, 0)
+		},
+		cleanup: func(c *moderationCtx, _ *target) error {
 			_, err := c.Reply.Delete(c.Bot, nil)
 			if err != nil {
 				log.Error(err)
-				return err
 			}
-			return c.punish(t, punishment.Mute, 0)
+			return err
 		},
 		reply:       muteReplyWithButton,
 		logAction:   "dmute",
