@@ -537,7 +537,8 @@ func (moduleStruct) restrictButtonHandler(b *gotgbot.Bot, ctx *ext.Context) erro
 	if !ok {
 		return ext.EndGroups
 	}
-	if query.Message == nil {
+	message, ok := query.Message.(*gotgbot.Message)
+	if !ok || message == nil {
 		return answerInvalidCallback(b, ctx, query)
 	}
 	user := chat_status.RequireUser(b, ctx)
@@ -604,7 +605,7 @@ func (moduleStruct) restrictButtonHandler(b *gotgbot.Bot, ctx *ext.Context) erro
 		log.Error(err)
 		return err
 	}
-	targetCtx := &moderationCtx{Bot: b, Chat: chat, Msg: query.Message, User: user, Ctx: ctx, Tr: tr, Module: &bansModule}
+	targetCtx := &moderationCtx{Bot: b, Chat: chat, Msg: message, User: user, Ctx: ctx, Tr: tr, Module: &bansModule}
 	targetName := targetMention(targetCtx, userId)
 	switch action {
 	case "kick":
@@ -626,13 +627,13 @@ func (moduleStruct) restrictButtonHandler(b *gotgbot.Bot, ctx *ext.Context) erro
 		temp, _ := tr.GetString("bans_restrict_banned")
 		helpText = fmt.Sprintf(temp,
 			formatting.MentionHtml(user.Id, user.FirstName),
-			formatting.MentionHtml(int64(userId), actionUser.FirstName),
+			targetName,
 		)
 	}
 
 	helpText = withButtonGroupLine(b, ctx, tr, chat.Id, helpText)
 
-	_, _, err = query.Message.EditText(b, &gotgbot.EditMessageTextOpts{Text: helpText, ParseMode: formatting.HTML})
+	_, _, err = message.EditText(b, &gotgbot.EditMessageTextOpts{Text: helpText, ParseMode: formatting.HTML})
 	if err != nil {
 		log.Error(err)
 		return err
