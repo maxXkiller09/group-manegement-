@@ -29,7 +29,8 @@ func TestMigrateChatIDMovesSettingsAndWarnsIdempotently(t *testing.T) {
 	if err := db.DB.Create(&models.Warns{UserId: userID, ChatId: oldID, NumWarns: 2, Reasons: models.StringArray{"one", "two"}}).Error; err != nil {
 		t.Fatalf("create old warns: %v", err)
 	}
-	if err := db.DB.Create(&models.WarnEntry{UserId: userID, ChatId: oldID, Reason: "one", WarnedAt: timePtr(time.Now())}).Error; err != nil {
+	warnedAt := time.Now()
+	if err := db.DB.Create(&models.WarnEntry{UserId: userID, ChatId: oldID, Reason: "one", WarnedAt: &warnedAt}).Error; err != nil {
 		t.Fatalf("create old warn entry: %v", err)
 	}
 
@@ -122,4 +123,3 @@ func TestMigrateChatIDFailsClosedOnTargetRows(t *testing.T) {
 	}
 }
 
-func timePtr(value time.Time) *time.Time { return &value }
