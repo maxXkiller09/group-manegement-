@@ -904,7 +904,6 @@ func TestLifecycleLogChatNotFoundWarnsOnceAndStopsRetries(t *testing.T) {
 	}
 }
 
-
 type blockingLifecycleCountClient struct {
 	*moduleBotClient
 	started chan struct{}
