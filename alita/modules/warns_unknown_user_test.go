@@ -49,7 +49,8 @@ func TestWarnsInGroupWithUnknownUsernameRepliesNotFoundOnly(t *testing.T) {
 	if len(texts) != 1 {
 		t.Fatalf("replies = %q, want exactly the not-found reply", texts)
 	}
-	if want := translated(t, "extraction_user_not_found"); texts[0] != want {
+	const want = "Ye username mere paas nahi hai. Uske message par reply karo ya numeric ID do."
+	if texts[0] != want {
 		t.Fatalf("reply = %q, want %q", texts[0], want)
 	}
 	for _, text := range texts {
