@@ -41,7 +41,7 @@ func decodeDirectAction(r *http.Request, actorID, botID int64) (directActionRequ
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&request); err != nil {
-		return request, "body must contain action, target_user_id, reason and confirmed"
+		return request, "body must contain action, target or target_user_id, reason and confirmed"
 	}
 	request.Action = strings.ToLower(strings.TrimSpace(request.Action))
 	request.Reason = strings.TrimSpace(request.Reason)
