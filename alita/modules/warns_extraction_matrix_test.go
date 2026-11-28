@@ -205,7 +205,9 @@ func TestWarnRemovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 						t.Fatalf("seed warn: %v", err)
 					}
 					status := "member"
-					if membership == "non-member" { status = "left" }
+					if membership == "non-member" {
+						status = "left"
+					}
 					f.client.membersByUser[fmt.Sprint(targetID)] = json.RawMessage(fmt.Sprintf(
 						`{"status":%q,"user":{"id":%d,"is_bot":false,"first_name":"Warn Removal Target"}}`, status, targetID))
 					arg := fmt.Sprint(targetID)
@@ -217,7 +219,9 @@ func TestWarnRemovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 					}
 					ctx := newModuleMessageContext(f.bot, f.chat, f.admin, command.text(arg, targetMethod == "reply"))
 					replyUser := gotgbot.User{Id: targetID, FirstName: "Warn Removal Target"}
-					if targetMethod != "reply" { replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"} }
+					if targetMethod != "reply" {
+						replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"}
+					}
 					ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{MessageId: 303, Date: 1, Chat: f.chat, From: &replyUser, Text: "reply source"}
 					if err := command.run(f.bot, ctx); err != ext.EndGroups {
 						t.Fatalf("%s error = %v, want EndGroups", command.name, err)
