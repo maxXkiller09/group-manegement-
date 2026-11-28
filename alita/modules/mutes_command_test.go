@@ -197,7 +197,7 @@ func TestSilentAndDeleteMuteRejectInvalidTargets(t *testing.T) {
 func TestSilentMuteRejectsProtectedAbsentAndSelfTargets(t *testing.T) {
 	f := newAdminChatFixture(t)
 	client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
-	client.errorsByUser["restrictChatMember|13"] = errors.New("Bad Request: user is not a member of the chat")
+	client.errorsByUser = map[string]error{"restrictChatMember|13": errors.New("Bad Request: user is not a member of the chat")}
 
 	for _, tt := range []struct {
 		name string
@@ -268,7 +268,7 @@ func TestDeleteMuteRejectsValidTargetWithoutReply(t *testing.T) {
 func TestDeleteMuteRejectsProtectedAbsentAndSelfTargets(t *testing.T) {
 	f := newAdminChatFixture(t)
 	client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
-	client.errorsByUser["restrictChatMember|13"] = errors.New("Bad Request: user is not a member of the chat")
+	client.errorsByUser = map[string]error{"restrictChatMember|13": errors.New("Bad Request: user is not a member of the chat")}
 
 	for _, tt := range []struct {
 		name   string
