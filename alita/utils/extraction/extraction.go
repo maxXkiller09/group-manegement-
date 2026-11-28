@@ -221,7 +221,7 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 
 // validModerationUserID accepts positive Telegram user IDs except the bot itself.
 func validModerationUserID(b *gotgbot.Bot, userID int64) bool {
-	return b != nil && userID > 0 && chat_status.IsValidUserId(userID)
+	return chat_status.IsValidUserId(userID)
 }
 
 func isReplyChannelTarget(msg *gotgbot.Message, targetID int64) bool {
@@ -243,7 +243,7 @@ func isNumericIDToken(value string) bool {
 }
 
 func replyUnknownModerationUser(b *gotgbot.Bot, ctx *ext.Context) {
-	if ctx == nil || ctx.EffectiveMessage == nil {
+	if b == nil || ctx == nil || ctx.EffectiveMessage == nil {
 		return
 	}
 	if _, err := ctx.EffectiveMessage.Reply(b, "Ye username mere paas nahi hai. Uske message par reply karo ya numeric ID do.", nil); err != nil {
