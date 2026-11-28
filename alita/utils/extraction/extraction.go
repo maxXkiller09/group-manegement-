@@ -186,7 +186,7 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 	} else if hasArgs {
 		if parsedID, err := strconv.ParseInt(args[1], 10, 64); err == nil || isNumericIDToken(args[1]) {
 			named = true
-			if err != nil || (!validModerationUserID(b, parsedID) && !isReplyChannelTarget(msg, parsedID)) {
+			if err != nil || (!validModerationUserID(b, parsedID) && !isReplyChannelTarget(msg, parsedID) && !chat_status.IsChannelId(parsedID)) {
 				replyUnknownModerationUser(b, ctx)
 				return -1, ""
 			}
@@ -197,7 +197,7 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 			}
 		}
 	}
-	if named && !validModerationUserID(b, userId) && !isReplyChannelTarget(msg, userId) {
+	if named && !validModerationUserID(b, userId) && !isReplyChannelTarget(msg, userId) && !chat_status.IsChannelId(userId) {
 		replyUnknownModerationUser(b, ctx)
 		return -1, ""
 	}
@@ -296,6 +296,11 @@ func resolveUsername(b *gotgbot.Bot, username string) (int64, string, string) {
 		return 0, "", ""
 	}
 
+	if channelID := channels.GetChannelIdByUserName(username); chat_status.IsChannelId(channelID) {
+		// Generic /info extraction also supports channel usernames already
+		// known to the bot. Moderation callers reject channel IDs downstream.
+		return channelID, "", ""
+	}
 	if userID := user.GetUserIdByUserName(username); validModerationUserID(b, userID) && userID != b.Id {
 		return userID, "", ""
 	}
