@@ -65,6 +65,13 @@ func MigrateChatID(oldID, newID int64, newTitle string) error {
 			return err
 		}
 
+		var targetChat models.Chat
+		if err := tx.Where("chat_id = ?", newID).First(&targetChat).Error; err == nil {
+			return fmt.Errorf("%w: chats", ErrChatMigrationTargetExists)
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
 		var oldChat models.Chat
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("chat_id = ?", oldID).First(&oldChat).Error; err != nil {
