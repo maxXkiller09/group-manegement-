@@ -426,7 +426,7 @@ func (moduleStruct) warnThisUserWithPunisher(b *gotgbot.Bot, ctx *ext.Context, u
 			// An unknown mode or Telegram refusal leaves the warn recorded.
 			logWarn("WARN")
 			if warnrc.WarnMode == "kick" || warnrc.WarnMode == "mute" || warnrc.WarnMode == "tmute" {
-				reply = "Ye user abhi group me nahi hai, /ban use karo.\\n"
+				reply = "Ye user abhi group me nahi hai, /ban use karo.\n"
 			}
 		} else {
 			// Only the bot's own warns (blacklists) are automated; an admin's

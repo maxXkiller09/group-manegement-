@@ -10,6 +10,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 
 	"github.com/divkix/Alita_Robot/alita/db"
+	"github.com/divkix/Alita_Robot/alita/db/models"
 	"github.com/divkix/Alita_Robot/alita/db/warns"
 )
 
@@ -138,6 +139,69 @@ func TestWarnCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 					for _, call := range f.client.callsFor("getChatMember") {
 						if fmt.Sprint(call.Params["user_id"]) == fmt.Sprint(targetID) {
 							t.Fatalf("warn target membership preflight occurred: %+v", call.Params)
+						}
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestWarnRemovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
+	useEnglishLocale(t)
+	commands := []struct {
+		name string
+		run  func(*gotgbot.Bot, *ext.Context) error
+		text func(string, bool) string
+	}{
+		{"rmwarn", warnsModule.removeWarn, func(target string, reply bool) string {
+			if reply { return "/rmwarn" }
+			return "/rmwarn " + target
+		}},
+		{"resetwarns", warnsModule.resetWarns, func(target string, reply bool) string {
+			if reply { return "/resetwarns" }
+			return "/resetwarns " + target
+		}},
+	}
+	for _, command := range commands {
+		for _, membership := range []string{"member", "non-member"} {
+			for _, targetMethod := range []string{"reply", "username", "numeric ID"} {
+				t.Run(command.name+"/"+membership+"/"+targetMethod, func(t *testing.T) {
+					f := newAdminChatFixture(t)
+					targetID := uniquePositiveUserID()
+					if targetMethod == "username" {
+						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "warnremove"+fmt.Sprint(targetID), Name: "Warn Removal Target"}).Error; err != nil {
+							t.Fatal(err)
+						}
+					}
+					if _, _, err := warns.WarnUser(targetID, f.chat.Id, models.WarnEntry{WarnedBy: f.admin.Id}); err != nil {
+						t.Fatalf("seed warn: %v", err)
+					}
+					status := "member"
+					if membership == "non-member" { status = "left" }
+					f.client.membersByUser[fmt.Sprint(targetID)] = json.RawMessage(fmt.Sprintf(
+						`{"status":%q,"user":{"id":%d,"is_bot":false,"first_name":"Warn Removal Target"}}`, status, targetID))
+					arg := fmt.Sprint(targetID)
+					if targetMethod == "username" { arg = "@warnremove"+fmt.Sprint(targetID) }
+					if targetMethod == "reply" { arg = "" }
+					ctx := newModuleMessageContext(f.bot, f.chat, f.admin, command.text(arg, targetMethod == "reply"))
+					replyUser := gotgbot.User{Id: targetID, FirstName: "Warn Removal Target"}
+					if targetMethod != "reply" { replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"} }
+					ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{MessageId: 303, Date: 1, Chat: f.chat, From: &replyUser, Text: "reply source"}
+					if err := command.run(f.bot, ctx); err != ext.EndGroups {
+						t.Fatalf("%s error = %v, want EndGroups", command.name, err)
+					}
+					if count, _ := warns.GetWarns(targetID, f.chat.Id); count != 0 {
+						t.Fatalf("%s left %d warns for target %d", command.name, count, targetID)
+					}
+					if targetMethod != "reply" {
+						if count, _ := warns.GetWarns(replyUser.Id, f.chat.Id); count != 0 {
+							t.Fatalf("reply sender %d received %d warns", replyUser.Id, count)
+						}
+					}
+					for _, call := range f.client.callsFor("getChatMember") {
+						if fmt.Sprint(call.Params["user_id"]) == fmt.Sprint(targetID) {
+							t.Fatalf("warn removal target membership lookup occurred: %+v", call.Params)
 						}
 					}
 				})
