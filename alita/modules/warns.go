@@ -371,7 +371,13 @@ func (moduleStruct) warnThisUserWithPunisher(b *gotgbot.Bot, ctx *ext.Context, u
 		found = true
 	}
 	if name == "" {
+		name = username
+	}
+	if name == "" {
 		name = strconv.FormatInt(userId, 10)
+	}
+	if username != "" && username != name {
+		name += " (@" + username + ")"
 	}
 	u := gotgbot.User{Id: userId, FirstName: name, Username: username}
 	if !found {
@@ -494,7 +500,6 @@ func (m moduleStruct) dispatchWarn(b *gotgbot.Bot, ctx *ext.Context, warnType st
 	}
 
 	mc.Command = warnType
-	chat := ctx.EffectiveChat
 	msg := ctx.EffectiveMessage
 	tr := mc.Tr
 
@@ -551,6 +556,7 @@ func (moduleStruct) warnings(b *gotgbot.Bot, ctx *ext.Context) error {
 	warnrc := chatsettings.ReadWarnsContext(tracing.UpdateContext(ctx), chat.Id)
 	temp, _ := tr.GetString("warns_settings_display")
 	text := fmt.Sprintf(temp, warnrc.WarnLimit, warnModeLabel(warnrc), warnExpiryLabel(tr, warnrc))
+	text += "\nTarget: " + warnTargetMention(ctx, userId)
 	_, err := msg.Reply(b, withGroupLine(tr, msg, chat, text), formatting.Shtml())
 	if err != nil {
 		log.Error(err)
@@ -741,6 +747,23 @@ func (moduleStruct) setWarnLimit(b *gotgbot.Bot, ctx *ext.Context) error {
 	}
 
 	return ext.EndGroups
+}
+
+func warnTargetMention(ctx *ext.Context, userID int64) string {
+	username, name, found := user.GetUserInfoById(userID)
+	if !found {
+		username, name, found = extraction.ResolvedUserInfoFromContext(ctx, userID)
+	}
+	if name == "" {
+		name = username
+	}
+	if name == "" {
+		name = strconv.FormatInt(userID, 10)
+	}
+	if username != "" && username != name {
+		name += " (@" + username + ")"
+	}
+	return formatting.MentionHtml(userID, name)
 }
 
 func (moduleStruct) resetWarns(b *gotgbot.Bot, ctx *ext.Context) error {
@@ -939,6 +962,7 @@ func (moduleStruct) removeWarn(b *gotgbot.Bot, ctx *ext.Context) error {
 		replyText, _ = tr.GetString("warns_no_warns_to_remove")
 	}
 
+	replyText += "\nTarget: " + warnTargetMention(ctx, userId)
 	_, err := msg.Reply(b, withGroupLine(tr, msg, chat, replyText), formatting.Shtml())
 	if err != nil {
 		log.Error(err)
