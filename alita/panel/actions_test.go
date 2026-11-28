@@ -159,9 +159,9 @@ func TestDirectActionRejectsCallerBotOwnerAndGroupAdmins(t *testing.T) {
 
 func TestDirectActionRechecksCallerAndBotRightsLive(t *testing.T) {
 	tests := []struct {
-		name      string
-		caller    panelFakeRights
-		bot       panelFakeRights
+		name   string
+		caller panelFakeRights
+		bot    panelFakeRights
 	}{
 		{name: "caller lost restrict right", caller: panelFakeRights{canRestrictMembers: false}, bot: panelFakeRights{canRestrictMembers: true}},
 		{name: "bot lost restrict right", caller: panelFakeRights{canRestrictMembers: true}, bot: panelFakeRights{canRestrictMembers: false}},
