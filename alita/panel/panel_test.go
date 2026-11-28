@@ -121,16 +121,16 @@ type panelFakeClient struct {
 	usernameChats   map[string]gotgbot.Chat
 	usernameLookups int
 	chatErr         error
-	members        map[int64]json.RawMessage
-	admins         map[int64]json.RawMessage
-	botAdmin       bool
-	blockUser      int64
-	rights         map[int64]panelFakeRights
-	botRights      panelFakeRights
-	memberErrors   map[int64]error
-	statuses       map[int64]string
-	memberCount    int64
-	memberCountErr error
+	members         map[int64]json.RawMessage
+	admins          map[int64]json.RawMessage
+	botAdmin        bool
+	blockUser       int64
+	rights          map[int64]panelFakeRights
+	botRights       panelFakeRights
+	memberErrors    map[int64]error
+	statuses        map[int64]string
+	memberCount     int64
+	memberCountErr  error
 }
 
 func newPanelFakeClient() *panelFakeClient {
