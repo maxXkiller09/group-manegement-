@@ -143,8 +143,10 @@ func TestTemporaryMuteRejectsMissingChannelSelfAndAbsentTargets(t *testing.T) {
 		})
 	}
 
-	if calls := client.callsFor("restrictChatMember"); len(calls) != 0 {
-		t.Fatalf("restrictChatMember calls = %d, want none for rejected targets", len(calls))
+	if calls := client.callsFor("restrictChatMember"); len(calls) != 1 {
+		t.Fatalf("restrictChatMember calls = %d, want one Telegram refusal for the absent user", len(calls))
+	} else {
+		assertParams(t, calls[0], targetParams(chat.Id, 13))
 	}
 	if calls := client.callsFor("sendMessage"); len(calls) != 4 {
 		t.Fatalf("sendMessage calls = %d, want one denial per rejected target", len(calls))
