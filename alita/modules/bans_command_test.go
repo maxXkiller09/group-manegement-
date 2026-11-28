@@ -1496,8 +1496,10 @@ func TestBanUnknownIDReplyIncludesRecoveryCommand(t *testing.T) {
 			t.Fatalf("ban confirmation %q does not contain %q", text, want)
 		}
 	}
-	if calls := f.client.callsFor("getChat"); len(calls) != 0 {
-		t.Fatalf("target display made %d getChat calls, want none", len(calls))
+	// The group lookup belongs to the admin-protection check, not target
+	// display; the numeric target must not trigger its own getChat request.
+	if calls := f.client.callsFor("getChat"); len(calls) != 1 || fmt.Sprint(calls[0].Params["chat_id"]) != fmt.Sprint(f.chat.Id) {
+		t.Fatalf("getChat calls = %+v, want only the group lookup for permission validation", calls)
 	}
 }
 
