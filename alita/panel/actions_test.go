@@ -159,12 +159,14 @@ func TestDirectActionRejectsCallerBotOwnerAndGroupAdmins(t *testing.T) {
 
 func TestDirectActionRechecksCallerAndBotRightsLive(t *testing.T) {
 	tests := []struct {
-		name   string
-		caller panelFakeRights
-		bot    panelFakeRights
+		name       string
+		caller     panelFakeRights
+		bot        panelFakeRights
+		wantStatus int
+		wantCode   string
 	}{
-		{name: "caller lost restrict right", caller: panelFakeRights{canRestrictMembers: false}, bot: panelFakeRights{canRestrictMembers: true}},
-		{name: "bot lost restrict right", caller: panelFakeRights{canRestrictMembers: true}, bot: panelFakeRights{canRestrictMembers: false}},
+		{name: "caller lost restrict right", caller: panelFakeRights{canRestrictMembers: false}, bot: panelFakeRights{canRestrictMembers: true}, wantStatus: http.StatusForbidden},
+		{name: "bot lost restrict right", caller: panelFakeRights{canRestrictMembers: true}, bot: panelFakeRights{canRestrictMembers: false}, wantStatus: http.StatusConflict, wantCode: "bot_missing_permission"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -172,8 +174,11 @@ func TestDirectActionRechecksCallerAndBotRightsLive(t *testing.T) {
 			fixture.client.rights[panelDirectActionActorID] = tt.caller
 			fixture.client.botRights = tt.bot
 			recorder := postDirectActionRequest(t, fixture, chatID, initData, "654")
-			if recorder.Code != http.StatusForbidden {
-				t.Fatalf("status = %d, want 403 (body %s)", recorder.Code, recorder.Body.String())
+			if recorder.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d (body %s)", recorder.Code, tt.wantStatus, recorder.Body.String())
+			}
+			if tt.wantCode != "" {
+				requireAPIError(t, recorder, tt.wantStatus, tt.wantCode)
 			}
 			if calls := fixture.client.countCalls("restrictChatMember"); calls != 0 {
 				t.Fatalf("action ran after live rights check failed: %d calls", calls)
