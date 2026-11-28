@@ -556,7 +556,6 @@ func (moduleStruct) warnings(b *gotgbot.Bot, ctx *ext.Context) error {
 	warnrc := chatsettings.ReadWarnsContext(tracing.UpdateContext(ctx), chat.Id)
 	temp, _ := tr.GetString("warns_settings_display")
 	text := fmt.Sprintf(temp, warnrc.WarnLimit, warnModeLabel(warnrc), warnExpiryLabel(tr, warnrc))
-	text += "\nTarget: " + warnTargetMention(ctx, userId)
 	_, err := msg.Reply(b, withGroupLine(tr, msg, chat, text), formatting.Shtml())
 	if err != nil {
 		log.Error(err)
