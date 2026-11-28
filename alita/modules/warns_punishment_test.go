@@ -139,3 +139,102 @@ func TestWarnLimitBanKeepsRecordAndLog(t *testing.T) {
 		t.Fatalf("warn-limit reply = %q", reply)
 	}
 }
+
+func TestWarnNonMemberLimitRefusalKeepsWarnAndCount(t *testing.T) {
+	useEnglishLocale(t)
+	for _, mode := range []string{"kick", "mute", "tmute"} {
+		t.Run(mode, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			targetID := uniquePositiveUserID()
+			settings := models.WarnSettings{ChatId: f.chat.Id, WarnLimit: 1, WarnMode: mode, WarnActionTime: 3600}
+			if err := db.DB.Create(&settings).Error; err != nil {
+				t.Fatal(err)
+			}
+			ctx := newModuleMessageContext(f.bot, f.chat, f.admin, fmt.Sprintf("/warn %d absent", targetID))
+			var got punishment.Request
+			err := warnsModule.warnThisUserWithPunisher(f.bot, ctx, targetID, "absent", "warn",
+				models.WarnEntry{WarnedBy: f.admin.Id},
+				func(_ context.Context, _ *gotgbot.Bot, request punishment.Request) (punishment.Result, error) {
+					got = request
+					return punishment.Result{Refusal: "user not found"}, nil
+				})
+			if err != ext.EndGroups {
+				t.Fatalf("warn result = %v, want EndGroups", err)
+			}
+			if got.Target.ID != targetID || got.Mode == punishment.Ban {
+				t.Fatalf("warn-limit request = %+v, want non-ban action for %d", got, targetID)
+			}
+			if count, entries := warns.GetWarns(targetID, f.chat.Id); count != 1 || len(entries) != 1 {
+				t.Fatalf("warns after refused action = %d/%d, want stored single warn", count, len(entries))
+			}
+			if reply := lastReply(t, f.client); !strings.Contains(reply, "Ye user abhi group me nahi hai, /ban use karo.") {
+				t.Fatalf("non-member warn reply = %q", reply)
+			}
+			for _, call := range f.client.callsFor("getChatMember") {
+				if fmt.Sprint(call.Params["user_id"]) == fmt.Sprint(targetID) {
+					t.Fatalf("warn performed target membership preflight: %+v", call.Params)
+				}
+			}
+		})
+	}
+}
+
+func TestWarnNonMemberLimitBanUsesBanAndResetsOnlyAfterSuccess(t *testing.T) {
+	useEnglishLocale(t)
+	f := newAdminChatFixture(t)
+	targetID := uniquePositiveUserID()
+	settings := models.WarnSettings{ChatId: f.chat.Id, WarnLimit: 1, WarnMode: "ban"}
+	if err := db.DB.Create(&settings).Error; err != nil {
+		t.Fatal(err)
+	}
+	ctx := newModuleMessageContext(f.bot, f.chat, f.admin, fmt.Sprintf("/warn %d absent", targetID))
+	var got punishment.Request
+	err := warnsModule.warnThisUserWithPunisher(f.bot, ctx, targetID, "absent", "warn",
+		models.WarnEntry{WarnedBy: f.admin.Id},
+		func(_ context.Context, _ *gotgbot.Bot, request punishment.Request) (punishment.Result, error) {
+			got = request
+			return punishment.Result{Applied: true}, nil
+		})
+	if err != ext.EndGroups {
+		t.Fatalf("warn result = %v, want EndGroups", err)
+	}
+	if got.Target.ID != targetID || got.Mode != punishment.Ban {
+		t.Fatalf("warn-limit request = %+v, want ban of %d", got, targetID)
+	}
+	if count, _ := warns.GetWarns(targetID, f.chat.Id); count != 0 {
+		t.Fatalf("warn count after successful ban = %d, want reset", count)
+	}
+}
+
+func TestWarnProtectsNonMemberPrivilegedTargets(t *testing.T) {
+	useEnglishLocale(t)
+	for _, name := range []string{"caller/admin", "creator", "bot itself", "global owner"} {
+		t.Run(name, func(t *testing.T) {
+			f := newAdminChatFixture(t)
+			targetID := f.admin.Id
+			if name == "creator" {
+				f.makeOwner()
+			}
+			switch name {
+			case "bot itself":
+				targetID = f.bot.Id
+			case "global owner":
+				targetID = 1087968824
+			}
+			ctx := newModuleMessageContext(f.bot, f.chat, f.admin, "/warn protected")
+			called := false
+			err := warnsModule.warnThisUserWithPunisher(f.bot, ctx, targetID, "protected", "warn",
+				models.WarnEntry{WarnedBy: f.admin.Id},
+				func(context.Context, *gotgbot.Bot, punishment.Request) (punishment.Result, error) {
+					called = true
+					return punishment.Result{Applied: true}, nil
+				})
+			if err != ext.EndGroups || called {
+				t.Fatalf("warn protected target: err=%v applyCalled=%v; want refusal without punishment", err, called)
+			}
+			if count, _ := warns.GetWarns(targetID, f.chat.Id); count != 0 {
+				t.Fatalf("protected target %d received %d warns, want none", targetID, count)
+			}
+		})
+	}
+}

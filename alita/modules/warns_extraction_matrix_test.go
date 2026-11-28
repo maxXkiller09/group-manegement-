@@ -87,3 +87,61 @@ func TestWarnDispatcherRejectsReplyToAnonymousChannelPost(t *testing.T) {
 		t.Fatalf("replies = %+v, want the anonymous/channel target refusal", calls)
 	}
 }
+
+func TestWarnCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
+	useEnglishLocale(t)
+	commands := []struct {
+		name string
+		text func(string, bool) string
+	}{
+		{"warn", func(target string, reply bool) string { if reply { return "/warn spam" }; return "/warn " + target + " spam" }},
+		{"swarn", func(target string, reply bool) string { if reply { return "/swarn" }; return "/swarn " + target }},
+		{"dwarn", func(target string, reply bool) string { if reply { return "/dwarn" }; return "/dwarn " + target + " spam" }},
+	}
+	for _, command := range commands {
+		for _, membership := range []string{"member", "non-member"} {
+			for _, targetMethod := range []string{"reply", "username", "numeric ID"} {
+				t.Run(command.name+"/"+membership+"/"+targetMethod, func(t *testing.T) {
+					f := newAdminChatFixture(t)
+					targetID := uniquePositiveUserID()
+					target := gotgbot.User{Id: targetID, FirstName: "Warn Matrix Target"}
+					if targetMethod == "username" {
+						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "warnmatrix"+fmt.Sprint(targetID), Name: target.FirstName}).Error; err != nil {
+							t.Fatal(err)
+						}
+					}
+					status := "member"
+					if membership == "non-member" { status = "left" }
+					f.client.membersByUser[fmt.Sprint(targetID)] = json.RawMessage(fmt.Sprintf(
+						`{"status":%q,"user":{"id":%d,"is_bot":false,"first_name":"Warn Matrix Target"}}`, status, targetID))
+					arg := fmt.Sprint(targetID)
+					if targetMethod == "username" { arg = "@warnmatrix"+fmt.Sprint(targetID) }
+					if targetMethod == "reply" { arg = "" }
+					text := command.text(arg, targetMethod == "reply")
+					ctx := newModuleMessageContext(f.bot, f.chat, f.admin, text)
+					replyUser := target
+					if targetMethod != "reply" { replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"} }
+					ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{MessageId: 303, Date: 1, Chat: f.chat, From: &replyUser, Text: "reply source"}
+					dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{MaxRoutines: -1})
+					LoadWarns(dispatcher)
+					if err := dispatcher.ProcessUpdate(f.bot, ctx.Update, nil); err != nil {
+						t.Fatalf("ProcessUpdate(%s) error = %v", text, err)
+					}
+					if count, entries := warns.GetWarns(targetID, f.chat.Id); count != 1 || len(entries) != 1 {
+						t.Fatalf("warn rows for target %d = %d/%d, want 1", targetID, count, len(entries))
+					}
+					if targetMethod != "reply" {
+						if count, _ := warns.GetWarns(replyUser.Id, f.chat.Id); count != 0 {
+							t.Fatalf("reply sender %d incorrectly received %d warns", replyUser.Id, count)
+						}
+					}
+					for _, call := range f.client.callsFor("getChatMember") {
+						if fmt.Sprint(call.Params["user_id"]) == fmt.Sprint(targetID) {
+							t.Fatalf("warn target membership preflight occurred: %+v", call.Params)
+						}
+					}
+				})
+			}
+		}
+	}
+}

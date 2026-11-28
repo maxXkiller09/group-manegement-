@@ -17,6 +17,7 @@ import (
 	"github.com/divkix/Alita_Robot/alita/db/chats"
 	"github.com/divkix/Alita_Robot/alita/db/lang"
 	"github.com/divkix/Alita_Robot/alita/db/models"
+	"github.com/divkix/Alita_Robot/alita/db/user"
 	"github.com/divkix/Alita_Robot/alita/i18n"
 	chatsettings "github.com/divkix/Alita_Robot/alita/settings"
 	"github.com/divkix/Alita_Robot/alita/utils/chat_status"
@@ -37,24 +38,53 @@ func (m moduleStruct) dkick(b *gotgbot.Bot, ctx *ext.Context) error {
 
 func kickTargetValidation(c *moderationCtx, t *target) error {
 	prefix := strings.ToLower(c.Module.moduleName)
-	return validateTarget(c, t.userID, true, prefix+"_kick_user_not_in_chat", prefix+"_kick_cannot_kick_admin", prefix+"_kick_is_bot_itself")
+	// Do not preflight membership: the kick operation performs its single
+	// required getChatMember call and its refusal is translated below.
+	return validateTarget(c, t.userID, false, "", prefix+"_kick_cannot_kick_admin", prefix+"_kick_is_bot_itself")
+}
+
+func kickPunish(c *moderationCtx, t *target) error {
+	err := c.punish(t, punishment.Kick, 0)
+	if error_handling.IsMissingChatMemberError(err) || isTelegramMissingTargetError(err) {
+		if replyErr := replyValidationError(c, "Ye user abhi group me nahi hai, /ban use karo."); replyErr != nil {
+			return replyErr
+		}
+		return ext.EndGroups
+	}
+	return err
 }
 
 // targetMention mentions userID by name, or by ID when the name lookup fails,
 // as it does for a user the bot has never met (a ban by ID). The action has
 // already happened, so its reply must not depend on the lookup.
 func targetMention(c *moderationCtx, userID int64) string {
-	user, err := c.Bot.GetChat(userID, nil)
-	if err != nil {
-		log.Debugf("[Bans] name lookup of %d failed, mentioning by ID: %v", userID, err)
+	username, name, found := user.GetUserInfoById(userID)
+	if !found {
 		return formatting.MentionHtml(userID, strconv.FormatInt(userID, 10))
 	}
-	return formatting.MentionHtml(user.Id, user.FirstName)
+	if name == "" {
+		name = username
+	}
+	if name == "" {
+		name = strconv.FormatInt(userID, 10)
+	}
+	if username != "" && name != username {
+		name += " (@" + username + ")"
+	}
+	return formatting.MentionHtml(userID, name)
+}
+
+func unknownBanTargetNote(userID int64) string {
+	_, _, found := user.GetUserInfoById(userID)
+	if found {
+		return ""
+	}
+	return "\nYe ID pehle kabhi nahi dekhi. Galat ho to /unban " + strconv.FormatInt(userID, 10) + " se wapas karo."
 }
 
 func kickReply(c *moderationCtx, t *target) error {
 	baseStr, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_kick_kicked_user")
-	text := fmt.Sprintf(baseStr, targetMention(c, t.userID))
+	text := fmt.Sprintf(baseStr, targetMention(c, t.userID)) + unknownBanTargetNote(t.userID)
 	if t.reason != "" {
 		temp, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_kick_kicked_reason")
 		if temp != "" {
@@ -79,15 +109,18 @@ func moderationDkick(m *moduleStruct) *moderationCommand {
 	return &moderationCommand{
 		command:  "dkick",
 		module:   m,
-		extract:  extractFromReply,
+		extract:  extractFromArgsWithRequiredReply,
 		validate: kickTargetValidation,
 		execute: func(c *moderationCtx, t *target) error {
+			if err := kickPunish(c, t); err != nil {
+				return err
+			}
 			_, err := c.Reply.Delete(c.Bot, nil)
 			if err != nil {
 				log.Error(err)
 				return err
 			}
-			return c.punish(t, punishment.Kick, 0)
+			return nil
 		},
 		reply:       kickReply,
 		logAction:   "dkick",
@@ -110,7 +143,7 @@ func moderationTban(m *moduleStruct) *moderationCommand {
 		},
 		reply: func(c *moderationCtx, t *target) error {
 			temp, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_ban_tban")
-			baseStr := fmt.Sprintf(temp, targetMention(c, t.userID), t.timeVal)
+			baseStr := fmt.Sprintf(temp, targetMention(c, t.userID), t.timeVal) + unknownBanTargetNote(t.userID)
 			if t.reason != "" {
 				temp, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_ban_ban_reason")
 				if temp != "" {
@@ -223,7 +256,7 @@ func moderationKick(m *moduleStruct) *moderationCommand {
 		extract:  extractFromArgs,
 		validate: kickTargetValidation,
 		execute: func(c *moderationCtx, t *target) error {
-			return c.punish(t, punishment.Kick, 0)
+			return kickPunish(c, t)
 		},
 		reply:       kickReply,
 		logAction:   "kick",
@@ -380,13 +413,8 @@ func moderationUnban(m *moduleStruct) *moderationCommand {
 				temp, _ := c.Tr.GetString("bans_anonymous_unban_user")
 				text = fmt.Sprintf(temp, formatting.MentionHtml(t.userID, c.Reply.GetSender().Name()))
 			} else {
-				banUser, err := c.Bot.GetChat(t.userID, nil)
-				if err != nil {
-					log.Error(err)
-					return err
-				}
 				temp, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_unban_unbanned_user")
-				text = fmt.Sprintf(temp, formatting.MentionHtml(banUser.Id, banUser.FirstName))
+				text = fmt.Sprintf(temp, targetMention(c, t.userID))
 			}
 			_, err := c.Msg.Reply(c.Bot, withGroupLine(c.Tr, c.Msg, c.Chat, text), formatting.Shtml())
 			if err != nil {
@@ -808,7 +836,7 @@ func moderationSkick(m *moduleStruct) *moderationCommand {
 		extract:  extractUserOnly,
 		validate: kickTargetValidation,
 		execute: func(c *moderationCtx, t *target) error {
-			return c.punish(t, punishment.Kick, 0)
+			return kickPunish(c, t)
 		},
 		cleanup: func(c *moderationCtx, _ *target) error {
 			if c.sentInPM() {

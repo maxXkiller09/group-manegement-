@@ -99,8 +99,11 @@ func Apply(ctx context.Context, bot *gotgbot.Bot, request Request) (Result, erro
 	case Kick:
 		var member gotgbot.ChatMember
 		if member, err = bot.GetChatMemberWithContext(ctx, request.ChatID, request.Target.ID, nil); err == nil {
-			if member.GetStatus() == "kicked" {
+			switch member.GetStatus() {
+			case "kicked":
 				return Result{Refusal: RefusalBanned}, nil
+			case "left":
+				return Result{Refusal: "user is not in chat"}, nil
 			}
 			_, err = bot.UnbanChatMemberWithContext(ctx, request.ChatID, request.Target.ID, &gotgbot.UnbanChatMemberOpts{OnlyIfBanned: false})
 		}

@@ -10,6 +10,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 
+	"github.com/divkix/Alita_Robot/alita/db"
 	"github.com/divkix/Alita_Robot/alita/db/admin"
 	"github.com/divkix/Alita_Robot/alita/db/logchannels"
 	"github.com/divkix/Alita_Robot/alita/utils/helpers"
@@ -1333,5 +1334,145 @@ func TestUnrestrictCallbackAnswersWhenTheActionFails(t *testing.T) {
 				t.Fatalf("editMessageText calls = %d, want 0 after a failed %s", len(calls), tt.action)
 			}
 		})
+	}
+}
+
+func TestDBanExplicitTargetWinsOverReplySender(t *testing.T) {
+	f := newAdminChatFixture(t)
+	targetID := uniquePositiveUserID()
+	replyUser := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Reply Sender"}
+	ctx := newBanReplyContext(f.bot, f.chat, f.admin, replyUser, fmt.Sprintf("/dban %d reason", targetID))
+	if err := bansModule.dBan(f.bot, ctx); err != ext.EndGroups {
+		t.Fatalf("dban error = %v, want EndGroups", err)
+	}
+	assertParams(t, f.client.onlyCall(t, "banChatMember"), targetParams(f.chat.Id, targetID))
+	assertDeleted(t, f.client, f.chat.Id, 303)
+}
+
+func TestDKickExplicitTargetWinsOverReplySender(t *testing.T) {
+	f := newAdminChatFixture(t)
+	targetID := uniquePositiveUserID()
+	replyUser := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Reply Sender"}
+	f.client.membersByUser[fmt.Sprint(targetID)] = []byte(fmt.Sprintf(
+		`{"status":"member","user":{"id":%d,"is_bot":false,"first_name":"Explicit Target"}}`, targetID))
+	ctx := newBanReplyContext(f.bot, f.chat, f.admin, replyUser, fmt.Sprintf("/dkick %d", targetID))
+	if err := bansModule.dkick(f.bot, ctx); err != ext.EndGroups {
+		t.Fatalf("dkick error = %v, want EndGroups", err)
+	}
+	assertParams(t, f.client.onlyCall(t, "unbanChatMember"), targetParams(f.chat.Id, targetID))
+	assertDeleted(t, f.client, f.chat.Id, 303)
+}
+
+func TestBanFamilyNonMemberTargetResolutionMatrix(t *testing.T) {
+	useEnglishLocale(t)
+	commands := []struct {
+		name   string
+		run    func(*gotgbot.Bot, *ext.Context) error
+		action string
+		text   func(string, bool) string
+	}{
+		{"ban", bansModule.ban, "banChatMember", func(target string, reply bool) string { if reply { return "/ban spam" }; return "/ban " + target + " spam" }},
+		{"sban", bansModule.sBan, "banChatMember", func(target string, reply bool) string { if reply { return "/sban" }; return "/sban " + target }},
+		{"dban", bansModule.dBan, "banChatMember", func(target string, reply bool) string { if reply { return "/dban" }; return "/dban " + target + " spam" }},
+		{"tban", bansModule.tBan, "banChatMember", func(target string, reply bool) string { if reply { return "/tban 1h spam" }; return "/tban " + target + " 1h spam" }},
+		{"unban", bansModule.unban, "unbanChatMember", func(target string, reply bool) string { if reply { return "/unban" }; return "/unban " + target }},
+		{"kick", bansModule.kick, "unbanChatMember", func(target string, reply bool) string { if reply { return "/kick" }; return "/kick " + target }},
+		{"skick", bansModule.sKick, "unbanChatMember", func(target string, reply bool) string { if reply { return "/skick" }; return "/skick " + target }},
+		{"dkick", bansModule.dkick, "unbanChatMember", func(target string, reply bool) string { if reply { return "/dkick" }; return "/dkick " + target }},
+	}
+	for _, command := range commands {
+		for _, membership := range []string{"member", "non-member"} {
+			for _, targetMethod := range []string{"reply", "username", "numeric ID"} {
+				t.Run(command.name+"/"+membership+"/"+targetMethod, func(t *testing.T) {
+					f := newAdminChatFixture(t)
+					targetID := uniquePositiveUserID()
+					target := gotgbot.User{Id: targetID, FirstName: "Matrix Target"}
+					if targetMethod == "username" {
+						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "matrixuser"+fmt.Sprint(targetID), Name: target.FirstName}).Error; err != nil {
+							t.Fatal(err)
+						}
+				}
+					status := "member"
+					if membership == "non-member" { status = "left" }
+					f.client.membersByUser[fmt.Sprint(targetID)] = []byte(fmt.Sprintf(
+						`{"status":%q,"user":{"id":%d,"is_bot":false,"first_name":"Matrix Target"}}`, status, targetID))
+					arg := fmt.Sprint(targetID)
+					if targetMethod == "username" { arg = "@matrixuser"+fmt.Sprint(targetID) }
+					if targetMethod == "reply" { arg = "" }
+					ctx := newModuleMessageContext(f.bot, f.chat, f.admin, command.text(arg, targetMethod == "reply"))
+					replyUser := target
+					if targetMethod != "reply" { replyUser = gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Different Reply Sender"} }
+					ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{MessageId: 303, Date: 1, Chat: f.chat, From: &replyUser, Text: "reply source"}
+					if err := command.run(f.bot, ctx); err != ext.EndGroups {
+						t.Fatalf("command error = %v, want EndGroups", err)
+					}
+					calls := f.client.callsFor(command.action)
+					if command.name == "kick" || command.name == "skick" || command.name == "dkick" {
+						if membership == "non-member" {
+							if len(calls) != 0 { t.Fatalf("non-member kick action calls = %+v, want none", calls) }
+						if reply := lastReply(t, f.client); !strings.Contains(reply, "Ye user abhi group me nahi hai, /ban use karo.") {
+							 t.Fatalf("non-member kick reply = %q", reply)
+						}
+						} else if len(calls) != 1 || fmt.Sprint(calls[0].Params["user_id"]) != fmt.Sprint(targetID) {
+							t.Fatalf("kick calls = %+v, want target %d", calls, targetID)
+						}
+					} else if len(calls) != 1 || fmt.Sprint(calls[0].Params["user_id"]) != fmt.Sprint(targetID) {
+						t.Fatalf("%s calls = %+v, want target %d", command.name, calls, targetID)
+					}
+					if targetMethod != "reply" && targetID == replyUser.Id {
+						t.Fatal("explicit target unexpectedly equals reply sender")
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestBanUnknownIDReplyIncludesRecoveryCommand(t *testing.T) {
+	useEnglishLocale(t)
+	f := newAdminChatFixture(t)
+	targetID := uniquePositiveUserID()
+	ctx := newModuleMessageContext(f.bot, f.chat, f.admin, fmt.Sprintf("/ban %d", targetID))
+	if err := bansModule.ban(f.bot, ctx); err != ext.EndGroups {
+		t.Fatalf("ban error = %v, want EndGroups", err)
+	}
+	calls := callsToChat(f.client, "sendMessage", f.chat.Id)
+	if len(calls) != 1 {
+		t.Fatalf("confirmation count = %d, want 1", len(calls))
+	}
+	text := fmt.Sprint(calls[0].Params["text"])
+	for _, want := range []string{fmt.Sprintf("tg://user?id=%d", targetID), fmt.Sprintf("Ye ID pehle kabhi nahi dekhi. Galat ho to /unban %d se wapas karo.", targetID)} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("ban confirmation %q does not contain %q", text, want)
+		}
+	}
+	if calls := f.client.callsFor("getChat"); len(calls) != 0 {
+		t.Fatalf("target display made %d getChat calls, want none", len(calls))
+	}
+}
+
+func TestBanConfirmationUsesStoredTargetIdentity(t *testing.T) {
+	useEnglishLocale(t)
+	f := newAdminChatFixture(t)
+	targetID := uniquePositiveUserID()
+	if err := db.DB.Create(&db.User{UserId: targetID, UserName: "storedtarget", Name: "Stored Target"}).Error; err != nil {
+		t.Fatal(err)
+	}
+	ctx := newModuleMessageContext(f.bot, f.chat, f.admin, fmt.Sprintf("/ban %d", targetID))
+	if err := bansModule.ban(f.bot, ctx); err != ext.EndGroups {
+		t.Fatalf("ban error = %v, want EndGroups", err)
+	}
+	calls := callsToChat(f.client, "sendMessage", f.chat.Id)
+	if len(calls) != 1 {
+		t.Fatalf("confirmation count = %d, want 1", len(calls))
+	}
+	text := fmt.Sprint(calls[0].Params["text"])
+	for _, want := range []string{"Stored Target", "@storedtarget", fmt.Sprintf("tg://user?id=%d", targetID)} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("ban confirmation %q does not contain %q", text, want)
+		}
+	}
+	if calls := f.client.callsFor("getChat"); len(calls) != 0 {
+		t.Fatalf("stored identity display made %d getChat calls, want none", len(calls))
 	}
 }

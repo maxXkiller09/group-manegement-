@@ -106,6 +106,18 @@ func replyAnonymousTarget(c *moderationCtx) error {
 }
 
 // extractFromReply resolves the target from the message the issuer replied to.
+func extractFromArgsWithRequiredReply(c *moderationCtx) (target, error) {
+	if c.Reply == nil {
+		text, _ := c.Tr.GetString("bans_dkick_no_reply")
+		if err := c.replyCommandHelp(text); err != nil {
+			log.Error(err)
+			return target{}, err
+		}
+		return target{}, fmt.Errorf("no reply")
+	}
+	return extractFromArgs(c)
+}
+
 func extractFromReply(c *moderationCtx) (target, error) {
 	reply := c.Reply
 	if reply == nil {
@@ -290,6 +302,18 @@ func recordModerationEvent(chatID, actorID, targetID int64, action, reason strin
 			"action":  action,
 		}).Error("[Moderation] Failed to record the event")
 	}
+}
+
+func isTelegramMissingTargetError(err error) bool {
+	if err == nil {
+		return false
+	}
+	message := strings.ToLower(err.Error())
+	return strings.Contains(message, "user not found") ||
+		strings.Contains(message, "participant_id_invalid") ||
+		strings.Contains(message, "user_id_invalid") ||
+		strings.Contains(message, "member not found") ||
+		strings.Contains(message, "user is not in chat")
 }
 
 // Sentinel errors used by moderation command templates.
