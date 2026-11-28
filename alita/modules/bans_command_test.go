@@ -1371,14 +1371,54 @@ func TestBanFamilyNonMemberTargetResolutionMatrix(t *testing.T) {
 		action string
 		text   func(string, bool) string
 	}{
-		{"ban", bansModule.ban, "banChatMember", func(target string, reply bool) string { if reply { return "/ban spam" }; return "/ban " + target + " spam" }},
-		{"sban", bansModule.sBan, "banChatMember", func(target string, reply bool) string { if reply { return "/sban" }; return "/sban " + target }},
-		{"dban", bansModule.dBan, "banChatMember", func(target string, reply bool) string { if reply { return "/dban" }; return "/dban " + target + " spam" }},
-		{"tban", bansModule.tBan, "banChatMember", func(target string, reply bool) string { if reply { return "/tban 1h spam" }; return "/tban " + target + " 1h spam" }},
-		{"unban", bansModule.unban, "unbanChatMember", func(target string, reply bool) string { if reply { return "/unban" }; return "/unban " + target }},
-		{"kick", bansModule.kick, "unbanChatMember", func(target string, reply bool) string { if reply { return "/kick" }; return "/kick " + target }},
-		{"skick", bansModule.sKick, "unbanChatMember", func(target string, reply bool) string { if reply { return "/skick" }; return "/skick " + target }},
-		{"dkick", bansModule.dkick, "unbanChatMember", func(target string, reply bool) string { if reply { return "/dkick" }; return "/dkick " + target }},
+		{"ban", bansModule.ban, "banChatMember", func(target string, reply bool) string {
+			if reply {
+				return "/ban spam"
+			}
+			return "/ban " + target + " spam"
+		}},
+		{"sban", bansModule.sBan, "banChatMember", func(target string, reply bool) string {
+			if reply {
+				return "/sban"
+			}
+			return "/sban " + target
+		}},
+		{"dban", bansModule.dBan, "banChatMember", func(target string, reply bool) string {
+			if reply {
+				return "/dban"
+			}
+			return "/dban " + target + " spam"
+		}},
+		{"tban", bansModule.tBan, "banChatMember", func(target string, reply bool) string {
+			if reply {
+				return "/tban 1h spam"
+			}
+			return "/tban " + target + " 1h spam"
+		}},
+		{"unban", bansModule.unban, "unbanChatMember", func(target string, reply bool) string {
+			if reply {
+				return "/unban"
+			}
+			return "/unban " + target
+		}},
+		{"kick", bansModule.kick, "unbanChatMember", func(target string, reply bool) string {
+			if reply {
+				return "/kick"
+			}
+			return "/kick " + target
+		}},
+		{"skick", bansModule.sKick, "unbanChatMember", func(target string, reply bool) string {
+			if reply {
+				return "/skick"
+			}
+			return "/skick " + target
+		}},
+		{"dkick", bansModule.dkick, "unbanChatMember", func(target string, reply bool) string {
+			if reply {
+				return "/dkick"
+			}
+			return "/dkick " + target
+		}},
 	}
 	for _, command := range commands {
 		for _, membership := range []string{"member", "non-member"} {
