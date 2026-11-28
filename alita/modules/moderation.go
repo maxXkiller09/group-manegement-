@@ -115,7 +115,15 @@ func extractFromArgsWithRequiredReply(c *moderationCtx) (target, error) {
 		}
 		return target{}, fmt.Errorf("no reply")
 	}
-	return extractFromArgs(c)
+	tgt, err := extractFromArgs(c)
+	if err != nil {
+		return target{}, err
+	}
+	// /dkick requires a reply for target confirmation, but historically treats
+	// trailing command text as ignored cleanup text, not a moderation reason.
+	// Keep explicit-target precedence without recording that text as a reason.
+	tgt.reason = ""
+	return tgt, nil
 }
 
 func extractFromReply(c *moderationCtx) (target, error) {
