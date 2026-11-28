@@ -290,7 +290,7 @@ func resolveUsername(b *gotgbot.Bot, username string) (int64, string, string) {
 		return userID, "", ""
 	}
 
-	chat, err := b.GetChat("@"+username, nil)
+	chat, err := chat_status.GetChat(b, "@"+username)
 	if err != nil {
 		log.Debugf("[Extraction] Failed to get user @%s from Telegram API: %v", username, err)
 		return 0, "", ""
