@@ -1271,7 +1271,7 @@ func TestGetUserIDPrefersDatabaseWithoutTelegramCall(t *testing.T) {
 }
 
 func TestExtractUserAndTextRejectsInvalidNumericTargets(t *testing.T) {
-	for _, raw := range []string{"0", "-1001234567890"} {
+	for _, raw := range []string{"0", "-12345"} {
 		t.Run(raw, func(t *testing.T) {
 			client := &extractionBotClient{}
 			bot := newExtractionBot(client)
