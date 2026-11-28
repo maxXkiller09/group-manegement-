@@ -9,6 +9,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/divkix/Alita_Robot/alita/config"
 	"github.com/divkix/Alita_Robot/alita/db"
 	"github.com/divkix/Alita_Robot/alita/db/models"
 	"github.com/divkix/Alita_Robot/alita/utils/extraction"
@@ -73,6 +74,10 @@ func decodeDirectAction(r *http.Request, actorID, botID int64) (directActionRequ
 }
 
 func (p *Panel) verifyDirectActionTarget(r *http.Request, w http.ResponseWriter, chatID, targetID int64, action string) bool {
+	if config.AppConfig != nil && config.AppConfig.OwnerId > 0 && targetID == config.AppConfig.OwnerId {
+		writeJSONError(w, http.StatusForbidden, "protected_owner", "the bot owner cannot be targeted")
+		return false
+	}
 	target, err := p.bot.GetChatMemberWithContext(r.Context(), chatID, targetID, nil)
 	if err != nil {
 		writeJSONError(w, http.StatusBadGateway, "target_lookup_failed", "Telegram could not verify this target member")
