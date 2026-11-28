@@ -1451,7 +1451,7 @@ func TestBanFamilyNonMemberTargetResolutionMatrix(t *testing.T) {
 					if command.name == "kick" || command.name == "skick" || command.name == "dkick" {
 						if membership == "non-member" {
 							if len(calls) != 0 {
-							t.Fatalf("non-member kick action calls = %+v, want none", calls)
+								t.Fatalf("non-member kick action calls = %+v, want none", calls)
 						}
 						if reply := lastReply(t, f.client); !strings.Contains(reply, "Ye user abhi group me nahi hai, /ban use karo.") {
 							 t.Fatalf("non-member kick reply = %q", reply)
