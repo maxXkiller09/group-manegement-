@@ -108,9 +108,14 @@ func MigrateChatID(oldID, newID int64, newTitle string) error {
 		}
 		now := time.Now()
 		newChat := models.Chat{
-			ChatId: newID, ChatName: title, Language: oldChat.Language,
-			Users: append(models.Int64Array(nil), oldChat.Users...),
-			IsInactive: false, LastActivity: now, CreatedAt: oldChat.CreatedAt, UpdatedAt: now,
+			ChatId:       newID,
+			ChatName:     title,
+			Language:     oldChat.Language,
+			Users:        append(models.Int64Array(nil), oldChat.Users...),
+			IsInactive:   false,
+			LastActivity: now,
+			CreatedAt:    oldChat.CreatedAt,
+			UpdatedAt:    now,
 		}
 		if err := tx.Create(&newChat).Error; err != nil {
 			return fmt.Errorf("create migrated chat row: %w", err)
