@@ -12,8 +12,6 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2"
 
 	"github.com/divkix/Alita_Robot/alita/config"
-	"github.com/divkix/Alita_Robot/alita/db"
-	"github.com/divkix/Alita_Robot/alita/db/models"
 )
 
 const panelDirectActionActorID int64 = 279058397
@@ -88,7 +86,7 @@ func TestDirectActionAcceptsOnlyPrivateTelegramUsernameFallback(t *testing.T) {
 		{name: "basic group", chat: gotgbot.Chat{Id: -765, Type: "group"}, wantHTTP: http.StatusBadRequest, wantCode: "invalid_target"},
 		{name: "supergroup", chat: gotgbot.Chat{Id: -100765, Type: "supergroup"}, wantHTTP: http.StatusBadRequest, wantCode: "invalid_target"},
 		{name: "channel", chat: gotgbot.Chat{Id: -1007654321000, Type: "channel"}, wantHTTP: http.StatusBadRequest, wantCode: "invalid_target"},
-		{name: "bot user", chat: gotgbot.Chat{Id: 999, Type: "private", Username: "botuser", IsForum: false}, wantHTTP: http.StatusBadRequest, wantCode: "invalid_target"},
+		{name: "bot user", chat: gotgbot.Chat{Id: 999, Type: "private", Username: "botuser"}, wantHTTP: http.StatusBadRequest, wantCode: "invalid_target"},
 	}
 
 	for _, tt := range tests {
@@ -191,5 +189,3 @@ func TestDirectActionLegacyNumericFieldRemainsSupported(t *testing.T) {
 	}
 }
 
-var _ = db.DB
-var _ = models.User{}
