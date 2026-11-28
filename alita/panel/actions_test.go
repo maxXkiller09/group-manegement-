@@ -41,7 +41,7 @@ func TestDirectActionResolvesUsernameFromUserDBBeforeTelegram(t *testing.T) {
 	// would be rejected. A DB hit must win without a username getChat request.
 	fixture.client.usernameChats["@dbmember"] = gotgbot.Chat{Id: -1009876543210, Type: "group"}
 
-	recorder := directActionRequest(t, fixture, chatID, initData, "@dbmember")
+	recorder := postDirectActionRequest(t, fixture, chatID, initData, "@dbmember")
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200 (body %s)", recorder.Code, recorder.Body.String())
 	}
@@ -59,7 +59,7 @@ func TestDirectActionResolvesUsernameFromUserDBBeforeTelegram(t *testing.T) {
 
 func TestDirectActionResolvesNumericTargetWithoutUsernameLookup(t *testing.T) {
 	fixture, chatID, initData := directActionFixture(t)
-	recorder := directActionRequest(t, fixture, chatID, initData, "654")
+	recorder := postDirectActionRequest(t, fixture, chatID, initData, "654")
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200 (body %s)", recorder.Code, recorder.Body.String())
 	}
@@ -93,7 +93,7 @@ func TestDirectActionAcceptsOnlyPrivateTelegramUsernameFallback(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			fixture, chatID, initData := directActionFixture(t)
 			fixture.client.usernameChats["@fallbackuser"] = tt.chat
-			recorder := directActionRequest(t, fixture, chatID, initData, "@fallbackuser")
+			recorder := postDirectActionRequest(t, fixture, chatID, initData, "@fallbackuser")
 			if recorder.Code != tt.wantHTTP {
 				t.Fatalf("status = %d, want %d (body %s)", recorder.Code, tt.wantHTTP, recorder.Body.String())
 			}
@@ -142,7 +142,7 @@ func TestDirectActionRejectsCallerBotOwnerAndGroupAdmins(t *testing.T) {
 			if tt.admin {
 				fixture.client.admins[chatID] = adminListJSON(panelDirectActionActorID, tt.targetID)
 			}
-			recorder := directActionRequest(t, fixture, chatID, initData, strconv.FormatInt(tt.targetID, 10))
+			recorder := postDirectActionRequest(t, fixture, chatID, initData, strconv.FormatInt(tt.targetID, 10))
 			requireAPIError(t, recorder, tt.wantStatus, tt.wantCode)
 			if calls := fixture.client.countCalls("restrictChatMember"); calls != 0 {
 				t.Fatalf("protected target received a Telegram action: %d calls", calls)
@@ -165,7 +165,7 @@ func TestDirectActionRechecksCallerAndBotRightsLive(t *testing.T) {
 			fixture, chatID, initData := directActionFixture(t)
 			fixture.client.rights[panelDirectActionActorID] = tt.caller
 			fixture.client.botRights = tt.bot
-			recorder := directActionRequest(t, fixture, chatID, initData, "654")
+			recorder := postDirectActionRequest(t, fixture, chatID, initData, "654")
 			if recorder.Code != http.StatusForbidden {
 				t.Fatalf("status = %d, want 403 (body %s)", recorder.Code, recorder.Body.String())
 			}
