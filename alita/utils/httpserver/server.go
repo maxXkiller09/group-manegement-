@@ -160,7 +160,8 @@ func (s *Server) SetMetricsAuthToken(token string) {
 func (s *Server) requireMetricsAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if s.metricsAuthToken == "" {
-			next.ServeHTTP(w, r)
+			// Fail closed: metrics are private unless an operator configures a token.
+			http.NotFound(w, r)
 			return
 		}
 		const prefix = "Bearer "
@@ -180,7 +181,7 @@ func (s *Server) requireMetricsAuth(next http.Handler) http.Handler {
 
 func (s *Server) RegisterMetrics() {
 	if s.metricsAuthToken == "" {
-		log.Warn("[HTTPServer] METRICS_AUTH_TOKEN is not set — /metrics is unauthenticated")
+		log.Warn("[HTTPServer] METRICS_AUTH_TOKEN is not set — /metrics is disabled (404)")
 	}
 	s.mux.Handle("/metrics", s.requireMetricsAuth(promhttp.Handler()))
 	log.Info("[HTTPServer] Registered /metrics endpoint")
@@ -188,7 +189,7 @@ func (s *Server) RegisterMetrics() {
 
 func (s *Server) RegisterDBMetrics() {
 	if s.metricsAuthToken == "" {
-		log.Warn("[HTTPServer] METRICS_AUTH_TOKEN is not set — /db_metrics is unauthenticated")
+		log.Warn("[HTTPServer] METRICS_AUTH_TOKEN is not set — /db_metrics is disabled (404)")
 	}
 	s.mux.Handle("/db_metrics", s.requireMetricsAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		metrics, err := monitoring.GetCurrentMetrics()
