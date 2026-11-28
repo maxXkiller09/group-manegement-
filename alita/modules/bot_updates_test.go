@@ -1038,3 +1038,24 @@ func TestPrivateStartLifecycleLogDistinguishesFirstAndReturning(t *testing.T) {
 		t.Fatalf("returning PM start log = %v, want RETURNING event", messages)
 	}
 }
+
+func TestBotJoinedSupergroupWithMissingOldChatMemberStillWelcomes(t *testing.T) {
+	useEnglishLocale(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Incomplete Update"}
+	adder := gotgbot.User{Id: 424243, FirstName: "Adder"}
+	ctx := newModuleMessageContext(bot, chat, adder, "bot joined")
+	ctx.MyChatMember = &gotgbot.ChatMemberUpdated{
+		Chat: chat,
+		From: adder,
+		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+	}
+
+	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
+	}
+	if calls := moduleSendMessagesToChat(client, chat.Id); len(calls) != 1 {
+		t.Fatalf("group sendMessage calls = %d, want welcome despite missing OldChatMember", len(calls))
+	}
+}
