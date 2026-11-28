@@ -365,6 +365,11 @@ func (moduleStruct) warnThisUserWithPunisher(b *gotgbot.Bot, ctx *ext.Context, u
 		return ext.EndGroups
 	}
 	username, name, found := user.GetUserInfoById(userId)
+	if resolvedUsername, resolvedName, resolved := extraction.ResolvedUserInfoFromContext(ctx, userId); resolved {
+		if username == "" { username = resolvedUsername }
+		if name == "" { name = resolvedName }
+		found = true
+	}
 	if name == "" {
 		name = strconv.FormatInt(userId, 10)
 	}

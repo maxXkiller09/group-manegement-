@@ -1301,3 +1301,33 @@ func TestExtractUserAndTextRejectsUsernameResolvingToChannel(t *testing.T) {
 		t.Fatalf("unknown-username reply = %+v", calls)
 	}
 }
+
+func TestExtractUserAndTextCarriesFallbackPrivateIdentity(t *testing.T) {
+	client := &extractionBotClient{getChatResponse: json.RawMessage(`{"id":555125,"type":"private","first_name":"Fallback Name","username":"fallbacktarget"}`)}
+	bot := newExtractionBot(client)
+	ctx := newExtractionContext(bot, "/ban @fallbacktarget")
+	id, _ := ExtractUserAndText(bot, ctx)
+	if id != 555125 {
+		t.Fatalf("target ID = %d, want 555125", id)
+	}
+	username, name, found := ResolvedUserInfoFromContext(ctx, id)
+	if !found || username != "fallbacktarget" || name != "Fallback Name" {
+		t.Fatalf("resolved identity = %q/%q/%v, want fallbacktarget/Fallback Name/true", username, name, found)
+	}
+}
+
+func TestExtractUserAndTextCarriesReplySenderIdentity(t *testing.T) {
+	client := &extractionBotClient{}
+	bot := newExtractionBot(client)
+	ctx := newExtractionContext(bot, "/ban spam")
+	replyUser := &gotgbot.User{Id: 555126, FirstName: "Reply Name", Username: "replytarget"}
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{From: replyUser, Text: "original"}
+	id, _ := ExtractUserAndText(bot, ctx)
+	if id != replyUser.Id {
+		t.Fatalf("target ID = %d, want %d", id, replyUser.Id)
+	}
+	username, name, found := ResolvedUserInfoFromContext(ctx, id)
+	if !found || username != "replytarget" || name != "Reply Name" {
+		t.Fatalf("resolved identity = %q/%q/%v, want replytarget/Reply Name/true", username, name, found)
+	}
+}

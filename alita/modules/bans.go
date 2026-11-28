@@ -60,6 +60,9 @@ func kickPunish(c *moderationCtx, t *target) error {
 func targetMention(c *moderationCtx, userID int64) string {
 	username, name, found := user.GetUserInfoById(userID)
 	if !found {
+		username, name, found = extraction.ResolvedUserInfoFromContext(c.Ctx, userID)
+	}
+	if !found {
 		return formatting.MentionHtml(userID, strconv.FormatInt(userID, 10))
 	}
 	if name == "" {

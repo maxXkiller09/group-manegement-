@@ -1476,3 +1476,23 @@ func TestBanConfirmationUsesStoredTargetIdentity(t *testing.T) {
 		t.Fatalf("stored identity display made %d getChat calls, want none", len(calls))
 	}
 }
+
+func TestBanConfirmationUsesReplySenderIdentity(t *testing.T) {
+	useEnglishLocale(t)
+	f := newAdminChatFixture(t)
+	target := gotgbot.User{Id: uniquePositiveUserID(), FirstName: "Reply Name", Username: "replytarget"}
+	ctx := newBanReplyContext(f.bot, f.chat, f.admin, target, "/ban reason")
+	if err := bansModule.ban(f.bot, ctx); err != ext.EndGroups {
+		t.Fatalf("ban error = %v, want EndGroups", err)
+	}
+	calls := callsToChat(f.client, "sendMessage", f.chat.Id)
+	if len(calls) != 1 {
+		t.Fatalf("confirmation count = %d, want 1", len(calls))
+	}
+	text := fmt.Sprint(calls[0].Params["text"])
+	for _, want := range []string{"Reply Name", "@replytarget", fmt.Sprintf("tg://user?id=%d", target.Id)} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("ban confirmation %q does not contain %q", text, want)
+		}
+	}
+}
