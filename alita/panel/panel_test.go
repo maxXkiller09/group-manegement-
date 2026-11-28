@@ -138,13 +138,13 @@ func newPanelFakeClient() *panelFakeClient {
 		chatType:      "supergroup",
 		usernameChats: make(map[string]gotgbot.Chat),
 		members:       make(map[int64]json.RawMessage),
-		admins:       make(map[int64]json.RawMessage),
-		botAdmin:     true,
-		rights:       make(map[int64]panelFakeRights),
-		botRights:    panelFakeRights{canChangeInfo: true, canRestrictMembers: true},
-		memberErrors: make(map[int64]error),
-		statuses:     make(map[int64]string),
-		memberCount:  42,
+		admins:        make(map[int64]json.RawMessage),
+		botAdmin:      true,
+		rights:        make(map[int64]panelFakeRights),
+		botRights:     panelFakeRights{canChangeInfo: true, canRestrictMembers: true},
+		memberErrors:  make(map[int64]error),
+		statuses:      make(map[int64]string),
+		memberCount:   42,
 	}
 }
 
