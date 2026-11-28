@@ -38,7 +38,7 @@ func TestApprovalCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 					f := newAdminChatFixture(t)
 					targetID := uniquePositiveUserID()
 					if targetMethod == "username" {
-						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "approvaluser"+fmt.Sprint(targetID), Name: "Approval Target"}).Error; err != nil {
+						if err := db.DB.Create(&db.User{UserId: targetID, UserName: "approvaluser" + fmt.Sprint(targetID), Name: "Approval Target"}).Error; err != nil {
 							t.Fatal(err)
 						}
 					}
