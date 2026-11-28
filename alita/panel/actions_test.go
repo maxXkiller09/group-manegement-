@@ -122,6 +122,7 @@ func TestDirectActionRejectsCallerBotOwnerAndGroupAdmins(t *testing.T) {
 		targetID   int64
 		ownerID    int64
 		admin      bool
+		creator    bool
 		wantStatus int
 		wantCode   string
 	}{
@@ -129,6 +130,7 @@ func TestDirectActionRejectsCallerBotOwnerAndGroupAdmins(t *testing.T) {
 		{name: "bot self", targetID: 999, wantStatus: http.StatusBadRequest, wantCode: "invalid_target"},
 		{name: "global owner", targetID: 7777, ownerID: 7777, wantStatus: http.StatusForbidden, wantCode: "protected_owner"},
 		{name: "group admin", targetID: 8888, admin: true, wantStatus: http.StatusForbidden, wantCode: "protected_admin"},
+		{name: "group creator", targetID: 8889, creator: true, wantStatus: http.StatusForbidden, wantCode: "protected_admin"},
 	}
 
 	for _, tt := range tests {
@@ -141,6 +143,9 @@ func TestDirectActionRejectsCallerBotOwnerAndGroupAdmins(t *testing.T) {
 			}
 			if tt.admin {
 				fixture.client.admins[chatID] = adminListJSON(panelDirectActionActorID, tt.targetID)
+			}
+			if tt.creator {
+				fixture.client.statuses[tt.targetID] = "creator"
 			}
 			recorder := postDirectActionRequest(t, fixture, chatID, initData, strconv.FormatInt(tt.targetID, 10))
 			requireAPIError(t, recorder, tt.wantStatus, tt.wantCode)
