@@ -457,17 +457,25 @@ func logGroupMigration(b *gotgbot.Bot, ctx *ext.Context) error {
 		return ext.ContinueGroups
 	}
 	msg := ctx.EffectiveMessage
+	var oldChatID, newChatID int64
 	var text string
 	switch {
 	case msg.MigrateToChatId != 0:
+		oldChatID, newChatID = msg.Chat.Id, msg.MigrateToChatId
 		text = fmt.Sprintf("<b>GROUP MIGRATION</b>\nFrom: <code>%d</code>\nTo: <code>%d</code>\nGroup: %s\nTime: %s",
-			msg.Chat.Id, msg.MigrateToChatId, lifecycleGroupTitle(&msg.Chat), lifecycleEventTime(msg.Date))
+			oldChatID, newChatID, lifecycleGroupTitle(&msg.Chat), lifecycleEventTime(msg.Date))
 	case msg.MigrateFromChatId != 0:
+		oldChatID, newChatID = msg.MigrateFromChatId, msg.Chat.Id
 		text = fmt.Sprintf("<b>GROUP MIGRATION</b>\nFrom: <code>%d</code>\nTo: <code>%d</code>\nGroup: %s\nTime: %s",
-			msg.MigrateFromChatId, msg.Chat.Id, lifecycleGroupTitle(&msg.Chat), lifecycleEventTime(msg.Date))
+			oldChatID, newChatID, lifecycleGroupTitle(&msg.Chat), lifecycleEventTime(msg.Date))
 	default:
 		return ext.ContinueGroups
 	}
+
+	if err := chats.MigrateChatID(oldChatID, newChatID, msg.Chat.Title); err != nil {
+		log.WithError(err).Warnf("[BotUpdates] Could not migrate chat ID %d -> %d", oldChatID, newChatID)
+	}
+
 	updateID := ctx.UpdateId
 	if updateID == 0 {
 		updateID = time.Now().UnixNano()
@@ -476,7 +484,7 @@ func logGroupMigration(b *gotgbot.Bot, ctx *ext.Context) error {
 	return ext.ContinueGroups
 }
 
-// LoadBotUpdates registers bot event handlers for group management.
+//// LoadBotUpdates registers bot event handlers for group management.
 // Sets up handlers for bot joins, admin updates, and anonymous admin verification.
 func LoadBotUpdates(dispatcher *ext.Dispatcher) {
 	dispatcher.AddHandlerToGroup(handlers.NewMyChatMember(
