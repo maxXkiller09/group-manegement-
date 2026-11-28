@@ -46,10 +46,7 @@ func kickTargetValidation(c *moderationCtx, t *target) error {
 func kickPunish(c *moderationCtx, t *target) error {
 	err := c.punish(t, punishment.Kick, 0)
 	if error_handling.IsMissingChatMemberError(err) || isTelegramMissingTargetError(err) {
-		if replyErr := replyValidationError(c, "Ye user abhi group me nahi hai, /ban use karo."); replyErr != nil {
-			return replyErr
-		}
-		return ext.EndGroups
+		return replyUserNotInChatUseBan(c)
 	}
 	return err
 }
@@ -480,13 +477,7 @@ func (moduleStruct) restrict(b *gotgbot.Bot, ctx *ext.Context) error {
 	}
 
 	if !chat_status.IsUserInChat(b, chat, userId) {
-		text, _ := tr.GetString("common_user_not_in_chat")
-		_, err := msg.Reply(b, text, formatting.Shtml())
-		if err != nil {
-			log.Error(err)
-			return err
-		}
-		return ext.EndGroups
+		return replyUserNotInChatUseBan(&moderationCtx{Bot: b, Chat: chat, Msg: msg, User: chat_status.RequireUser(b, ctx), Ctx: ctx, Tr: tr, Module: &bansModule})
 	}
 
 	if chat_status.IsUserBanProtected(b, ctx, nil, userId) {
@@ -601,36 +592,34 @@ func (moduleStruct) restrictButtonHandler(b *gotgbot.Bot, ctx *ext.Context) erro
 
 	var helpText string
 
-	actionUser, err := b.GetChat(userId, nil)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
 	mode, _ := chatsettings.PunishmentMode(action)
 	if _, err := applyPunishment(tracing.UpdateContext(ctx), b, punishment.Request{
 		ChatID: chat.Id, Target: punishment.Target{ID: userId}, Mode: mode,
 		Source: models.BanSourceManual, ActorID: user.Id,
 	}); errors.Is(err, punishment.ErrKickTargetBanned) {
 		return answerKickTargetBanned(b, query, tr)
+	} else if error_handling.IsMissingChatMemberError(err) || isTelegramMissingTargetError(err) {
+		return answerNonMemberModerationCallback(b, query)
 	} else if err != nil {
 		log.Error(err)
 		return err
 	}
+	targetCtx := &moderationCtx{Bot: b, Chat: chat, Msg: query.Message, User: user, Ctx: ctx, Tr: tr, Module: &bansModule}
+	targetName := targetMention(targetCtx, userId)
 	switch action {
 	case "kick":
 		recordModerationEvent(chat.Id, user.Id, userId, models.ModerationActionKick, "")
 		temp, _ := tr.GetString("bans_restrict_kicked")
 		helpText = fmt.Sprintf(temp,
 			formatting.MentionHtml(user.Id, user.FirstName),
-			formatting.MentionHtml(userId, actionUser.FirstName),
+			targetName,
 		)
 	case "mute":
 		recordModerationEvent(chat.Id, user.Id, userId, models.ModerationActionMute, "")
 		temp, _ := tr.GetString("bans_restrict_muted")
 		helpText = fmt.Sprintf(temp,
 			formatting.MentionHtml(user.Id, user.FirstName),
-			formatting.MentionHtml(int64(userId), actionUser.FirstName),
+			targetName,
 		)
 	case "ban":
 		recordModerationEvent(chat.Id, user.Id, userId, models.ModerationActionBan, "")
@@ -779,6 +768,9 @@ func (moduleStruct) unrestrictButtonHandler(b *gotgbot.Bot, ctx *ext.Context) er
 
 	// A failed unrestrict still answers the query, or the button keeps spinning.
 	failAction := func(err error) error {
+		if error_handling.IsMissingChatMemberError(err) || isTelegramMissingTargetError(err) {
+			return answerNonMemberModerationCallback(b, query)
+		}
 		log.Error(err)
 		_, _ = query.Answer(b, nil)
 		return err
