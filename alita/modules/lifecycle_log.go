@@ -16,11 +16,11 @@ import (
 )
 
 const (
-	lifecycleLogRequestTimeout      = 5 * time.Second
-	lifecycleLogMemberCountTimeout   = time.Second
-	lifecycleLogMinInterval          = time.Second
-	lifecycleLogDedupeWindow   = 24 * time.Hour
-	lifecycleLogQueueSize      = 64
+	lifecycleLogRequestTimeout     = 5 * time.Second
+	lifecycleLogMemberCountTimeout = time.Second
+	lifecycleLogMinInterval        = time.Second
+	lifecycleLogDedupeWindow       = 24 * time.Hour
+	lifecycleLogQueueSize          = 64
 )
 
 type lifecycleLogTask struct {
