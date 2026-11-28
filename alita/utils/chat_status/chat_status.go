@@ -714,6 +714,11 @@ func GetMessageLinkFromMessageId(chat *gotgbot.Chat, messageId int64) (messageLi
 }
 
 func ExtractJoinLeftStatusChange(u *gotgbot.ChatMemberUpdated) (bool, bool) {
+	// Incomplete membership updates can be delivered by Telegram or synthetic
+	// contexts. Treat missing snapshots as an unknown transition, not a join/leave.
+	if u == nil || u.OldChatMember == nil || u.NewChatMember == nil {
+		return false, false
+	}
 	if u.Chat.Type == "channel" {
 		return false, false
 	}

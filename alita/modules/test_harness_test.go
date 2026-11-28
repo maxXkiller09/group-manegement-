@@ -205,6 +205,16 @@ func (c *moduleBotClient) FileURL(token string, path string, _ *gotgbot.RequestO
 	return "https://api.telegram.org/file/bot" + token + "/" + path
 }
 
+func moduleSendMessagesToChatID(client *moduleBotClient, chatID int64) []moduleBotCall {
+	var calls []moduleBotCall
+	for _, call := range client.callsFor("sendMessage") {
+		if fmt.Sprint(call.Params["chat_id"]) == fmt.Sprint(chatID) {
+			calls = append(calls, call)
+		}
+	}
+	return calls
+}
+
 func (c *moduleBotClient) callsFor(method string) []moduleBotCall {
 	c.mu.Lock()
 	defer c.mu.Unlock()

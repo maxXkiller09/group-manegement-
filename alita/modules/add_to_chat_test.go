@@ -98,9 +98,9 @@ bot_updates_make_me_admin: " Localized: make me admin."
 	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
 		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
 	}
-	calls := client.callsFor("sendMessage")
+	calls := moduleSendMessagesToChatID(client, chat.Id)
 	if len(calls) != 1 {
-		t.Fatalf("sendMessage calls = %d, want 1", len(calls))
+		t.Fatalf("group sendMessage calls = %d, want 1", len(calls))
 	}
 	text := fmt.Sprint(calls[0].Params["text"])
 	if !strings.Contains(text, "Localized: make me admin.") {

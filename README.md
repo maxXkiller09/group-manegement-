@@ -50,6 +50,17 @@ metrics token and remains available for service health checks.
 
 Do not expose the metrics token in logs, source control, or client-side code.
 
+## Operational lifecycle logs
+
+The configured `MESSAGE_DUMP` chat receives short HTML audit notices when a
+user starts the bot in PM, the bot is added to or removed from a group, or
+Telegram reports a group-to-supergroup migration. These notices contain
+identifiers and event metadata only; they never copy message text or other
+message content. Delivery is asynchronous, rate-limited, deduplicated, and
+uses a bounded Telegram request timeout. If Telegram reports that the dump
+chat cannot be found, lifecycle delivery is disabled for that process after
+one warning; normal bot update handling continues.
+
 ## Development
 
 ```bash
