@@ -215,7 +215,7 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 	return userId, trimTextNewline(text)
 }
 
-// validModerationUserID excludes chat/channel IDs, invalid/system IDs and the bot itself.
+// validModerationUserID accepts positive Telegram user IDs except the bot itself.
 func validModerationUserID(b *gotgbot.Bot, userID int64) bool {
 	return b != nil && userID > 0 && userID != b.Id && chat_status.IsValidUserId(userID)
 }

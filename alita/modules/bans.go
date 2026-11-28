@@ -84,7 +84,7 @@ func unknownBanTargetNote(userID int64) string {
 
 func kickReply(c *moderationCtx, t *target) error {
 	baseStr, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_kick_kicked_user")
-	text := fmt.Sprintf(baseStr, targetMention(c, t.userID)) + unknownBanTargetNote(t.userID)
+	text := fmt.Sprintf(baseStr, targetMention(c, t.userID))
 	if t.reason != "" {
 		temp, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_kick_kicked_reason")
 		if temp != "" {
@@ -165,7 +165,7 @@ func moderationTban(m *moduleStruct) *moderationCommand {
 
 func banReplyWithButton(c *moderationCtx, t *target) error {
 	baseStr, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_ban_normal_ban")
-	text := fmt.Sprintf(baseStr, targetMention(c, t.userID))
+	text := fmt.Sprintf(baseStr, targetMention(c, t.userID)) + unknownBanTargetNote(t.userID)
 	if t.reason != "" {
 		temp, _ := c.Tr.GetString(strings.ToLower(c.Module.moduleName) + "_ban_ban_reason")
 		text += fmt.Sprintf(temp, html.EscapeString(t.reason))
