@@ -1047,9 +1047,9 @@ func TestBotJoinedSupergroupWithMissingOldChatMemberStillWelcomes(t *testing.T) 
 	adder := gotgbot.User{Id: 424243, FirstName: "Adder"}
 	ctx := newModuleMessageContext(bot, chat, adder, "bot joined")
 	ctx.MyChatMember = &gotgbot.ChatMemberUpdated{
-		Chat: chat,
-		From: adder,
-		NewChatMember: gotgbot.ChatMemberAdministrator{User: bot.User},
+		Chat:           chat,
+		From:           adder,
+		NewChatMember:  gotgbot.ChatMemberAdministrator{User: bot.User},
 	}
 
 	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
