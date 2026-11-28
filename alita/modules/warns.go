@@ -366,8 +366,12 @@ func (moduleStruct) warnThisUserWithPunisher(b *gotgbot.Bot, ctx *ext.Context, u
 	}
 	username, name, found := user.GetUserInfoById(userId)
 	if resolvedUsername, resolvedName, resolved := extraction.ResolvedUserInfoFromContext(ctx, userId); resolved {
-		if username == "" { username = resolvedUsername }
-		if name == "" { name = resolvedName }
+		if username == "" {
+			username = resolvedUsername
+		}
+		if name == "" {
+			name = resolvedName
+		}
 		found = true
 	}
 	if name == "" {
@@ -751,7 +755,7 @@ func (moduleStruct) setWarnLimit(b *gotgbot.Bot, ctx *ext.Context) error {
 func warnTargetMention(ctx *ext.Context, userID int64) string {
 	username, name, found := user.GetUserInfoById(userID)
 	if !found {
-		username, name, found = extraction.ResolvedUserInfoFromContext(ctx, userID)
+		username, name, _ = extraction.ResolvedUserInfoFromContext(ctx, userID)
 	}
 	if name == "" {
 		name = username

@@ -95,7 +95,12 @@ func TestWarnCommandsNonMemberTargetResolutionMatrix(t *testing.T) {
 		name string
 		text func(string, bool) string
 	}{
-		{"warn", func(target string, reply bool) string { if reply { return "/warn spam" }; return "/warn " + target + " spam" }},
+		{"warn", func(target string, reply bool) string {
+			if reply {
+				return "/warn spam"
+			}
+			return "/warn " + target + " spam"
+		}},
 		{"swarn", func(target string, reply bool) string { if reply { return "/swarn" }; return "/swarn " + target }},
 		{"dwarn", func(target string, reply bool) string { if reply { return "/dwarn" }; return "/dwarn " + target + " spam" }},
 	}
