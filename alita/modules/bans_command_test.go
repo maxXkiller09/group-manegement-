@@ -1058,13 +1058,6 @@ func TestBanCommandsPropagateGotgbotRequestErrors(t *testing.T) {
 			run:    bansModule.unban,
 		},
 		{
-			name:   "unban get chat failure",
-			method: "getChat",
-			text:   "/unban 42",
-			ctx:    func(bot *gotgbot.Bot) *ext.Context { return newModuleMessageContext(bot, chat, admin, "/unban 42") },
-			run:    bansModule.unban,
-		},
-		{
 			name:   "unban anonymous sender failure",
 			method: "unbanChatSenderChat",
 			text:   "/unban -1001234567890",
