@@ -42,7 +42,7 @@ func TestSuccessfulModerationCommandsRecordOneEvent(t *testing.T) {
 		{name: "dban", text: "/dban spam", action: models.ModerationActionBan, reason: "spam", asReply: true, run: bansModule.dBan},
 		{name: "sban", text: "/sban", action: models.ModerationActionBan, asReply: true, run: bansModule.sBan},
 		{name: "kick", text: "/kick spam", action: models.ModerationActionKick, reason: "spam", asReply: true, run: bansModule.kick},
-		{name: "dkick", text: "/dkick cleanup", action: models.ModerationActionKick, reason: "cleanup", asReply: true, run: bansModule.dkick},
+		{name: "dkick", text: "/dkick cleanup", action: models.ModerationActionKick, asReply: true, run: bansModule.dkick},
 		{name: "skick", text: "/skick", action: models.ModerationActionKick, asReply: true, run: bansModule.sKick},
 		{name: "mute", text: "/mute noisy", action: models.ModerationActionMute, reason: "noisy", asReply: true, run: mutesModule.mute},
 		{name: "tmute", text: "/tmute 1h noisy", action: models.ModerationActionMute, reason: "noisy", asReply: true, run: mutesModule.tMute},
