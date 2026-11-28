@@ -568,10 +568,8 @@ func TestWarnThisUserPropagatesGotgbotRequestErrors(t *testing.T) {
 		name         string
 		method       string
 		mode         string
-		callWarnThis bool
-	}{
-		{name: "member lookup failure", method: "getChatMember", callWarnThis: true},
-		{name: "warning reply failure", method: "sendMessage"},
+		}{
+			{name: "warning reply failure", method: "sendMessage"},
 		{name: "ban limit failure", method: "banChatMember", mode: "ban"},
 		{name: "kick limit failure", method: "unbanChatMember", mode: "kick"},
 		{name: "mute limit failure", method: "restrictChatMember", mode: "mute"},
@@ -591,12 +589,7 @@ func TestWarnThisUserPropagatesGotgbotRequestErrors(t *testing.T) {
 			}
 			ctx := newWarnReplyContext(bot, chat, admin, target, "/warn too noisy")
 
-			var err error
-			if tt.callWarnThis {
-				err = warnsModule.warnThisUser(bot, ctx, target.Id, "too noisy", "warn", warnIssuer(ctx))
-			} else {
-				err = warnsModule.warnUser(bot, ctx)
-			}
+			err := warnsModule.warnUser(bot, ctx)
 			if !errors.Is(err, requestErr) {
 				t.Fatalf("warnUser() error = %v, want request error", err)
 			}
@@ -820,5 +813,30 @@ func TestWarnSettingsEscapeUserInputInHTMLReplies(t *testing.T) {
 				t.Fatalf("reply = %q, want the input HTML-escaped", text)
 			}
 		})
+	}
+}
+
+func TestWarnStoresForNonMemberWithoutMembershipPreflight(t *testing.T) {
+	useEnglishLocale(t)
+	requestErr := errors.New("membership lookup should not be needed")
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	client.errors["getChatMember"] = requestErr
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Warn Chat"}
+	admin := gotgbot.User{Id: 777000, FirstName: "Telegram"}
+	target := gotgbot.User{Id: 42, FirstName: "Former Member"}
+	ctx := newModuleMessageContext(bot, chat, admin, "/warn too noisy")
+	ctx.EffectiveMessage.ReplyToMessage = &gotgbot.Message{
+		MessageId: 303, Date: 1, Chat: chat, From: &target, Text: "previous message",
+	}
+
+	if err := warnsModule.warnThisUser(bot, ctx, target.Id, "too noisy", "warn", warnIssuer(ctx)); err != ext.EndGroups {
+		t.Fatalf("warnThisUser() error = %v, want EndGroups", err)
+	}
+	if count, entries := warns.GetWarns(target.Id, chat.Id); count != 1 || len(entries) != 1 {
+		t.Fatalf("stored warns = %d/%d, want one warning for non-member", count, len(entries))
+	}
+	if calls := client.callsFor("getChatMember"); len(calls) != 0 {
+		t.Fatalf("non-member warning performed %d membership lookups, want none", len(calls))
 	}
 }
