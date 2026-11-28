@@ -1059,3 +1059,20 @@ func TestBotJoinedSupergroupWithMissingOldChatMemberStillWelcomes(t *testing.T) 
 		t.Fatalf("group sendMessage calls = %d, want welcome despite missing OldChatMember", len(calls))
 	}
 }
+
+func TestBotJoinedSupergroupWithMissingMyChatMemberStillWelcomes(t *testing.T) {
+	useEnglishLocale(t)
+	client := newModuleBotClient()
+	bot := newModuleTestBot(client)
+	chat := gotgbot.Chat{Id: uniqueModuleChatID(), Type: "supergroup", Title: "Missing Membership Update"}
+	user := gotgbot.User{Id: 424244, FirstName: "Member"}
+	ctx := newModuleMessageContext(bot, chat, user, "bot joined")
+	ctx.MyChatMember = nil
+
+	if err := botJoinedGroup(bot, ctx); err != ext.ContinueGroups {
+		t.Fatalf("botJoinedGroup() error = %v, want ContinueGroups", err)
+	}
+	if calls := moduleSendMessagesToChat(client, chat.Id); len(calls) != 1 {
+		t.Fatalf("group sendMessage calls = %d, want welcome despite missing MyChatMember", len(calls))
+	}
+}
