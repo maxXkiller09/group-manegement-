@@ -341,6 +341,27 @@ func replyValidationError(c *moderationCtx, text string) error {
 	return nil
 }
 
+func replyUserNotInChatUseBan(c *moderationCtx) error {
+	if err := replyValidationError(c, "Ye user abhi group me nahi hai, /ban use karo."); err != nil {
+		return err
+	}
+	return ext.EndGroups
+}
+
+func answerNonMemberModerationCallback(b *gotgbot.Bot, query *gotgbot.CallbackQuery) error {
+	if query == nil {
+		return ext.EndGroups
+	}
+	_, err := query.Answer(b, &gotgbot.AnswerCallbackQueryOpts{
+		Text:      "Ye user abhi group me nahi hai, /ban use karo.",
+		ShowAlert: true,
+	})
+	if err != nil {
+		log.Error(err)
+	}
+	return ext.EndGroups
+}
+
 // validateTarget runs the shared target checks: optional in-chat membership,
 // admin-protection, and bot-self. Each key falls back to the shared common_*
 // string when the module-specific key is empty. Returns the sentinel for the
