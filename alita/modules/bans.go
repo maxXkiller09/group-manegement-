@@ -537,8 +537,16 @@ func (moduleStruct) restrictButtonHandler(b *gotgbot.Bot, ctx *ext.Context) erro
 	if !ok {
 		return ext.EndGroups
 	}
-	message, ok := query.Message.(*gotgbot.Message)
-	if !ok || message == nil {
+	var message *gotgbot.Message
+	switch value := query.Message.(type) {
+	case *gotgbot.Message:
+		message = value
+	case gotgbot.Message:
+		message = &value
+	default:
+		return answerInvalidCallback(b, ctx, query)
+	}
+	if message == nil {
 		return answerInvalidCallback(b, ctx, query)
 	}
 	user := chat_status.RequireUser(b, ctx)
