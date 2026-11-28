@@ -27,7 +27,7 @@ func directActionFixture(t *testing.T) (panelFixture, int64, string) {
 	return fixture, chatID, readFixture(t, "initdata_main.txt")
 }
 
-func directActionRequest(t *testing.T, fixture panelFixture, chatID int64, initData, target string) *httptest.ResponseRecorder {
+func postDirectActionRequest(t *testing.T, fixture panelFixture, chatID int64, initData, target string) *httptest.ResponseRecorder {
 	t.Helper()
 	body := fmt.Sprintf(`{"action":"mute","target":%q,"reason":"panel test","confirmed":true}`, target)
 	path := "/panel/api/v1/chats/" + strconv.FormatInt(chatID, 10) + "/actions"
