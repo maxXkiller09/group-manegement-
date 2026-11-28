@@ -134,6 +134,7 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 	splitText := strings.SplitN(msg.Text, " ", 2)
 
 	if len(splitText) < 2 {
+		setReplyUserInfo(ctx, msg)
 		return IdFromReply(msg)
 	}
 
@@ -206,6 +207,7 @@ func ExtractUserAndText(b *gotgbot.Bot, ctx *ext.Context) (int64, string) {
 		// target regardless of whether the trailing reason happens to be a UUID.
 		// Requiring a UUID here made ordinary reasons such as "spam" or "too
 		// noisy" discard the replied-to user across moderation commands.
+		setReplyUserInfo(ctx, msg)
 		userId, text = IdFromReply(msg)
 		return userId, trimTextNewline(text)
 	}
@@ -257,6 +259,14 @@ type ResolvedUserInfo struct {
 	FirstName string
 }
 
+func setReplyUserInfo(ctx *ext.Context, msg *gotgbot.Message) {
+	reply := UserReply(msg)
+	if reply == nil || reply.From == nil {
+		return
+	}
+	setResolvedUserInfo(ctx, reply.From.Id, reply.From.Username, reply.From.FirstName)
+}
+
 func setResolvedUserInfo(ctx *ext.Context, userID int64, username, firstName string) {
 	if ctx == nil || userID <= 0 || (username == "" && firstName == "") {
 		return
@@ -286,7 +296,7 @@ func resolveUsername(b *gotgbot.Bot, username string) (int64, string, string) {
 		return 0, "", ""
 	}
 
-	if userID := user.GetUserIdByUserName(username); validModerationUserID(b, userID) {
+	if userID := user.GetUserIdByUserName(username); validModerationUserID(b, userID) && userID != b.Id {
 		return userID, "", ""
 	}
 
@@ -295,7 +305,7 @@ func resolveUsername(b *gotgbot.Bot, username string) (int64, string, string) {
 		log.Debugf("[Extraction] Failed to get user @%s from Telegram API: %v", username, err)
 		return 0, "", ""
 	}
-	if chat.Type != "private" || !validModerationUserID(b, chat.Id) {
+	if chat.Type != "private" || chat.Id == b.Id || !validModerationUserID(b, chat.Id) {
 		log.Debugf("[Extraction] Rejected @%s Telegram fallback: chat type=%q id=%d", username, chat.Type, chat.Id)
 		return 0, "", ""
 	}
