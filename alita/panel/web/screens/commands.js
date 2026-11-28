@@ -32,19 +32,19 @@ function copyButton(value){
  return b;
 }
 function directForm(chatID,command){
- const box=el("section","ng-command-direct");box.append(el("h3","","Member par action"),el("p","ng-command-muted","Member ka Telegram ID chunein ya likhein. Action se pehle details check hongi."));
+ const box=el("section","ng-command-direct");box.append(el("h3","","Member par action"),el("p","ng-command-muted","Recent member chunein, Telegram ID likhein ya @username dein. Action se pehle details check hongi."));
  const action=document.createElement("select");action.setAttribute("aria-label","Moderation action");
  for(const [v,l] of [["ban","Ban"],["tban","Tay time ke liye ban"],["kick","Kick"],["mute","Mute"],["tmute","Tay time ke liye mute"],["unban","Unban"],["unmute","Unmute"]])action.append(new Option(l,v));action.value=command.name.slice(1);
  const picker=document.createElement("select");picker.setAttribute("aria-label","Recent member");picker.append(new Option("Member chunein (optional)",""));
- const target=document.createElement("input");target.type="number";target.min="1";target.step="1";target.inputMode="numeric";target.placeholder="Ya Telegram user ID likhein";target.setAttribute("aria-label","Target Telegram user ID");
+ const target=document.createElement("input");target.type="text";target.inputMode="text";target.autocomplete="off";target.placeholder="Telegram user ID ya @username";target.setAttribute("aria-label","Target Telegram user ID or username");
  picker.addEventListener("change",()=>{if(picker.value)target.value=picker.value;});
- api(`chats/${encodeURIComponent(chatID)}/top-members?days=90`).then(d=>{picker.replaceChildren(new Option("Member chunein (optional)",""));for(const m of (Array.isArray(d?.members)?d.members:[]))picker.append(new Option(userLabel(d.names,m.user_id),String(m.user_id)));}).catch(()=>picker.replaceChildren(new Option("Member list nahi mili — ID likhein","")));
+ api(`chats/${encodeURIComponent(chatID)}/top-members?days=90`).then(d=>{picker.replaceChildren(new Option("Member chunein (optional)",""));for(const m of (Array.isArray(d?.members)?d.members:[]))picker.append(new Option(userLabel(d.names,m.user_id),String(m.user_id)));}).catch(()=>picker.replaceChildren(new Option("Member list nahi mili — ID ya @username dein","")));
  const duration=document.createElement("input");duration.type="number";duration.min="1";duration.max=String(366*86400);duration.value="3600";duration.placeholder="Time seconds mein (3600 = 1 hour)";duration.hidden=!["/tban","/tmute"].includes(command.name);
  action.addEventListener("change",()=>duration.hidden=action.value!=="tban"&&action.value!=="tmute");
  const reason=document.createElement("textarea");reason.maxLength=3000;reason.rows=2;reason.placeholder="Reason (optional)";
  const review=el("button","ng-command-primary","Action check karein");review.type="button";
- review.addEventListener("click",async()=>{const id=Number(target.value);if(!Number.isSafeInteger(id)||id<=0)return toast("Sahi Telegram user ID likhein.","error");const chosen=action.value,timed=chosen==="tban"||chosen==="tmute",seconds=timed?Number(duration.value):0;if(timed&&(!Number.isSafeInteger(seconds)||seconds<1||seconds>366*86400))return toast("Time 1 se 31622400 seconds ke beech dein.","error");
- const confirmationLines = [`Action: ${chosen}`, `Member ID: ${id}`];
+ review.addEventListener("click",async()=>{const targetValue=target.value.trim();if(!targetValue)return toast("Telegram user ID ya @username dein.","error");const chosen=action.value,timed=chosen==="tban"||chosen==="tmute",seconds=timed?Number(duration.value):0;if(timed&&(!Number.isSafeInteger(seconds)||seconds<1||seconds>366*86400))return toast("Time 1 se 31622400 seconds ke beech dein.","error");
+ const confirmationLines = [`Action: ${chosen}`, `Member: ${targetValue}`];
  if (timed) confirmationLines.push(`Time: ${seconds} seconds`);
  const reasonText = reason.value.trim();
  if (reasonText) confirmationLines.push(`Reason: ${reasonText}`);
@@ -55,7 +55,7 @@ function directForm(chatID,command){
  });
  if (!ok) return;
  review.disabled = true;
- try{const result=await api(`chats/${encodeURIComponent(chatID)}/actions`,{method:"POST",body:{action:chosen,target_user_id:id,reason:reason.value.trim(),duration_seconds:seconds,confirmed:true}});toast(result.message||"Action apply ho gaya.");haptic("success");}catch(error){toast(error.message||"Action nahi ho paya.","error");haptic("error");}finally{review.disabled=false;}});
+ try{const result=await api(`chats/${encodeURIComponent(chatID)}/actions`,{method:"POST",body:{action:chosen,target:targetValue,reason:reason.value.trim(),duration_seconds:seconds,confirmed:true}});toast(result.message||"Action apply ho gaya.");haptic("success");}catch(error){toast(error.message||"Action nahi ho paya.","error");haptic("error");}finally{review.disabled=false;}});
  box.append(action,picker,target,duration,reason,review);return box;
 }
 function openSheet(command,module,chatID,chat){

@@ -2,13 +2,17 @@ package panel
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	"github.com/divkix/Alita_Robot/alita/config"
 	"github.com/divkix/Alita_Robot/alita/db"
 	"github.com/divkix/Alita_Robot/alita/db/models"
+	"github.com/divkix/Alita_Robot/alita/utils/extraction"
 	"github.com/divkix/Alita_Robot/alita/utils/punishment"
 	log "github.com/sirupsen/logrus"
 )
@@ -17,6 +21,7 @@ const maxActionReasonRunes = 3000
 
 type directActionRequest struct {
 	Action          string `json:"action"`
+	Target          string `json:"target"`
 	TargetID        int64  `json:"target_user_id"`
 	Reason          string `json:"reason"`
 	DurationSeconds int64  `json:"duration_seconds"`
@@ -36,12 +41,16 @@ func decodeDirectAction(r *http.Request, actorID, botID int64) (directActionRequ
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&request); err != nil {
-		return request, "body must contain action, target_user_id, reason and confirmed"
+		return request, "body must contain action, target or target_user_id, reason and confirmed"
 	}
 	request.Action = strings.ToLower(strings.TrimSpace(request.Action))
 	request.Reason = strings.TrimSpace(request.Reason)
-	if request.TargetID <= 0 || request.TargetID == actorID || request.TargetID == botID {
-		return request, "target_user_id must be a valid user other than you or the bot"
+	request.Target = strings.TrimSpace(request.Target)
+	if request.Target != "" && request.TargetID != 0 {
+		return request, "provide target or target_user_id, not both"
+	}
+	if request.Target == "" && (request.TargetID <= 0 || request.TargetID == actorID || request.TargetID == botID) {
+		return request, "target must be a valid user ID or @username other than you or the bot"
 	}
 	if utf8.RuneCountInString(request.Reason) > maxActionReasonRunes {
 		return request, "reason must be 3000 characters or fewer"
@@ -65,6 +74,10 @@ func decodeDirectAction(r *http.Request, actorID, botID int64) (directActionRequ
 }
 
 func (p *Panel) verifyDirectActionTarget(r *http.Request, w http.ResponseWriter, chatID, targetID int64, action string) bool {
+	if config.AppConfig != nil && config.AppConfig.OwnerId > 0 && targetID == config.AppConfig.OwnerId {
+		writeJSONError(w, http.StatusForbidden, "protected_owner", "the bot owner cannot be targeted")
+		return false
+	}
 	target, err := p.bot.GetChatMemberWithContext(r.Context(), chatID, targetID, nil)
 	if err != nil {
 		writeJSONError(w, http.StatusBadGateway, "target_lookup_failed", "Telegram could not verify this target member")
@@ -131,6 +144,24 @@ func (p *Panel) handleDirectAction(w http.ResponseWriter, r *http.Request) {
 	if !p.requirePermission(w, r, access, session.User.ID, permRestrict|permBotRestrict) {
 		return
 	}
+	targetInput := request.Target
+	if targetInput == "" {
+		targetInput = strconv.FormatInt(request.TargetID, 10)
+	}
+	targetID, err := extraction.ResolveModerationTarget(p.bot, targetInput)
+	if err != nil {
+		if errors.Is(err, extraction.ErrModerationTargetNotFound) {
+			writeJSONError(w, http.StatusNotFound, "target_not_found", "Ye username mere paas nahi hai. Numeric ID check karo.")
+		} else {
+			writeJSONError(w, http.StatusBadRequest, "invalid_target", "Target valid Telegram user ID ya @username hona chahiye.")
+		}
+		return
+	}
+	if targetID == session.User.ID || targetID == p.bot.Id {
+		writeJSONError(w, http.StatusBadRequest, "invalid_target", "You or the bot cannot be the moderation target")
+		return
+	}
+	request.TargetID = targetID
 	if !p.verifyDirectActionTarget(r, w, access.ChatID, request.TargetID, request.Action) {
 		return
 	}

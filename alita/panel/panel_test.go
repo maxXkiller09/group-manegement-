@@ -56,6 +56,7 @@ func TestMain(m *testing.M) {
 		&models.WarnSettings{},
 		&models.Warns{},
 		&models.WarnEntry{},
+		&models.User{},
 		&models.ModerationEvent{},
 		&models.ProbationSettings{},
 		&models.DigestSettings{},
@@ -83,6 +84,17 @@ func seedPanelChat(t *testing.T, chatID int64, name string, activity time.Time) 
 	})
 }
 
+func seedPanelUser(t *testing.T, userID int64, username, name string) {
+	t.Helper()
+	record := models.User{UserId: userID, UserName: username, Name: name}
+	if err := db.DB.Create(&record).Error; err != nil {
+		t.Fatalf("seed user %d: %v", userID, err)
+	}
+	t.Cleanup(func() {
+		db.DB.Delete(&models.User{}, "user_id = ?", userID)
+	})
+}
+
 // sqliteLookup mirrors the production chat list without the Postgres-only
 // jsonb containment, which is why the lookup is injected.
 func sqliteLookup(ctx context.Context, _ int64, limit int) ([]models.Chat, error) {
@@ -103,33 +115,36 @@ type panelFakeRights struct {
 }
 
 type panelFakeClient struct {
-	mu             sync.Mutex
-	calls          []string
-	chatType       string
-	chatErr        error
-	members        map[int64]json.RawMessage
-	admins         map[int64]json.RawMessage
-	botAdmin       bool
-	blockUser      int64
-	rights         map[int64]panelFakeRights
-	botRights      panelFakeRights
-	memberErrors   map[int64]error
-	statuses       map[int64]string
-	memberCount    int64
-	memberCountErr error
+	mu              sync.Mutex
+	calls           []string
+	chatType        string
+	usernameChats   map[string]gotgbot.Chat
+	usernameLookups int
+	chatErr         error
+	members         map[int64]json.RawMessage
+	admins          map[int64]json.RawMessage
+	botAdmin        bool
+	blockUser       int64
+	rights          map[int64]panelFakeRights
+	botRights       panelFakeRights
+	memberErrors    map[int64]error
+	statuses        map[int64]string
+	memberCount     int64
+	memberCountErr  error
 }
 
 func newPanelFakeClient() *panelFakeClient {
 	return &panelFakeClient{
-		chatType:     "supergroup",
-		members:      make(map[int64]json.RawMessage),
-		admins:       make(map[int64]json.RawMessage),
-		botAdmin:     true,
-		rights:       make(map[int64]panelFakeRights),
-		botRights:    panelFakeRights{canChangeInfo: true, canRestrictMembers: true},
-		memberErrors: make(map[int64]error),
-		statuses:     make(map[int64]string),
-		memberCount:  42,
+		chatType:      "supergroup",
+		usernameChats: make(map[string]gotgbot.Chat),
+		members:       make(map[int64]json.RawMessage),
+		admins:        make(map[int64]json.RawMessage),
+		botAdmin:      true,
+		rights:        make(map[int64]panelFakeRights),
+		botRights:     panelFakeRights{canChangeInfo: true, canRestrictMembers: true},
+		memberErrors:  make(map[int64]error),
+		statuses:      make(map[int64]string),
+		memberCount:   42,
 	}
 }
 
@@ -151,12 +166,29 @@ func (c *panelFakeClient) countCalls(method string) int {
 	return count
 }
 
+func (c *panelFakeClient) countUsernameLookups() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.usernameLookups
+}
+
 func (c *panelFakeClient) RequestWithContext(ctx context.Context, _ string, method string, params map[string]any, _ *gotgbot.RequestOpts) (json.RawMessage, error) {
 	c.record(method)
 
 	chatID, _ := strconv.ParseInt(fmt.Sprint(params["chat_id"]), 10, 64)
 	switch method {
 	case "getChat":
+		if username, ok := params["chat_id"].(string); ok && strings.HasPrefix(username, "@") {
+			c.mu.Lock()
+			c.usernameLookups++
+			chat, found := c.usernameChats[strings.ToLower(username)]
+			c.mu.Unlock()
+			if !found {
+				return nil, errors.New("Bad Request: chat not found")
+			}
+			raw, err := json.Marshal(chat)
+			return raw, err
+		}
 		if c.chatErr != nil {
 			return nil, c.chatErr
 		}
