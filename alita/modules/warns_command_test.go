@@ -565,11 +565,11 @@ func TestWarnThisUserPropagatesGotgbotRequestErrors(t *testing.T) {
 	target := gotgbot.User{Id: 42, FirstName: "Member"}
 
 	for _, tt := range []struct {
-		name         string
-		method       string
-		mode         string
-		}{
-			{name: "warning reply failure", method: "sendMessage"},
+		name   string
+		method string
+		mode   string
+	}{
+		{name: "warning reply failure", method: "sendMessage"},
 		{name: "ban limit failure", method: "banChatMember", mode: "ban"},
 		{name: "kick limit failure", method: "unbanChatMember", mode: "kick"},
 		{name: "mute limit failure", method: "restrictChatMember", mode: "mute"},
