@@ -320,8 +320,11 @@ func isTelegramMissingTargetError(err error) bool {
 	return strings.Contains(message, "user not found") ||
 		strings.Contains(message, "participant_id_invalid") ||
 		strings.Contains(message, "user_id_invalid") ||
+		strings.Contains(message, "user_not_participant") ||
 		strings.Contains(message, "member not found") ||
-		strings.Contains(message, "user is not in chat")
+		strings.Contains(message, "user is not in chat") ||
+		strings.Contains(message, "user is not a member") ||
+		strings.Contains(message, "not a member of the chat")
 }
 
 // Sentinel errors used by moderation command templates.
