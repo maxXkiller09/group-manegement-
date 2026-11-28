@@ -114,17 +114,15 @@ func TestTemporaryMuteRejectsInvalidDurationAndProtectedTarget(t *testing.T) {
 		t.Fatalf("tMute(protected) error = %v, want EndGroups", err)
 	}
 
-	if calls := client.callsFor("restrictChatMember"); len(calls) != 1 {
-		t.Fatalf("restrictChatMember calls = %d, want one Telegram refusal for the absent user", len(calls))
-	} else {
-		assertParams(t, calls[0], targetParams(chat.Id, 13))
+	if calls := client.callsFor("restrictChatMember"); len(calls) != 0 {
+		t.Fatalf("restrictChatMember calls = %d, want none for invalid duration and protected target", len(calls))
 	}
 }
 
 func TestTemporaryMuteRejectsMissingChannelSelfAndAbsentTargets(t *testing.T) {
 	f := newAdminChatFixture(t)
 	client, bot, chat, admin := f.client, f.bot, f.chat, f.admin
-	client.errorsByUser["restrictChatMember|13"] = errors.New("Bad Request: user is not a member of the chat")
+	client.errorsByUser = map[string]error{"restrictChatMember|13": errors.New("Bad Request: user is not a member of the chat")}
 
 	for _, tt := range []struct {
 		name string
